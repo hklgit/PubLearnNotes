@@ -30,7 +30,7 @@ Time taken: 27.359 seconds
 
 /home/xiaosi/adv/路径是Linux本地文件系统路径；同时/home/xiaosi/adv/在HDFS文件系统也有这样的一个路径。
 从上面的输出我们可以看到数据是先从本地的/home/xiaosi/adv/文件夹下复制到HDFS上的/home/xiaosi/adv/(这个是Hive中的配置导致的)文件中。
-最后Hive将从HDFS上把数据移动到test数据库下的tmp_order_uid_total表中。移到表中的数据到底存放在HDFS的什么地方？这个在Hive的${HIVE_HOME}/conf/hive-site.xml配置文件中指定，hive.metastore.xiaosi.dir属性指向的就是Hive表数据存放的路径（在这配置的是/user/hive/xiaosi/）。Hive每创建一个表都会在hive.metastore.xiaosi.dir指向的目录下以表名创建一个文件夹，所有属于这个表的数据都存放在这个文件夹里面（/user/hive/xiaosi/test.db/tmp_order_uid_total）。
+最后Hive将从HDFS上把数据移动到test数据库下的tmp_order_uid_total表中。移到表中的数据到底存放在HDFS的什么地方？这个在Hive的${HIVE_HOME}/conf/hive-site.xml配置文件中指定，`hive.metastore.warehouse.dir`属性指向的就是Hive表数据存放的路径（在这配置的是/user/hive/xiaosi/）。Hive每创建一个表都会在`hive.metastore.warehouse.dir`指向的目录下以表名创建一个文件夹，所有属于这个表的数据都存放在这个文件夹里面（/user/hive/xiaosi/test.db/tmp_order_uid_total）。
 
 查看数据：
 ```
