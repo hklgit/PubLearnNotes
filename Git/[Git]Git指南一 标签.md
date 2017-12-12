@@ -48,7 +48,7 @@ Date:   Tue Jul 25 14:14:26 2017 +0800
 version 1.0.2
 
 commit 2274f5e988b9300d9103a6be230d19ee945ff575
-Author: xiaosi <xiaosi@qunar.com>
+Author: xiaosi <xiaosi@qq.com>
 Date:   Tue Jul 25 13:39:29 2017 +0800
 
     MOD
@@ -71,7 +71,7 @@ v1.0.3
 ```
 xiaosi@yoona:~/code/learningnotes$ git show v1.0.3
 commit 2274f5e988b9300d9103a6be230d19ee945ff575
-Author: xiaosi <xiaosi@qunar.com>
+Author: xiaosi <xiaosi@qq.com>
 Date:   Tue Jul 25 13:39:29 2017 +0800
 
     MOD
@@ -86,7 +86,7 @@ xiaosi@yoona:~/code/learningnotes$ git push origin v1.0.0
 对象计数中: 1, 完成.
 写入对象中: 100% (1/1), 162 bytes | 0 bytes/s, 完成.
 Total 1 (delta 0), reused 0 (delta 0)
-To git@gitlab.corp.qunar.com:yoona/learningnotes.git
+To git@github.com:yoona/learningnotes.git
  * [new tag]         v1.0.0 -> v1.0.0
 ```
 如果要一次推送所有本地新增的标签上去，可以使用 --tags 选项：
@@ -97,7 +97,7 @@ Delta compression using up to 4 threads.
 压缩对象中: 100% (3/3), 完成.
 写入对象中: 100% (3/3), 258 bytes | 0 bytes/s, 完成.
 Total 3 (delta 2), reused 0 (delta 0)
-To git@gitlab.corp.qunar.com:xiaosi/learningnotes.git
+To git@github.com:xiaosi/learningnotes.git
  * [new tag]         v1.0.1 -> v1.0.1
  * [new tag]         v1.0.2 -> v1.0.2
  * [new tag]         v1.0.3 -> v1.0.3
@@ -124,13 +124,13 @@ xiaosi@yoona:~/code/learningnotes$ git tag -d v1.0.0
 ##### 4.2.1 在Git v1.7.0版本之后如下操作
 ```
 xiaosi@yoona:~/code/learningnotes$ git push origin --delete v1.0.0
-To git@gitlab.corp.qunar.com:xiaosi/learningnotes.git
+To git@github.com:xiaosi/learningnotes.git
  - [deleted]         v1.0.0
 ```
 ##### 4.2.2 在Git v1.7.0版本之前如下操作
 ```
 xiaosi@yoona:~/code/learningnotes$ git push origin :refs/tags/v1.0.0
-To git@gitlab.corp.qunar.com:xiaosi/learningnotes.git
+To git@github.com:xiaosi/learningnotes.git
  - [deleted]         v1.0.0
 ```
 
