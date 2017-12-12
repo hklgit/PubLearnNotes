@@ -1,0 +1,74 @@
+### 2. 常见压缩格式
+
+
+#### 2.1 Gzip
+
+gzip是Hadoop内置压缩方法，基于DEFLATE算法，组合LZ77和Huffman编码。
+
+#### 2.2 Bzip2
+
+bzip2是免费使用，免专利，高质量的数据压缩器。使用PPM统计压缩器系列（最好的压缩技术），bzip2通常能够将文件压缩到10%到15%之间。
+
+whilst being around twice as fast at compression and six times faster at decompression.
+
+#### 2.3 LZO
+
+LZO压缩格式由许多较小（大约256K）的压缩数据块组成，因此允许作业沿着块边界进行分割。此外，设计时考虑了速度要素：解压缩大约是gzip的两倍，这意味着它的速度足以跟上硬盘读取速度。LZO没有gzip压缩得好，期望文件大小比gzip版本大50％（It doesn’t compress quite as well as gzip，expect files that are on the order of 50% larger than their gzipped version）。但是LZO压缩文件中大约有20-50%的文件没有经过压缩，这就意味着IO密集型作业完成Map阶段要比gzip快四倍。
+
+#### 2.4 Snappy
+
+Snappy是一个压缩/解压缩库。 它的目标不是最大压缩率,也不关心与任何其他压缩库的兼容性（It does not aim for maximum compression, or compatibility with any other compression library）。相反，它的目标是快速压缩与压缩的合理性（it aims for very high speeds and reasonable compression）。例如，与zlib的最快压缩模式相比，Snappy对于大多数输入都快了一个数量级，但是生成的压缩文件都要比zlib模式大，20％到100％都有可能（the resulting compressed files are anywhere from 20% to 100% bigger）。在一个64位，单核酷睿i7处理器上，Snappy压缩速度在 250 MB/秒以上，解压缩速度在 500 MB/ 秒以上。Snappy广泛应用于Google内部，BigTable，MapReduce以及内部RPC系统各个地方都在使用。
+
+### 3. 折衷
+
+所有压缩算法都在空间与时间上进行权衡：更快的压缩和解压缩速度通常以更小的空间节省为代价（faster compression and decompression speeds usually come at the expense of smaller space savings），意味着耗费更大的空间。上表中列出的工具通常通过提供九个不同的选项在压缩时对这种权衡进行控制：1表示优化速度，-9表示优化空间。
+
+不同的工具具有非常不同的压缩特性。Gzip是一个通用压缩器，空间与时间权衡的更好一些。Bzip2比gzip压缩更有效（压缩后文件更小），但速度较慢。 Bzip2 的解压缩速度比其压缩速度快，但它仍然比其他方法慢。另一方面，LZO和Snappy都对速度进行了优化，并且比gzip快一个数量级，但是压缩效率较低。解压缩方面Snappy明显快于LZO。
+
+### 4. 有关压缩和输入拆分的问题
+
+当考虑如何压缩将由MapReduce处理的数据时，重要的是要了解压缩格式是否支持分割。考虑存储在HDFS中的大小为1 GB的未压缩文件。如果HDFS块大小为64 MB（MR1默认64MB，MR2默认128MB），文件将存储为16个块，并且使用此文件作为输入的MapReduce作业将创建16个输入拆分（InputSplit），每个被独立的处理为一个单独Map任务的输入。
+
+假设我们有一个大小为1 GB的gzip压缩文件，和以前一样，HDFS将文件存储为16块。然而，不能分割出每个块（creating a split for each block won’t work），因为不可能在gzip流中的任意位置开始读取，因此Map任务不可能区别于其他Map任务单独读取它自己的分割（it is impossible to start reading at an arbitrary point in the gzip stream and therefore impossible for a map task to read its split independently of the others）。gzip格式使用DEFLATE算法存储压缩数据，DEFLATE算法将数据存储为一系列压缩数据块。问题是用任何方法也没办法区分每个块的开始位置，每个块的开始位置保证了允许从流中的任意位置能够读到下一个块的开始位置，这就意味着能够读出单个块的数据。 因此，gzip不支持拆分。
+
+在这种情况下，MapReduce不会尝试对压缩文件进行分割，因为MapReduce知道输入文件是通过gzip压缩（通过查看文件扩展名），并且知道gzip不支持分割。这种情况下MapReduce还是会继续工作的，只是牺牲了数据局部性的特性：单个Map将会处理16个HDFS块，大部分都不会在Map本地节点。此外，使用较少的Mapper，作业的粒度变小，因此可能运行较长时间（with fewer maps, the job is less granular, and so may take longer to run）。
+
+假设示例中的文件是一个LZO文件，我们也会遇到同样的问题，因为底层的压缩格式不提供一种方法与流同步读取（since the underlying compression format does not provide a way for a reader to synchronize itself with the stream）。但是，可以使用Hadoop LZO库附带的索引器工具处理LZO文件（it is possible to preprocess LZO files using an indexer tool that comes with the Hadoop LZO libraries）。该工具建立分割点的索引，当使用适当的MapReduce输入格式时，有效地使他们可以拆分。另一方面，bzip2文件在块之间提供了同步标记（pi的48位近似），因此它支持分裂。
+
+### 5. IO密集型与CPU密集型
+
+在HDFS中存储压缩数据能够进一步分配你的硬件，因为压缩数据通常是原始数据大小的25％。此外，由于MapReduce作业几乎都是IO密集型，存储压缩数据意味着整体上更少的IO处理，意味着作业运行更快。然而，有两个注意事项：
+
+- 一些压缩格式不能拆分并行处理
+
+- 一些解压缩速度非常慢，作业变为CPU密集型，消除你在IO上的收获（others are slow enough at decompression that jobs become CPU-bound, eliminating your gains on IO.）。
+
+gzip压缩格式说明了第一个注意事项。假设有一个1.1 GB的gzip文件，并且群集中块大小为128 MB。这个文件分割为9个HDFS块，每个大约128MB。为了在MapReduce作业中并行处理这些数据，每个块将由不同的Mapper负责。但这意味着第二个Mapper将在文件中大约128MB的任意字节处开始（But this means that the second mapper will start on an arbitrary byte about 128MB into the file）。The contextual dictionary that gzip used to compress input will be empty at this point, which means they gzip decompress will not be able to correctly interpret the bytes.结果就是，Hadoop中的大型gzip文件需要由单个Mapper处理，这违背了并行性的目的。
+
+Bzip2压缩格式说明了作业成为CPU密集型的第二个注意事项。Bzip2文件压缩效果良好，甚至可以拆分，但解压缩算法速度比较慢，无法跟上在Hadoop作业中常见的流式磁盘读取（cannot keep up with the streaming disk reads that are common in Hadoop jobs）。虽然Bzip2压缩有一些好处，因为它节省了存储空间，但是运行作业需要花费时间等待CPU完成解压数据。
+
+### 6. 总结
+
+#### 6.1 需要压缩原因
+
+数据经常存储，但是不经常处理。 这是通常的DWH场景。 在这种情况下，空间节省可能比处理开销更重要；
+
+压缩系数非常高，节省了大量的IO；
+
+解压缩非常快（例如 Snappy）,we have a some gain with little price
+
+数据到达时已经压缩
+
+#### 6.2 不需要压缩原因
+
+压缩数据不可拆分。 必须注意的是，many modern format are built with block level compression to enable splitting and other partial processing of the files. 。
+
+数据在集群中创建，压缩需要大量时间。 必须注意，压缩通常比解压缩需要更多的CPU；
+
+数据几乎没有冗余，没有必要进行压缩；
+
+
+
+
+
+原文地址：http://comphadoop.weebly.com/
