@@ -45,17 +45,17 @@ getopts在名称中放置一个问号（？），如果它找到一个不出现�
 
 ## 4. Example
 
-```
+```shell
 #！ /bin/bash
 echo "init index "${OPTIND}
-while getopts 'd:p:k' opt; 
-do	
+while getopts 'd:p:k' opt;
+do
     case ${opt} in
         d)
             date="${OPTARG}";;
         p)
             platform="${OPTARG}";;
-	k) 
+	k)
 	    haveKey="true";;
         ?)
             echo "Usage: `basename $0` [options] filename"
