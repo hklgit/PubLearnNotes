@@ -12,16 +12,16 @@ tr [OPTION]... SET1 [SET2]
 
 -s： squeeze-repeats，用SET1指定的字符来替换对应的重复字符 （replace each input sequence of  a  repeated  character  that  is listed in SET1 with a single occurrence of that character）
 ```
-xiaosi@Qunar:~/test$ echo "aaabbbaacccfddd" | tr -s [abcdf] // abacfd
+xiaosi@yoona:~/test$ echo "aaabbbaacccfddd" | tr -s [abcdf] // abacfd
 ```
 可以使用这一特点，删除文件中的空白行，实质上跟上面一样，都是用SET1指定的字符来替换对应的重复字符
 
 ```
-xiaosi@Qunar:~/test$ cat b.txt
+xiaosi@yoona:~/test$ cat b.txt
 I like football
 Football is very fun!
 Hello
-xiaosi@Qunar:~/test$ cat b.txt | tr -s ["\n"]
+xiaosi@yoona:~/test$ cat b.txt | tr -s ["\n"]
 I like football
 Football is very fun!
 Hello
@@ -30,31 +30,31 @@ Hello
 
 -d：delete，删除SET1中指定的所有字符，不转换（delete characters in SET1, do not translate）
 ```
-xiaosi@Qunar:~/test$ echo "a12HJ13fdaADff" | tr -d "[a-z][A-Z]"
+xiaosi@yoona:~/test$ echo "a12HJ13fdaADff" | tr -d "[a-z][A-Z]"
 1213
-xiaosi@Qunar:~/test$ echo "a1213fdasf" | tr -d [adfs]
+xiaosi@yoona:~/test$ echo "a1213fdasf" | tr -d [adfs]
 1213
 ```
 #### 3.3 字符替换
 
 -t：truncate，将SET1中字符用SET2对应位置的字符进行替换，一般缺省为-t
 ```
-xiaosi@Qunar:~/test$ echo "a1213fdasf" | tr -t [afd] [AFO]  // A1213FOAsF
+xiaosi@yoona:~/test$ echo "a1213fdasf" | tr -t [afd] [AFO]  // A1213FOAsF
 ```
 上述代码将a转换为A，f转换为F，d转换为O。
 
 可以利用这一特点，实现大小字母的转换
 ```
-xiaosi@Qunar:~/test$ echo "Hello World I Love You" |tr -t [a-z] [A-Z]
+xiaosi@yoona:~/test$ echo "Hello World I Love You" |tr -t [a-z] [A-Z]
 HELLO WORLD I LOVE YOU
-xiaosi@Qunar:~/test$ echo "HELLO WORLD I LOVE YOU" |tr -t [A-Z] [a-z]
+xiaosi@yoona:~/test$ echo "HELLO WORLD I LOVE YOU" |tr -t [A-Z] [a-z]
 hello world i love you
 ```
 也可以利用字符集合进行转换
 ```
-xiaosi@Qunar:~/test$ echo "Hello World I Love You" |tr -t [:lower:] [:upper:]
+xiaosi@yoona:~/test$ echo "Hello World I Love You" |tr -t [:lower:] [:upper:]
 HELLO WORLD I LOVE YOU
-xiaosi@Qunar:~/test$ echo "HELLO WORLD I LOVE YOU" |tr -t [:upper:] [:lower:]
+xiaosi@yoona:~/test$ echo "HELLO WORLD I LOVE YOU" |tr -t [:upper:] [:lower:]
 hello world i love you
 ```
 
@@ -90,7 +90,7 @@ CHAR1-CHAR2 从CHAR1 到 CHAR2的所有字符按照ASCII字符的顺序
 
 -c：complement，用SET2替换SET1中没有包含的字符
 ```
-xiaosi@Qunar:~/test$ cat a.txt
+xiaosi@yoona:~/test$ cat a.txt
 Monday     09:00
 Tuesday    09:10
 Wednesday  10:11
@@ -98,7 +98,7 @@ Thursday   11:30
 Friday     08:00
 Saturday   07:40
 Sunday     10:00
-xiaosi@Qunar:~/test$ cat a.txt | tr -c "[a-z][A-Z]" "#" | tr -s "#" | tr -t "#" "\n"
+xiaosi@yoona:~/test$ cat a.txt | tr -c "[a-z][A-Z]" "#" | tr -s "#" | tr -t "#" "\n"
 Monday
 Tuesday
 Wednesday
@@ -111,7 +111,7 @@ Sunday
 
 上面代码可优化为：
 ```
-xiaosi@Qunar:~/test$ cat a.txt | tr -cs "[a-z][A-Z]" "\n"
+xiaosi@yoona:~/test$ cat a.txt | tr -cs "[a-z][A-Z]" "\n"
 Monday
 Tuesday
 Wednesday
@@ -120,17 +120,3 @@ Friday
 Saturday
 Sunday
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-

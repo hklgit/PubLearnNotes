@@ -1,3 +1,14 @@
+---
+layout: post
+author: sjf0115
+title: Hadoop1.x Secondary NameNode的作用
+date: 2017-12-20 20:26:01
+tags:
+  - Hadoop
+
+categories: Hadoop
+---
+
 `Secondary NameNode`是`Hadoop`中命名不当的其中一个组件。不当命名很容易造成歧义，通过`Secondary NameNode`这个名字，我们很容易理解为是一个备份`NameNode`，但实际上它不是。很多`Hadoop`的初学者对`Secondary NameNode`究竟做了什么以及为什么存在于`HDFS`中感到困惑。因此，在这篇博文中，我试图解释`HDFS`中`Secondary NameNode`的作用。
 
 通过它的名字，你可能会认为它和`NameNode`有关，它确实是`NameNode`相关。所以在我们深入研究`Secondary NameNode`之前，让我们看看`NameNode`究竟做了什么。
