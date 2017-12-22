@@ -89,9 +89,45 @@ HDFS数据访问模式为一次写入多次读取。文件一旦创建、写入�
 
 ### 6. 文件系统元数据持久化
 
+`HDFS`命名空间存储在`NameNode`中。`NameNode`使用称之为`EditLog`编辑日志的事务日志来持久化存储在文件系统元数据上发生的每一个变化。例如，在`HDFS`中创建一个新文件会导致`NameNode`向`EditLog`编辑日志中插入一条记录。同样，更改文件的复制因子也会导致将新记录插入到`EditLog`编辑日志中。`NameNode`使用其本地主机OS文件系统中的文件来存储`EditLog`编辑日志。整个文件系统命名空间，包括数据块到文件的映射以及文件系统属性，都存储在一个名为`FsImage`的文件中。`FsImage`作为文件存储在`NameNode`的本地文件系统中。
+
+`NameNode`将整个文件系统命名空间和文件`Blockmap`的快照(image)保存在内存中。这个关键的元数据被设计得很紧凑，这样一个具有4GB内存的`NameNode`足以支持大量的文件和目录。当`NameNode`启动时，它会从磁盘中读取`FsImage`和`EditLog`编辑日志，将`EditLog`编辑日志中的所有事务应用到内存中的`FsImage`(applies all the transactions from the EditLog to the in-memory representation of the FsImage)，并将这个新版本刷新到磁盘上生成一个新`FsImage`。它可以截断旧的`EditLog`编辑日志，因为它的事务已经被应用到持久化的`FsImage`上。这个过程被称为检查点。在目前的实现中，只有在`NameNode`启动时才会出现检查点。在未来版本中正在进行工作的`NameNode`也会支持周期性的检查点。
+
+`DataNode`将`HDFS`数据存储在本地文件系统的文件中。`DataNode`不了解`HDFS`文件(The DataNode has no knowledge about HDFS files)。它将每个`HDFS`数据块存储在本地文件系统中的单个文件中。`DataNode`不会在同一目录中创建所有文件。相反，它使用启发式来确定每个目录的最佳文件数量并适当地创建子目录。由于本地文件系统可能无法有效地支持单个目录中的大量文件，因此在同一目录中创建所有本地文件并不是最佳选择。当`DataNode`启动时，它会扫描其本地文件系统，生成一个包含所有`HDFS`数据块(与每个本地文件相对应)的列表，并将此报告发送给`NameNode`：这是`Blockreport`。
+
 ### 7. 通信协议
 
-### 8. 稳健性
+所有的`HDFS`通信协议都是基于`TCP/IP`协议的。客户端建立到`NameNode`机器上的可配置TCP端口的连接。它使用`ClientProtocol`与`NameNode`交谈。`DataNode`使用`DataNode`协议与`NameNode`进行通信。远程过程调用(RPC)抽象包装客户端协议和数据节点协议。根据设计，`NameNode`永远不会启动任何RPC。而是只响应由`DataNode`或客户端发出的RPC请求。
+
+### 8. 稳定性
+
+`HDFS`的主要目标是即使在出现故障时也能可靠地存储数据。三种常见的故障类型是`NameNode`故障，`DataNode`故障和网络分裂(network partitions)。
+
+#### 8.1 数据磁盘故障，心跳和重新复制
+
+每个`DataNode`定期向`NameNode`发送一个`Heartbeat`消息。网络分裂可能导致一组`DataNode`与`NameNode`失去联系。`NameNode`通过丢失`Heartbeat`消息来检测这种情况。`NameNode`将最近没有`Heartbeats`的`DataNode`标记为死亡，并且不会将任何新的IO请求转发给它们。任何注册在标记为死亡的`DataNode`中的数据不再可用。`DataNode`死亡可能导致某些块的复制因子降到其指定值以下。`NameNode`不断跟踪哪些块需要复制，并在需要时启动复制。重新复制可能由于许多原因而产生：`DataNode`可能变得不可用，副本可能被破坏，`DataNode`上的硬盘可能出现故障，或者文件的复制因子可能需要增加。
+
+为了避免由于`DataNode`的状态震荡而导致的复制风暴，标记`DataNode`死亡的超时时间设置的比较保守(The time-out to mark DataNodes dead is conservatively long)(默认超过10分钟)。用户可以设置较短的时间间隔以将`DataNode`标记为陈旧，并避免陈旧节点在读取或按配置写入时性能出现负载(Users can set shorter interval to mark DataNodes as stale and avoid stale nodes on reading and/or writing by configuration for performance sensitive workloads)。
+
+#### 8.2 集群重新平衡
+
+`HDFS`体系结构与数据重新平衡方案兼容。如果某个`DataNode`上的可用空间低于某个阈值，那么会自动将数据从一个`DataNode`移动到另一个`DataNode`。对于特定文件突然高需求(sudden high demand)的情况下，可能会动态创建额外的副本并重新平衡集群中的其他数据。这些类型的数据重新平衡方案尚未实现。
+
+#### 8.3 数据完整性
+
+从`DataNode`上获取的数据块可能会损坏。发生损坏可能是由存储设备故障，网络故障或软件错误引起。`HDFS`客户端实现了对`HDFS`上文件内容进行校验和检查。当客户端创建一个`HDFS`文件时，它会计算每个文件的对应数据块的校验和，并将这些校验和存储在同一个`HDFS`命名空间中的单独隐藏文件中。当客户端检索文件内容时，它会验证从每个`DataNode`收到的数据是否与存储在相关校验和文件中的校验和相匹配。如果不匹配，那么客户端可以选择从另一个具有该数据块副本的`DataNode`中检索该数据块。
+
+#### 8.4 元数据磁盘故障
+
+Another option to increase resilience against failures is to enable High Availability using multiple NameNodes either with a shared storage on NFS or using a distributed edit log (called Journal). The latter is the recommended approach.
+
+`FsImage`和`EditLog`编辑日志是`HDFS`中的中心数据结构。这些文件的损坏可能会导致`HDFS`实例无法正常运行。为此，`NameNode`可以配置为支持维护`FsImage`和`EditLog`编辑日志的多个副本。任何对`FsImage`或`EditLog`编辑日志的更新都会引起每个`FsImages`和`EditLogs`编辑日志同步更新。同步更新`FsImage`和`EditLog`编辑日志的多个副本可能会降低`NameNode`支持的每秒的命名空间事务的速度(degrade the rate of namespace transactions per second)。但是，这种降低是可以接受的，因为尽管`HDFS`应用程序实质上是非常密集的数据，但是它们也不是元数据密集型的。当`NameNode`重新启动时，它会选择最新的一致的`FsImage`和`EditLog`编辑日志来使用。
+
+另一个增强防御故障的方法是使用多个`NameNode`以启用高可用性，或者使用[`NFS`上的共享存储](http://hadoop.apache.org/docs/r2.7.3/hadoop-project-dist/hadoop-hdfs/HDFSHighAvailabilityWithNFS.html)或使用[分布式编辑日志](http://hadoop.apache.org/docs/r2.7.3/hadoop-project-dist/hadoop-hdfs/HDFSHighAvailabilityWithQJM.html)(称为日志)。后者是推荐的方法。
+
+#### 8.5 快照
+
+[快照](http://hadoop.apache.org/docs/r2.7.3/hadoop-project-dist/hadoop-hdfs/HdfsSnapshots.html)支持在特定时刻存储数据副本。快照功能的一种用法是将损坏的`HDFS`实例回滚到先前已知的良好时间点。
 
 ### 9. 数据组织
 
