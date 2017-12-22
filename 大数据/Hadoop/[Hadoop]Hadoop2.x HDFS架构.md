@@ -119,11 +119,9 @@ HDFS数据访问模式为一次写入多次读取。文件一旦创建、写入�
 
 #### 8.4 元数据磁盘故障
 
-Another option to increase resilience against failures is to enable High Availability using multiple NameNodes either with a shared storage on NFS or using a distributed edit log (called Journal). The latter is the recommended approach.
-
 `FsImage`和`EditLog`编辑日志是`HDFS`中的中心数据结构。这些文件的损坏可能会导致`HDFS`实例无法正常运行。为此，`NameNode`可以配置为支持维护`FsImage`和`EditLog`编辑日志的多个副本。任何对`FsImage`或`EditLog`编辑日志的更新都会引起每个`FsImages`和`EditLogs`编辑日志同步更新。同步更新`FsImage`和`EditLog`编辑日志的多个副本可能会降低`NameNode`支持的每秒的命名空间事务的速度(degrade the rate of namespace transactions per second)。但是，这种降低是可以接受的，因为尽管`HDFS`应用程序实质上是非常密集的数据，但是它们也不是元数据密集型的。当`NameNode`重新启动时，它会选择最新的一致的`FsImage`和`EditLog`编辑日志来使用。
 
-另一个增强防御故障的方法是使用多个`NameNode`以启用高可用性，或者使用[`NFS`上的共享存储](http://hadoop.apache.org/docs/r2.7.3/hadoop-project-dist/hadoop-hdfs/HDFSHighAvailabilityWithNFS.html)或使用[分布式编辑日志](http://hadoop.apache.org/docs/r2.7.3/hadoop-project-dist/hadoop-hdfs/HDFSHighAvailabilityWithQJM.html)(称为日志)。后者是推荐的方法。
+另一个增强防御故障的方法是使用多个`NameNode`以启用高可用性，或者使用[`NFS`上的共享存储](http://hadoop.apache.org/docs/r2.7.3/hadoop-project-dist/hadoop-hdfs/HDFSHighAvailabilityWithNFS.html)或使用[分布式编辑日志](http://hadoop.apache.org/docs/r2.7.3/hadoop-project-dist/hadoop-hdfs/HDFSHighAvailabilityWithQJM.html)(称为`Journal`)。后者是推荐的方法。
 
 #### 8.5 快照
 
@@ -131,38 +129,49 @@ Another option to increase resilience against failures is to enable High Availab
 
 ### 9. 数据组织
 
-### 10.
+#### 9.1 数据块
 
+`HDFS`为支持大文件而设计的。与`HDFS`兼容的应用程序是处理大型数据集的应用程序。这些应用程序只写入数据一次，但是读取一次或多次，并读取速度要求满足流式处理速度。`HDFS`支持在文件上一次写入多次读取语义。`HDFS`使用的一般块大小为128 MB。因此，一个`HDFS`文件被分成多个128MB的块，如果可能的话，每个块将保存在不同的`DataNode`上。
 
+#### 9.2 分阶段
 
+客户端创建文件的请求不会立即到达`NameNode`。事实上，最初`HDFS`客户端将文件数据缓存到本地缓冲区。应用程序写入重定向到本地缓冲区。当本地文件累积超过一个块大小的数据时，客户端才会联系`NameNode`。`NameNode`将文件名插入到文件系统层次结构中，并为其分配一个数据块。`NameNode`将`DataNode`和目标数据块的标识和返回给客户请求。然后，客户端将本地缓冲区中的数据块保存到指定的`DataNode`上。当文件关闭时，本地缓冲区中剩余的未保存数据也被传输到`DataNode`。客户端然后告诉`NameNode`该文件已关闭。此时，`NameNode`将文件创建操作提交到持久化存储中。如果`NameNode`在文件关闭之前崩溃，那么文件会丢失。
 
+在仔细考虑在`HDFS`上运行的目标应用程序之后，采用了上述方法。这些应用程序需要流式写入文件。如果客户端直接写入远程文件目录而没有在客户端进行任何缓冲，那么网络速度和网络拥塞会大大影响吞吐量。这种方法并非没有先例。较早的分布式文件系统，例如`AFS`，已经使用客户端缓存来提高性能。`POSIX`的要求已经放宽，以实现更高的数据传输性能。
 
+### 9.3 副本流水线
 
+当客户端将数据写入`HDFS`文件时，首先将数据写入本地缓冲区，如上一节所述。假设`HDFS`文件复制因子为3。当本地缓冲区累积了一个块的用户数据时，客户端从`NameNode`中检索`DataNode`列表。该列表包含保存数据的数据块副本的`DataNode`。客户端然后将数据块刷新到第一个`DataNode`。第一个`DataNode`开始接收一小部分数据，将这一小部分数据写入其本地存储库，然后传输到列表中的第二个`DataNode`。第二个`DataNode`依次接收数据块的每一部分数据，将其写入存储库，然后再将刷新到第三个`DataNode`。最后，第三个`DataNode`将数据写入其本地存储库。因此，`DataNode`可以以流水线的方式从前一个`DataNode`接收数据，同时将数据转发到流水线中的下一个`DataNode`。因此，数据从一个`DataNode`流到下一个。
 
+### 10. 访问
 
+应用程序可以以多种不同的方式访问`HDFS`。`HDFS`为应用程序提供了一个`FileSystem Java API`。`Java API`和`REST API`的C语言包装器也可以使用。另外还有一个HTTP浏览器(HTTP browser)，也可以用来浏览`HDFS`实例的文件。通过使用`NFS`网关，可以将`HDFS`作为客户端本地文件系统的一部分。
 
+#### 10.1 FS Shell
 
+`HDFS`将用户数据以文件和目录的形式进行组织。它提供了一个名为`FS shell`的命令行接口，让用户可以与`HDFS`中的数据进行交互。这个命令集的语法类似于用户已经熟悉的其他`shell`(例如`bash`，`csh`)。 以下是一些示例操作/命令对：
 
+操作|命令
+---|---
+创建`/foodir`目录|`bin/hadoop dfs -mkdir /foodir`
+删除目录`/foodir`|`bin/hadoop fs -rm -R /foodir`
+查看`/foodir/myfile.txt`中内容|`bin/hadoop dfs -cat /foodir/myfile.txt`
 
+`FS shell`针对需要脚本语言与存储数据进行交互的应用程序。
 
+#### 10.2 DFSAdmin
 
+`DFSAdmin`命令集用于管理`HDFS`集群。这些是仅能由`HDFS`管理员使用的命令。以下是一些示例操作/命令对：
 
+操作|命令
+---|---
+使集群处于安全模式|`bin/hdfs dfsadmin -safemode enter`
+生成`DataNode`列表|`bin/hdfs dfsadmin -report`
+重新投放或停用`DataNode(s)`|`bin/hdfs dfsadmin -refreshNodes`
 
+#### 10.3 浏览器接口
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+一个典型的`HDFS`安装会配置一个`Web`服务器，通过一个可配置的`TCP`端口公开`HDFS`命名空间。这允许用户使用Web浏览器浏览`HDFS`命名空间并查看其文件的内容。
 
 
 备注:
