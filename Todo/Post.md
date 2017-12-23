@@ -4,6 +4,8 @@
 
 > Hadoop
 
+- [x] http://hadoop.apache.org/docs/r2.7.3/hadoop-project-dist/hadoop-hdfs/HdfsDesign.html
+- [ ] http://hadoop.apache.org/docs/r2.7.3/hadoop-project-dist/hadoop-hdfs/HDFSHighAvailabilityWithNFS.html
 - [ ] http://hadoop.apache.org/docs/r2.4.1/hadoop-project-dist/hadoop-hdfs/HdfsDesign.html
 - [x] http://blog.cloudera.com/blog/2012/02/mapreduce-2-0-in-hadoop-0-23/
 - [ ] http://blog.cloudera.com/blog/2017/02/untangling-apache-hadoop-yarn-part-5-using-fairscheduler-queue-properties/
