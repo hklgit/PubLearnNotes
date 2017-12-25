@@ -45,7 +45,4 @@
 
 
 
-
-
-
 原文: http://hadoop.apache.org/docs/r2.7.3/hadoop-project-dist/hadoop-hdfs/HDFSHighAvailabilityWithNFS.html
