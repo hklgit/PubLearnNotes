@@ -1,9 +1,51 @@
-This guide provides an overview of the HDFS High Availability (HA) feature and how to configure and manage an HA HDFS cluster, using NFS for the shared storage required by the NameNodes.
-
-This document assumes that the reader has a general understanding of general components and node types in an HDFS cluster. Please refer to the HDFS Architecture guide for details.
 
 ### 1. 目标
 
 这篇文章了讲述了`HDFS`高可用性`HA`功能以及如何使用`NFS`作为`NameNodes`的共享存储来配置和管理`HA` `HDFS`群集。
 
-本文档假设读者对HDFS集群中的通用组件和节点类型有一个大体的了解。 有关详细信息，请参阅HDFS体系结构指南。
+这篇文章假设读者对`HDFS`集群中的通用组件和节点类型有一个大体的了解。有关详细信息，请参阅[HDFS架构](http://smartying.club/2017/12/20/Hadoop/Hadoop2.x%20HDFS%E6%9E%B6%E6%9E%84/)。
+
+### 2. 背景
+
+在`Hadoop 2.0.0`之前，`NameNode`是`HDFS`集群中的单点故障(`SPOF`)。每个群集都只有一个`NameNode`，如果`NameNode`所在节点或所在进程不可用，那么整个集群将变的不可用，直到`NameNode`重新启动或在另一个节点上启动。
+
+主要有两个主要方面影响了`HDFS`集群的总体可用性：
+
+- 意外情况下(例如机器崩溃)，集群将不可用，直到操作员重新启动`NameNode`。
+- 计划内的运维情况下(如`NameNode`所在节点上的软件或硬件升级)将导致集群停机一段时间。
+
+`HDFS`高可用性功能通过提供具有热备份的`Active`/`Passive`配置，在同一个集群中运行两个冗余`NameNode`来解决上述问题。这允许在节点崩溃的情况下快速故障切换到新的`NameNode`，或为了计划内运维管理员发起的正常切换。
+
+### 3. 架构
+
+在典型的`HA`集群中，两台独立的机器被配置为`NameNode`。在任何时候，只有一个`NameNode`处于`Active`状态，另一个处于`Standby`状态。`Active`状态的`NameNode`负责集群中的所有客户端操作，而`Passive`状态的`NameNode`仅充当备份`NameNode`，并保存全部的状态在必要时提供快速故障转移。
+
+为了使`Standby`节点与`Active`节点保持同步状态，目前的实现是两个节点都可以访问共享存储设备上的目录(例如，从`NAS`上挂载`NFS`)。未来版本可能会放宽这个限制。
+
+当`Active`节点执行关于命名空间的任何修改时，它都将修改记录持久化存储到共享存储目录中的编辑日志文件中。`Standby`节点不断地监视这个目录，当看到修改时，它将它们应用到它自己的命名空间。在需要故障切换时，`Standby`状态节点在自己切换为`Active`状态之前确保从共享存储目录中已经读取所有的编辑日志。这确保了在故障切换发生之前命名空间状态已经完全同步。
+
+为了提供快速故障切换，`Standby`节点还需要拿到有关于集群中块位置的最新信息。为了实现这一点，`DataNode`配置了两个`NameNode`的位置，并发送块位置信息和心跳给这两个。
+
+对于`HA`集群的正确操作来说只有一个`NameNode`处于`Active`状态至关重要。否则，命名空间状态将很快在两者之间发生分歧，从而可能导致数据丢失或其他不正确的结果。为了确保此属性并防止所谓的`脑裂情形`，管理员必须至少为共享存储配置一种`fencing`方法。在故障转移期间，如果无法验证上一个`Active`节点是否离开`Active`状态，那么守护进程负责切断前一个`Active`节点对共享存储的访问。这样可以防止对命名空间进行任何的编辑，从而使新的`Active`节点安全地进行故障转移。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+原文: http://hadoop.apache.org/docs/r2.7.3/hadoop-project-dist/hadoop-hdfs/HDFSHighAvailabilityWithNFS.html
