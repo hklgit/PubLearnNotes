@@ -5,7 +5,7 @@
 这个问题一般是由于两次或两次以上的格式化NameNode造成的。jps命令发现没有datanode启动，所以去Hadoop的日志文件下查看日志（/opt/hadoop-2.7.2/logs/hadoop-xiaosi-datanode-Qunar.log），每个人的日志文件都是不一样的：
 ```
 2016-06-12 20:01:31,374 WARN org.apache.hadoop.hdfs.server.common.Storage: java.io.IOException: Incompatible clusterIDs in /home/xiaosi/config/hadoop/tmp/dfs/data: namenode clusterID = CID-67134f3c-0dcd-4e29-a629-a823d6c04732; datanode clusterID = CID-cf2f0387-3b3b-4bd8-8b10-6f5baecccdcf
-2016-06-12 20:01:31,375 FATAL org.apache.hadoop.hdfs.server.datanode.DataNode: Initialization failed for Block pool <registering> (Datanode Uuid unassigned) service to localhost/127.0.0.1:9000. Exiting. 
+2016-06-12 20:01:31,375 FATAL org.apache.hadoop.hdfs.server.datanode.DataNode: Initialization failed for Block pool <registering> (Datanode Uuid unassigned) service to localhost/127.0.0.1:9000. Exiting.
 java.io.IOException: All specified directories are failed to load.
 	at org.apache.hadoop.hdfs.server.datanode.DataStorage.recoverTransitionRead(DataStorage.java:478)
 	at org.apache.hadoop.hdfs.server.datanode.DataNode.initStorage(DataNode.java:1358)
@@ -18,11 +18,11 @@ java.io.IOException: All specified directories are failed to load.
 2016-06-12 20:01:31,388 INFO org.apache.hadoop.hdfs.server.datanode.DataNode: Removed Block pool <registering> (Datanode Uuid unassigned)
 2016-06-12 20:01:33,389 WARN org.apache.hadoop.hdfs.server.datanode.DataNode: Exiting Datanode
 2016-06-12 20:01:33,391 INFO org.apache.hadoop.util.ExitUtil: Exiting with status 0
-2016-06-12 20:01:33,392 INFO org.apache.hadoop.hdfs.server.datanode.DataNode: SHUTDOWN_MSG: 
+2016-06-12 20:01:33,392 INFO org.apache.hadoop.hdfs.server.datanode.DataNode: SHUTDOWN_MSG:
 /************************************************************
 SHUTDOWN_MSG: Shutting down DataNode at Qunar/127.0.0.1
 ************************************************************/
-2016-06-13 12:56:00,753 INFO org.apache.hadoop.hdfs.server.datanode.DataNode: STARTUP_MSG: 
+2016-06-13 12:56:00,753 INFO org.apache.hadoop.hdfs.server.datanode.DataNode: STARTUP_MSG:
 /************************************************************
 ```
 
@@ -159,7 +159,7 @@ java.lang.IllegalArgumentException: The ServiceName: mapreduce.shuffle set in ya
 ```
 在访问 http://localhost:8088/cluster/ 时，发现节点为不健康节点。NodeHealthReport报告如下：
 ```
-1/1 local-dirs are bad: /tmp/hadoop-hduser/nm-local-dir; 
+1/1 local-dirs are bad: /tmp/hadoop-hduser/nm-local-dir;
 1/1 log-dirs are bad: /usr/local/hadoop/logs/userlogs
 ```
 #### 4.2 解决方案
@@ -177,3 +177,20 @@ java.lang.IllegalArgumentException: The ServiceName: mapreduce.shuffle set in ya
 
 参考：http://stackoverflow.com/questions/29131449/hadoop-unhealthy-node-local-dirs-are-bad-tmp-hadoop-hduser-nm-local-dir
 
+### 5. NameNode启动失败2
+
+```
+2017-12-26 20:02:44,017 ERROR org.apache.hadoop.hdfs.server.namenode.NameNode: Failed to start namenode.
+org.apache.hadoop.hdfs.server.common.InconsistentFSStateException: Directory /tmp/hadoop-xiaosi/dfs/name is in an inconsistent state: storage directory does not exist or is not accessible.
+	at org.apache.hadoop.hdfs.server.namenode.FSImage.recoverStorageDirs(FSImage.java:327)
+	at org.apache.hadoop.hdfs.server.namenode.FSImage.recoverTransitionRead(FSImage.java:215)
+	at org.apache.hadoop.hdfs.server.namenode.FSNamesystem.loadFSImage(FSNamesystem.java:975)
+	at org.apache.hadoop.hdfs.server.namenode.FSNamesystem.loadFromDisk(FSNamesystem.java:681)
+	at org.apache.hadoop.hdfs.server.namenode.NameNode.loadNamesystem(NameNode.java:585)
+	at org.apache.hadoop.hdfs.server.namenode.NameNode.initialize(NameNode.java:645)
+	at org.apache.hadoop.hdfs.server.namenode.NameNode.<init>(NameNode.java:812)
+	at org.apache.hadoop.hdfs.server.namenode.NameNode.<init>(NameNode.java:796)
+	at org.apache.hadoop.hdfs.server.namenode.NameNode.createNameNode(NameNode.java:1493)
+	at org.apache.hadoop.hdfs.server.namenode.NameNode.main(NameNode.java:1559)
+```
+http://www.linuxidc.com/Linux/2012-03/56348.htm
