@@ -1,3 +1,13 @@
+---
+layout: post
+author: sjf0115
+title: Airflow使用指南一 安装与启动
+date: 2017-12-29 12:55:01
+tags:
+  - Airflow
+
+categories: Airflow
+---
 
 ### 1. 安装
 
@@ -89,7 +99,7 @@ sql_alchemy_conn = mysql://root:root@localhost:3306/airflow
 
 数据库用户名与密码均为`root`，airflow使用的数据库为`airflow`．使用如下命令创建对应的数据库:
 ```
-mysql> create database airfow;
+mysql> create database airflow;
 Query OK, 1 row affected (0.00 sec)
 ```
 重新初始化服务器数据库:
