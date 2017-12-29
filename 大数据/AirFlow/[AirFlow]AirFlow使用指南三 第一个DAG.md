@@ -20,7 +20,7 @@ Airflow附带了许多示例DAG。 请注意，在你自己的`dags_folder`中�
 
 现在一切都准备好了，我们开始写一些代码，来实现我们的第一个DAG。 我们将首先创建一个Hello World工作流程，其中除了向日志发送"Hello world！"之外什么都不做。
 
-创建你的`dags_folder`，那就是你的DAG定义文件存储目录---`$AIRFLOW_HOME/dags`。在该目录中创建一个名为hello_world.py的文件。
+创建你的`dags_folder`，那就是你的DAG定义文件存储目录---`$AIRFLOW_HOME/dags`。在该目录中创建一个名为`hello_world.py`的文件。
 ```
 AIRFLOW_HOME
 ├── airflow.cfg
