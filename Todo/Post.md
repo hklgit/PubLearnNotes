@@ -1,6 +1,8 @@
 > Flink
 
 - [ ] https://data-artisans.com/blog/how-apache-flink-enables-new-streaming-applications-part-1
+- [ ] https://flink.apache.org/news/2015/12/04/Introducing-windows.html
+
 
 > Hadoop
 

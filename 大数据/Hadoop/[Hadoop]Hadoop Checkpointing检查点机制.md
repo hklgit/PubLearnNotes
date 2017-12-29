@@ -42,10 +42,15 @@
 
 在配置`NameNode`高可用性时，活动和备用`NameNode`可以共享存储编辑日志的存储(译者注:通过高可用的共享存储实现编辑日志的共享)。通常情况下，共享存储是三个或更多`JournalNodes`的ensemble(this shared storage is an ensemble of three or more JournalNodes)，但是这是从检查点过程中抽象出来的(that’s abstracted away from the checkpointing process)。
 
-备用`NameNode`通过定期重新执行由活动`NameNode`写入到共享编辑日志目录的新编辑日志来维护命名空间的当前最新版本。因此，检查点非常简单，检查之前定义的触发条件是否满足，保存命名空间到一个新的`fsimage`(大致相当于在命令行上运行`hdfs dfsadmin -saveNamespace`)，然后将新的`fsimage`通过HTTP传输到活动`NodeNode`。
+备用`NameNode`通过定期重新执行由活动`NameNode`写入到共享存储目录的新编辑日志来维护命名空间的当前最新版本。因此，检查点非常简单，检查之前定义的触发条件是否满足，保存命名空间到一个新的`fsimage`(大致相当于在命令行上运行`hdfs dfsadmin -saveNamespace`)，然后将新的`fsimage`通过HTTP传输到活动`NodeNode`。
 
 ![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hadoop/Hadoop%20Checkpointing%E6%A3%80%E6%9F%A5%E7%82%B9%E6%9C%BA%E5%88%B6-checkpointing3.png?raw=true)
 
+在这里，`Standby` `NameNode`缩写为`SbNN`以及`Active NameNode`为`ANN`：
+
+(1) `SbNN`检查是否满足这两个前提条件的任意一个：从上一个检查点开始经过的时间或累积的编辑日志的数量。
+
+(2)
 
 ### 4. 使用辅助NameNode进行Checkpointing
 
