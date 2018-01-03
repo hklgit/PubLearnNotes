@@ -63,7 +63,7 @@ xiaosi@yoona:~/opt/flink-1.3.2/log$ cat flink-xiaosi-jobmanager-0-yoona.log | le
 你可以在GitHub上找到SocketWindowWordCount例子的完整代码，有[Java](https://github.com/apache/flink/blob/master/flink-examples/flink-examples-streaming/src/main/java/org/apache/flink/streaming/examples/socket/SocketWindowWordCount.java)和[Scala](https://github.com/apache/flink/blob/master/flink-examples/flink-examples-streaming/src/main/scala/org/apache/flink/streaming/scala/examples/socket/SocketWindowWordCount.scala)两个版本。
 
 Scala:
-```
+```scala
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
