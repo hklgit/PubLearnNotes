@@ -47,7 +47,7 @@ println(env.getExecutionPlan())
 
 完成上面这些步骤后，将会显示详细的执行计划。
 
-![](https://ci.apache.org/projects/flink/flink-docs-release-1.3/fig/plan_visualizer.png)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Flink/Flink%20%E6%89%A7%E8%A1%8C%E8%AE%A1%E5%88%92-1.png?raw=true)
 
 ### 2. Web界面
 
