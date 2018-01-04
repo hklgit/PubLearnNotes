@@ -1,8 +1,6 @@
-Flink中的DataStream程序是实现数据流转换（例如，过滤，更新状态，定义窗口，聚合）的常规程序。 数据流最初是从各种来源（例如，消息队列，套接字流，文件）创建的。 通过接收器返回结果，例如可以将数据写入文件或标准输出（例如命令行终端）。Flink程序可以在不同上下文中运行，独立模式或嵌入其他程序模式。可以在本地JVM上运行，也可以在许多机器的集群上运行。
+Flink中的`DataStream`程序是实现数据流转换(例如，过滤，更新状态，定义窗口，聚合)的常规程序。数据流最初是从各种来源(例如，消息队列，套接字流，文件)创建的。通过接收器返回结果，例如可以将数据写入文件或标准输出(例如命令行终端)。`Flink`程序可以在不同上下文中运行，独立模式或嵌入其他程序模式。可以在本地`JVM`上运行，也可以在多机器集群上运行。
 
-请参阅基本概念，介绍Flink API的基本概念。
-
-为了创建你的第一个 Flink DataStream 程序，我们鼓励你从 剖析 Flink 程序 开始，然后逐步地增加你的 转换操作。而剩余的章节主要作为额外操作(operations)和高级特性的一个参考。
+为了创建第一个`Flink DataStream`程序，我们建议你首先从[剖析Flink程序](http://smartsi.club/2018/01/04/Flink/[Flink]Flink%20Flink%E7%A8%8B%E5%BA%8F%E5%89%96%E6%9E%90/)开始，然后逐步地增加你的 转换操作。而剩余的章节主要作为额外操作(operations)和高级特性的一个参考。
 
 ### 1. Example程序
 
@@ -233,3 +231,9 @@ DataStream<String> result =
 #### 2.21 Iterate DataStream → IterativeStream → DataStream
 
 #### 2.22 Extract Timestamps DataStream → DataStream
+
+
+
+
+
+原文:

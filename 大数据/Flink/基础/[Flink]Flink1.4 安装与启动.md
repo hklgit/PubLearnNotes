@@ -1,8 +1,8 @@
 ---
 layout: post
 author: sjf0115
-title: Flink 1.4 安装与启动
-date: 2017-12-29 12:54:01
+title: Flink1.4 安装与启动
+date: 2018-01-04 08:54:01
 tags:
   - Flink
 
@@ -51,7 +51,7 @@ Starting jobmanager daemon on host yoona.
 ```
 通过访问 http://localhost:8081 检查JobManager网页,确保所有组件都启动并已运行。网页会显示一个有效的TaskManager实例。
 
-![img](https://ci.apache.org/projects/flink/flink-docs-release-1.3/page/img/quickstart-setup/jobmanager-1.png)
+![img](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Flink/Flink%20%E5%AE%89%E8%A3%85%E4%B8%8E%E5%90%AF%E5%8A%A8-1.png?raw=true)
 
 你也可以通过检查日志目录里的日志文件来验证系统是否已经运行:
 ```
@@ -74,25 +74,6 @@ xiaosi@yoona:~/opt/flink-1.3.2/log$ cat flink-xiaosi-jobmanager-0-yoona.log | le
 
 Scala:
 ```scala
-
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.apache.flink.streaming.scala.examples.socket
 
 import org.apache.flink.api.java.utils.ParameterTool
@@ -160,24 +141,6 @@ object SocketWindowWordCount {
 ```
 Java版本:
 ```java
-/*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package org.apache.flink.streaming.examples.socket;
 
 import org.apache.flink.api.common.functions.FlatMapFunction;
@@ -307,9 +270,9 @@ Connected to JobManager at Actor[akka.tcp://flink@localhost:6123/user/jobmanager
 ```
 应用程序连接socket并等待输入，你可以通过web界面来验证任务期望的运行结果：
 
-![](https://ci.apache.org/projects/flink/flink-docs-release-1.3/page/img/quickstart-setup/jobmanager-2.png)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Flink/Flink%20%E5%AE%89%E8%A3%85%E4%B8%8E%E5%90%AF%E5%8A%A8-2.png?raw=true)
 
-![](https://ci.apache.org/projects/flink/flink-docs-release-1.3/page/img/quickstart-setup/jobmanager-3.png)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Flink/Flink%20%E5%AE%89%E8%A3%85%E4%B8%8E%E5%90%AF%E5%8A%A8-3.png?raw=true)
 
 单词的数量在5秒的时间窗口中进行累加（使用处理时间和tumbling窗口），并打印在stdout。监控JobManager的输出文件，并在nc写一些文本(回车一行就发送一行输入给Flink) :
 ```
