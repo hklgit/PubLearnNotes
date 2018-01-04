@@ -104,7 +104,4 @@ public void registerCachedFile(String filePath, String name, boolean executable)
 Flink版本:1.3
 ```
 
-译者：sjf0115
-链接：
 原文:https://ci.apache.org/projects/flink/flink-docs-release-1.3/dev/batch/index.html#distributed-cache
-著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。
