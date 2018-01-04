@@ -39,7 +39,7 @@ println(env.getExecutionPlan())
 
 (1) 使用浏览器打开`planVisualizer.html`(或者直接在浏览器中输入http://flink.apache.org/visualizer/index.html 网址)
 
-![](http://img.blog.csdn.net/20171117100332547?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvU3VubnlZb29uYQ==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Flink/Flink%20%E6%89%A7%E8%A1%8C%E8%AE%A1%E5%88%92-2.png?raw=true)
 
 (2) 将`JSON`字符串粘贴到文本框中
 
