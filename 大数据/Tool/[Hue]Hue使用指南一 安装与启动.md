@@ -1,9 +1,6 @@
 ### 1. 下载
 
 
-
-
-
 /home/xiaosi/opt/hue-4.0.0/desktop/conf目录下修改`hue.ini`配置文件:
 
 (1) Hive相关配置:

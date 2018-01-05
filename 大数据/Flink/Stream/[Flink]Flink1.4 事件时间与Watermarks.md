@@ -1,13 +1,24 @@
-Flink实现了数据流模型(Dataflow Model)中许多技术。如果想对事件时间(event time)和水位线(watermarks)更详细的了解，请参阅下面的文章:
+---
+layout: post
+author: sjf0115
+title: Flink1.4 事件时间与Watermarks
+date: 2018-01-04 17:57:01
+tags:
+  - Flink
+
+categories: Flink
+---
+
+`Flink`实现了数据流模型(`Dataflow Model`)中许多技术。如果想对事件时间(`event time`)和水位线(`watermarks`)更详细的了解，请参阅下面的文章:
 - [The world beyond batch: Streaming 101
 ](https://www.oreilly.com/ideas/the-world-beyond-batch-streaming-101)
 - [The Dataflow Model](http://www.vldb.org/pvldb/vol8/p1792-Akidau.pdf)
 
 支持事件时间的流处理器需要一种方法来衡量事件时间的进度。例如，一个构建按小时处理窗口的窗口算子，当事件时间超过一小时末尾时需要被通知(a window operator that builds hourly windows needs to be notified when event time has passed beyond the end of an hour)，以便操作员可以关闭正在进行的窗口。
 
-事件时间可以独立于处理时间来运行。例如，在一个程序中，算子(operator)的当前事件时间可以略微落后于处理时间(考虑接收事件的延迟)，而两者以相同的速度继续前行。另一方面，另一个流式处理程序可以运行几个星期的事件时间，但是处理只需几秒钟(another streaming program might progress through weeks of event time with only a few seconds of processing)，通过快速转发已经在Kafka Topic中缓冲的一些历史数据。
+事件时间可以独立于处理时间来运行。例如，在一个程序中，算子(`operator`)的当前事件时间可以略微落后于处理时间(考虑接收事件的延迟)，而两者以相同的速度继续前行。另一方面，另一个流式处理程序可以运行几个星期的事件时间，但是处理只需几秒钟(another streaming program might progress through weeks of event time with only a few seconds of processing)，通过快速转发在`Kafka Topic`中缓冲的一些历史数据。
 
-Flink中测量事件时间进度的机制是水位线(watermarks)。水位线作为数据流的一部分流动，并携带时间戳t。`Watermark(t)`声明在数据流中事件时间已达到时间t，这意味着流不再有时间戳t'<= t(即时间戳老于或等于水印的事件)的元素。
+`Flink`中测量事件时间进度的机制是水位线(watermarks)。水位线作为数据流的一部分流动，并携带时间戳t。`Watermark(t)`声明在数据流中事件时间已达到时间t，这意味着流不再有时间戳t'<= t(即时间戳老于或等于水印的事件)的元素。
 
 下图显示了具有时间戳(逻辑上)和内嵌watermark的事件流。在这个例子中，事件是顺序的（相对于它们的时间戳），这意味着水位线只是数据流中的周期性标记。
 
