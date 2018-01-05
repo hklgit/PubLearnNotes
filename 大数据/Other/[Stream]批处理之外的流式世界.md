@@ -111,12 +111,8 @@
 
 #### 2.3 无限数据-streaming
 
-Highly unordered with respect to event times, meaning you need some sort of time-based shuffle in your pipeline if you want to analyze the data in the context in which they occurred.
-Of varying event time skew, meaning you can’t just assume you’ll always see most of the data for a given event time X within some constant epsilon of time Y.
-
-
 与大多数基于批处理的无限数据处理方法的特殊性质相反，流式处理系统是为无限数据而设计的。正如我前面提到的，对于许多现实世界的分布式输入源，你发现不仅处理无限数据，而且数据还具有以下特点：
-- 相对于事件时间高度无序，这意味着如果你想分析事件发生上下文中的数据，你需要在管道中进行某种基于时间的数据洗牌。
+- 相对于事件时间的高度无序，这意味着如果你想分析事件发生上下文中的数据，你需要在管道中进行某种基于时间的数据洗牌。
 - 事件时间的不同偏差，意味着你不能假设给定的事件时间X在一个常数时间Y上下浮动时间(`[X-Y, X+Y]`)内看到大部分的数据。
 
 处理具有这些特征的数据时，可以采取一些方法。我通常将这些方法分为四类：
