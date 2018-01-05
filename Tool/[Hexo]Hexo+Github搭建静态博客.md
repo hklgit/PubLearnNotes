@@ -33,15 +33,15 @@ sudo apt-get install npm
 ```
 下面使用npm安装Hexo，安装过程中我们可能会遇到下面的问题:
 
-![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hexo+Github%E6%90%AD%E5%BB%BA%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2-1.png?raw=true)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hexo/Hexo+Github%E6%90%AD%E5%BB%BA%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2-1.png?raw=true)
 
 我们需要运行下面的命令，才能安装成功：
 
-![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hexo+Github%E6%90%AD%E5%BB%BA%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2-2.png?raw=true)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hexo/Hexo+Github%E6%90%AD%E5%BB%BA%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2-2.png?raw=true)
 
 再重新安装hexo:
 
-![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hexo+Github%E6%90%AD%E5%BB%BA%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2-3.png?raw=true)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hexo/Hexo+Github%E6%90%AD%E5%BB%BA%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2-3.png?raw=true)
 
 ### 3. 建站
 
@@ -54,7 +54,7 @@ cd blog
 npm install
 ```
 
-![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hexo+Github%E6%90%AD%E5%BB%BA%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2-4.png?raw=true)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hexo/Hexo+Github%E6%90%AD%E5%BB%BA%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2-4.png?raw=true)
 
 备注:
 ```
@@ -205,7 +205,7 @@ deploy:
 
 下面我们创建一篇名为hexo的文章：
 
-![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hexo+Github%E6%90%AD%E5%BB%BA%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2-5.png?raw=true)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hexo/Hexo+Github%E6%90%AD%E5%BB%BA%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2-5.png?raw=true)
 
 在_post目录下，就会生成文件："hexo.md":
 ```
@@ -306,42 +306,42 @@ deploy:
 ```
 然后，通过如下命令进行部署:
 
-![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hexo+Github%E6%90%AD%E5%BB%BA%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2-7.png?raw=true)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hexo/Hexo+Github%E6%90%AD%E5%BB%BA%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2-7.png?raw=true)
 
 出现上述问题，可以使用配置ssh秘钥解决。如果出现deployer找不到git: ERROR Deployer not found: git错误，使用下面方式解决：
 
-![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hexo+Github%E6%90%AD%E5%BB%BA%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2-8.png?raw=true)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hexo/Hexo+Github%E6%90%AD%E5%BB%BA%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2-8.png?raw=true)
 
 再来一次hexo deploy：
 
-![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hexo+Github%E6%90%AD%E5%BB%BA%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2-9.png?raw=true)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hexo/Hexo+Github%E6%90%AD%E5%BB%BA%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2-9.png?raw=true)
 
 到目前为止这个静态的web网站就被部署到了github，检查一下分支是gh-pages。gh-pages是github为了web项目特别设置的分支:
 
-![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hexo+Github%E6%90%AD%E5%BB%BA%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2-10.png?raw=true)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hexo/Hexo+Github%E6%90%AD%E5%BB%BA%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2-10.png?raw=true)
 
 然后，点击”Settings”，找到GitHub Pages，提示“Your site is published at `http://sjf0115.github.io/hexo-blog`:
 
-![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hexo+Github%E6%90%AD%E5%BB%BA%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2-11.png?raw=true)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hexo/Hexo+Github%E6%90%AD%E5%BB%BA%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2-11.png?raw=true)
 
 打开网页，就是我们刚刚发布站点：
 
-![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hexo+Github%E6%90%AD%E5%BB%BA%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2-12.png?raw=true)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hexo/Hexo+Github%E6%90%AD%E5%BB%BA%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2-12.png?raw=true)
 
 可以看到网页样式出现问题，不用担心，我们设置域名之后就OK了。
 
 #### 4.3 设置域名
 
-![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hexo+Github%E6%90%AD%E5%BB%BA%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2-13.png?raw=true)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hexo/Hexo+Github%E6%90%AD%E5%BB%BA%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2-13.png?raw=true)
 
 在dnspod控制台，设置主机记录@，类型A，到IP 23.235.37.133（github地址）:
 
-![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hexo+Github%E6%90%AD%E5%BB%BA%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2-14.png?raw=true)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hexo/Hexo+Github%E6%90%AD%E5%BB%BA%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2-14.png?raw=true)
 
 对域名判断是否生效，对域名执行ping：
 
-![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hexo+Github%E6%90%AD%E5%BB%BA%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2-15.png?raw=true)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hexo/Hexo+Github%E6%90%AD%E5%BB%BA%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2-15.png?raw=true)
 
 在github项目中，新建一个文件CNAME，文件中写出你要绑定的域名sjf0115.club。通过浏览器，访问http://sjf0115.club ， 就打开了我们建好的博客站点:
 
-![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hexo+Github%E6%90%AD%E5%BB%BA%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2-16.png?raw=true)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hexo/Hexo+Github%E6%90%AD%E5%BB%BA%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2-16.png?raw=true)
