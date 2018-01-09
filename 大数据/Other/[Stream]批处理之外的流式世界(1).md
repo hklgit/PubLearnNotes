@@ -1,3 +1,14 @@
+---
+layout: post
+author: sjf0115
+title: Stream 批处理之外的流式世界(1)
+date: 2018-01-09 17:54:01
+tags:
+  - Stream
+
+categories: Stream
+---
+
 数据流处理在大数据当中是越来越重要，有很好的理由。 其中：
 
 (1) 业务渴望更及时的数据，并且切换到流是实现更低延迟的好方法。
