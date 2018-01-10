@@ -61,8 +61,25 @@ xiaosi@ying:~/qunar/company/opt/nexus$ sudo ln -s bin/nexus /etc/init.d/nexus
 ```
 (2) 执行以下命令来添加一个`nexus`服务进行启动:
 ```
-sudo chkconfig --add nexus
-sudo chkconfig --levels 345 nexus on
+cd /etc/init.d
+sudo update-rc.d nexus defaults
+sudo service nexus start
+```
+
+```
+[Unit]
+Description=nexus service
+After=network.target
+
+[Service]
+Type=forking
+ExecStart=/home/xiaosi/qunar/company/opt/nexus/bin/nexus start
+ExecStop=/home/xiaosi/qunar/company/opt/nexus/bin/nexus stop
+User=yoona
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target
 ```
 
 备注:
@@ -77,9 +94,19 @@ sudo chkconfig --levels 345 nexus on
 
 ```
 
+### 4. 登录
 
+上述两种启动方式将在端口`8081`上启动`nexus`服务。要访问`nexus`页面，请访问`http://localhost:8081`。你将能够看到如下所示的页面：
 
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Other/Nexus%E5%AE%89%E8%A3%85%E4%B8%8E%E5%90%AF%E5%8A%A8-1.png?raw=true)
 
+使用如下默认的用户与密码进行登录:
+```
+用户名: admin
+密码: admin123
+```
+
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Other/Nexus%E5%AE%89%E8%A3%85%E4%B8%8E%E5%90%AF%E5%8A%A8-2.png?raw=true)
 
 
 
@@ -116,3 +143,5 @@ sudo chkconfig --levels 345 nexus on
 
 
 参考:http://www.sonatype.org/nexus/2017/01/25/how-to-install-latest-sonatype-nexus-3-on-linux/
+
+http://books.sonatype.com/nexus-book/3.5/reference/install.html#service-linux
