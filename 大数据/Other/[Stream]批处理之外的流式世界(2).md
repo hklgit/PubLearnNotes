@@ -21,5 +21,57 @@ categories: Stream
 
 除了这两个概念之外，我们现在要仔细研究一下三个概念：
 - `Watermarks`是关于事件时间输入完整性的概念。具有时间X值的`watermark`表示：`已经观察到所有输入数据并且事件时间小于X`。因此，当不知道无限数据源什么时候结束时，`watermark`就用作进度的度量。
-- `Triggers`
+- `Triggers`是一种机制，用于声明窗口输出何时应相对于某个外部信号实现。触发器在选择何时发送输出方面提供了灵活性。它们还可以随着时间的变化多次观察窗口的输出(observe the output for a window multiple times as it evolves)。这为随着时间的推移而修改结果提供了可能，这允许随着数据到达提供推测结果以及随时间处理上游数据（修订）的变化或相对于水印迟到的数据（例如，移动场景 ，其中某个人的电话在该人离线时记录各种动作和他们的事件时间，然后在重新获得连接时继续上传这些事件进行处理。
 - `Accumulation`
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+原文:https://www.oreilly.com/ideas/the-world-beyond-batch-streaming-102
