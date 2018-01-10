@@ -52,11 +52,23 @@ categories: Stream
 - `PCollections`表示执行并行转换操作的数据集(可能是大数据集)(因此名称以`p`开头)。
 - `PTransforms`，将其应用于`PCollections`来创建新的`PCollections`。`PTransforms`可以执行元素转换，可以将多个元素聚合在一起，也可以是其他`PTransforms`的复合组合。
 
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Other/%E6%89%B9%E5%A4%84%E7%90%86%E4%B9%8B%E5%A4%96%E7%9A%84%E6%B5%81%E5%BC%8F%E4%B8%96%E7%95%8C-12.jpg?raw=true)
 
+就我们的例子而言，我们首先假定认为`PCollection< KV<String，Integer> >`为`输入`(即由`Strings`和`Integer`的键/值对组成的`PCollection`，其中的`Strings`像是团队名称，`Integer`是对应团队的任意人的分数)。在现实世界的流水线中，我们将通过从`I/O`数据源读取原始数据(例如，日志记录)的`PCollection`来获取输入，然后通过将日志记录解析为适当的键/值对将其转换为`PCollection< KV<String，Integer> >`。 为了清楚起见，在第一个例子中，我将包含这些所有步骤的伪代码，但在随后的例子中，我忽略了`I/O`和解析部分。
 
+因此，管道会简单地从`I/O`源读取数据，解析出团队/分数键值对，并计算每个团队的分数总和:
+```
+PCollection<String> raw = IO.read(...);
+PCollection<KV<String, Integer>> input = raw.apply(ParDo.of(new ParseFn());
+PCollection<KV<String, Integer>> scores = input.apply(Sum.integersPerKey());
+```
+上述代码从`I/O`源读取键/值对数据，其中以`String`(例如，团队名称)作为键和`Integer`(例如，团队每个成员分数)作为值。然后将每个键对应的值相加在一起以在输出集合中产生键对应数据的总和(例如一个团队的总得分)。
 
+对于所有的例子来说，在看到描述管道的代码片段之后，我们将看看在具体数据集上执行该管道的动画渲染。更具体地说，我们将看到在的单个key的10个输入数据(唯一的一个key对应10个值)上执行管道的过程。在一个真正的管道中，你可以想象类似的操作将会在多台机器上并行执行，但是在我们的例子中尽量简单化。
 
+每个动画在两个维度上绘制输入和输出：`事件时间`(在X轴上)和`处理时间`(在Y轴上)。因此，如粗的上升白线所示，管道从下到上的进度可实时观察。输入是圆圈，圆圈内的数字代表特定记录的值。当管道观察到它们时，它们开始改变之前灰色而变成白色。
 
+当管道观察到值时，将它们进行累加，并最终将聚合结果输出。状态和输出由矩形表示，聚合值靠近顶部，矩形覆盖的区域表示部分事件时间和处理时间累加到结果中。对于下图中的管道，在经典的批处理引擎上执行时看起来就像这样：
 
 
 
