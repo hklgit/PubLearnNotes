@@ -6,6 +6,18 @@
 `ctrl-shift-M`|`Markdown`预览
 `cmd-shift-o`|打开目录
 
+
+### 2. Git操作
+
+命令|描述
+---|---
+`shift-cmd-H`|git-plus menu
+`shift-cmd-C`|git-plus commit
+`shift-cmd-A q`|git-plus add-commit-push
+`shift-cmd-A p`|git-plus add-all-commit-push
+
+
+
 ### 2. 文件切换
 
 命令|描述
