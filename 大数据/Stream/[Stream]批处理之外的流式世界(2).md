@@ -100,15 +100,17 @@ PCollection<KV<String, Integer>> scores = input
 
 ### 3. Streaming 102
 
-我们刚才观察到在批处理引擎上执行一个加窗的流水线。 但理想情况下，我们希望对结果具有较低的延迟，并且还希望本机处理无限的数据源。 切换到流式引擎是朝着正确的方向迈出的一步，但批处理引擎有一个已知的点，每个窗口的输入已经完成（即一旦有界输入源中的所有数据都已被占用），我们 目前缺乏用无限制的数据来源来确定完整性的实际方法。 输入水印。
+我们刚才观察到在批处理引擎上执行一个窗口的管道。但理想情况下，我们希望结果具有较低的延迟。切换到流式引擎是朝着正确的方向迈出了一步，但对于批处理引擎我们都知道，每个窗口的输入都是完整性的(即一旦有限输入源中的所有数据都已被消费)，但是我们目前缺乏对于无限数据源确定其完整性的实际方法。
 
+#### 3.1 When: watermarks
 
+`watermark`是问题"处理时间什么时候被物化的？"答案的前半部分。`watermark`是输入数据完整性的一个事件时间概念。换一种说法，它是系统相对于在事件流中正处理事件的事件时间进行衡量进度和完整性的方法(they are the way the system measures progress and completeness relative to the event times of the records being processed in a stream of events)(无论是有限还是无限数据，尽管在无限数据中作用更明显)。
 
+回想一下`Streaming 101`中这个图，在这里稍作修改，这里我将大多数现实世界分布式数据处理系统中事件时间和处理时间之间的偏差描述为不断变化的函数。
 
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Stream/%E6%89%B9%E5%A4%84%E7%90%86%E4%B9%8B%E5%A4%96%E7%9A%84%E6%B5%81%E5%BC%8F%E4%B8%96%E7%95%8C%E4%B9%8B%E4%BA%8C-5.png?raw=true)
 
-
-
-
+代表现实世界的那个弯弯曲曲的红线，实际上就是`watermark`；随着处理时间的推移能够获取事件时间完整性的进展(it captures the progress of event time completeness as processing time progresses.)。从概念上将，可以`watermark`看作为一个函数，`F（P） - > E`，输入一个处理时间点输出一个事件时间点。(更准确地说，函数的输入实际上是某个时间点在管道中观察到`watermark`的上游的所有东西的当前状态：输入源，缓冲的数据，正在处理的数据等；但从概念上讲，可以简单的理解为将处理时间到事件时间的映射)(More accurately, the input to the function is really the current state of everything upstream of the point in the pipeline where the watermark is being observed: the input source, buffered data, data actively being processed, etc.; but conceptually, it’s simpler to think of it as a mapping from processing time to event time.)。事件时间点E是表示事件时间小于E的那些所有输入数据都已经被看到了。换句话说，我们断言不会再看到事件时间小于E的其他数据了。根据`watermark`的类型，完美或启发式，上述断言可能分别是一个严格的保证或一个受过教育的猜测：
 
 
 
