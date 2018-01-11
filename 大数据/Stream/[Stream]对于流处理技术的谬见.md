@@ -25,7 +25,7 @@ categories: Stream
 
 `Lambda架构`在`Apache Storm`的早期阶段和其它流处理项目里是一个很有用的设计模式。这个架构包含了一个`快速流层`和一个`批次层`。
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Stream/%E5%AF%B9%E4%BA%8E%E6%B5%81%E5%A4%84%E7%90%86%E6%8A%80%E6%9C%AF%E7%9A%84%E8%B0%AC%E8%A7%81-1.png?raw=true)
 
 之所以使用两个单独的层，是因为Lambda架构里的流处理只能计算出大致的结果（也就是说，如果中间出现了错误，那么计算结果就不可信），而且只能处理相对少量的事件。
 
@@ -83,11 +83,11 @@ categories: Stream
 
 那么端到端的一次性处理呢？通过恰当的方式让检查点兼具事务协调机制是可能的，换句话说，就是让源操作和目标操作参与到检查点里来。在框架内部，结果是一次性的，从端到端来看，也是一次性的，或者说`接近一次性`。例如，在使用`Flink`和`Kafka`作为数据源并发生数据槽（HDFS）滚动时，从`Kafka`到`HDFS`就是端到端的一次性处理。类似地，在把`Kafka`作为`Flink`的源并且把`Cassandra`作为`Flink`的槽时，如果针对`Cassandra`的更新是幂等时，那么就可以实现端到端的一次性处理。
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Stream/%E5%AF%B9%E4%BA%8E%E6%B5%81%E5%A4%84%E7%90%86%E6%8A%80%E6%9C%AF%E7%9A%84%E8%B0%AC%E8%A7%81-2.png?raw=true)
 
 值得一提的是，利用`Flink`的保存点，检查点可以兼具状态版本机制。使用保存点，在保持状态一致性的同时还可以“随着时间移动”。这样可以让代码的更新、维护、迁移、调试和各种模拟测试变得简单。
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Stream/%E5%AF%B9%E4%BA%8E%E6%B5%81%E5%A4%84%E7%90%86%E6%8A%80%E6%9C%AF%E7%9A%84%E8%B0%AC%E8%A7%81-3.png?raw=true)
 
 ### 5. 谬见5：流只能被应用在“实时”场景里
 
@@ -116,7 +116,7 @@ categories: Stream
 
 让我们再深入一点，来区分两种没有边界的数据集：连续性流和间歇性流。
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Stream/%E5%AF%B9%E4%BA%8E%E6%B5%81%E5%A4%84%E7%90%86%E6%8A%80%E6%9C%AF%E7%9A%84%E8%B0%AC%E8%A7%81-4.png?raw=true)
 
 使用任意一种模型来处理任意一种数据集是完全可能的，虽然这不是最优的做法。例如，批次处理模型被长时间地应用在无边界的数据集上，特别是间歇性的无边界数据集。现实情况是，大多数`批处理`任务是通过调度来执行的，每次只处理无边界数据集的一小部分。这意味着流的无边界特质会给某些人带来麻烦（那些工作在流入管道上的人）。
 
