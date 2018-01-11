@@ -70,9 +70,9 @@ PCollection<KV<String, Integer>> scores = input.apply(Sum.integersPerKey());
 
 当管道观察到值时，将它们累加在其状态中，并最终将聚合结果输出。状态和输出由矩形表示，聚合值靠近顶部，矩形覆盖的区域表示部分事件时间和处理时间累加到结果中。对于下图中的管道，在经典的批处理引擎上执行时看起来就像这样：
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Stream/%E6%89%B9%E5%A4%84%E7%90%86%E4%B9%8B%E5%A4%96%E7%9A%84%E6%B5%81%E5%BC%8F%E4%B8%96%E7%95%8C%E4%B9%8B%E4%BA%8C-1.png?raw=true)
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Stream/%E6%89%B9%E5%A4%84%E7%90%86%E4%B9%8B%E5%A4%96%E7%9A%84%E6%B5%81%E5%BC%8F%E4%B8%96%E7%95%8C%E4%B9%8B%E4%BA%8C-2.png?raw=true)
 
 由于这是一个批处理管道，因此它会累积状态，直到看到所有输入(顶部的绿色虚线出现时表示看到所有的输入了)，此时它将产生单一输出`51`。在此示例中，我们是在所有事件时间上计算的总和，因为我们没有使用任何指定的窗口转换操作；因此状态和输出的矩形覆盖整个X轴。但是，如果我们想处理一个无限的数据源，那么经典的批处理是不够的。我们不能等待输入结束，因为它永远不会结束。我们需要的一个概念就是窗口化，我们在上篇文章中引入了这个概念。因此，在第二个问题的上下文中：`事件发生的时间是在哪里计算的？`，现在我们简要回顾一下窗口。
 
@@ -80,7 +80,7 @@ PCollection<KV<String, Integer>> scores = input.apply(Sum.integersPerKey());
 
 正如上次讨论的那样，窗口化是沿着时间界线分割数据源的过程。常见的窗口策略包括固定窗口，滑动窗口和会话窗口：
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Stream/%E6%89%B9%E5%A4%84%E7%90%86%E4%B9%8B%E5%A4%96%E7%9A%84%E6%B5%81%E5%BC%8F%E4%B8%96%E7%95%8C%E4%B9%8B%E4%BA%8C-3.jpg?raw=true)
 
 为了更好地在实践中理解在窗口，让我们以整数求和管道为例，并将它窗口化为2分钟的固定窗口。使用`Dataflow SDK`比较简单，添加`Window.into`转换操作即可：
 ```
@@ -90,9 +90,9 @@ PCollection<KV<String, Integer>> scores = input
 ```
 回想一下，`Dataflow`提供了一个统一的模型，可以在批处理和流式处理中使用，因为语义上批处理只是流式处理的一个特殊情况。因此，我们首先在批处理引擎上执行这个管道；机制比较简单，可以与切换到的流处理引擎直接进行比较。
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Stream/%E6%89%B9%E5%A4%84%E7%90%86%E4%B9%8B%E5%A4%96%E7%9A%84%E6%B5%81%E5%BC%8F%E4%B8%96%E7%95%8C%E4%B9%8B%E4%BA%8C-3.png?raw=true)
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Stream/%E6%89%B9%E5%A4%84%E7%90%86%E4%B9%8B%E5%A4%96%E7%9A%84%E6%B5%81%E5%BC%8F%E4%B8%96%E7%95%8C%E4%B9%8B%E4%BA%8C-4.png?raw=true)
 
 和以前一样，输入在状态下累积，直到完全消费掉，最后输出。然而，在这种情况下，我们得到四个输出，而不是一个输出：四个相关的两分钟事件时间窗口对应一个输出。
 
