@@ -111,7 +111,7 @@ PCollection<KV<String, Integer>> scores = input
 ![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Stream/%E6%89%B9%E5%A4%84%E7%90%86%E4%B9%8B%E5%A4%96%E7%9A%84%E6%B5%81%E5%BC%8F%E4%B8%96%E7%95%8C%E4%B9%8B%E4%BA%8C-5.png?raw=true)
 
 代表现实世界的那个弯弯曲曲的红线，实际上就是`watermark`；随着处理时间的推移能够获取事件时间完整性的进展(it captures the progress of event time completeness as processing time progresses.)。从概念上将，可以`watermark`看作为一个函数，`F（P） - > E`，输入一个处理时间点输出一个事件时间点。(更准确地说，函数的输入实际上是某个时间点在管道中观察到`watermark`的上游的所有东西的当前状态：输入源，缓冲的数据，正在处理的数据等；但从概念上讲，可以简单的理解为将处理时间到事件时间的映射)(More accurately, the input to the function is really the current state of everything upstream of the point in the pipeline where the watermark is being observed: the input source, buffered data, data actively being processed, etc.; but conceptually, it’s simpler to think of it as a mapping from processing time to event time.)。事件时间点E是表示事件时间小于E的那些所有输入数据都已经被看到了。换句话说，我们断言不会再看到事件时间小于E的其他数据了。根据`watermark`的类型，完美或启发式，上述断言分别是一个严格保证的或一个与依据的猜测：
-- `Perfect watermarks:`：在对所有输入数据充分了解的情况下，可以构建`Perfect watermarks`；在这种情况下，没有延迟的数据；所有数据要不提前，要不准时。
+- `Perfect watermarks`：在对所有输入数据充分了解的情况下，可以构建`Perfect watermarks`；在这种情况下，没有延迟的数据；所有数据要不提前，要不准时。
 - `Heuristic watermarks`：对于许多分布式输入源，充分了解输入数据是不切实际的，在这种情况下，下一个最佳选择是`Heuristic watermarks`。`Heuristic watermarks`使用任何可以获取到的输入信息(分区，分区内的排序(如果有的话)，文件的增长率等)来提供尽可能准确的进度估计。在许多情况下，这样的`watermark`在预测中是非常准确的。即使如此，`Heuristic watermarks`的使用意味着有时可能是错误的，这将导致延迟数据。我们将在下面的触发器部分中了解如何处理延迟数据。
 
 `watermark`是一个非常吸引人并且复杂的话题。现在，为了更好地理解`watermark`的作用以及它的一些缺点，我们来看看两个仅使用`watermark`的流引擎的例子，确定在执上述代码中的窗口化管道时何时实现输出(materialize output)。左边的例子使用的是`Perfect watermarks`; 右边使用的是`Heuristic watermarks`。
@@ -161,19 +161,44 @@ PCollection<KV<String, Integer>> scores = input
 
 在太慢的情况下(即提早提供推测结果)，我们应该假定对于任何给定的窗口有稳定的输入数据量，因为我们知道(根据在早期阶段定义的窗口)，我们观察到的窗口输入是远远不完整的。因此，当处理时间提前(例如，每分钟一次)时周期性地触发可能是明智的，因为触发器触发的数量不取决于窗口内观察到的实际数据量；在最坏的情况下，我们会得到稳定的周期性触发器触发规律。
 
-在太快的情况下(即由于`Heuristic watermarks`而提供响应于晚期数据的更新结果)，假设我们的水印基于相对准确的启发（通常是合理安全的假设）。 在这种情况下，我们不希望经常看到迟到的数据，但是当我们这样做的时候，很快就会修改我们的结果。 在观察元素数为1之后触发将使我们快速更新我们的结果（即，每当我们看到晚期数据时），但是由于后期数据的预期频率不足而不可能压倒系统。
+在太快的情况下(即提供由于`Heuristic watermarks`而延迟的数据应对的更新结果)，假设我们的`watermark`基于相对准确的启发式算法(通常是合理安全的假设)。在这种情况下，我们不希望经常看到延迟的数据，当我们这样做的时候，很快就会修改我们的结果。在观察元素数为1之后触发将使我们快速更新我们的结果（即，每当我们看到晚期数据时），但是由于后期数据的预期频率不足而不可能压倒系统。
 
+请注意，这些仅仅是示例：根据不同的用例，我们可以自由选择不同的触发器(或者选择不触发其中的一个或两个)。
 
+最后，我们需要协调各种触发的时机：提前`early`，准时`on-time`和延迟`late`。我们可以通过一个`Sequence`触发器和一个特殊的`OrFinally`触发器来完成这个工作，`OrFinally`触发器会安装一个子触发器，当子触发器触发时会终止父触发器。
 
+```
+PCollection<KV<String, Integer>> scores = input
+  .apply(Window.into(FixedWindows.of(Duration.standardMinutes(2)))
+               .triggering(
+                  Sequence(
+                    Repeat(AtPeriod(Duration.standardMinutes(1))).OrFinally(AtWatermark()),
+                    Repeat(AtCount(1))
+                  )
+                )
+  .apply(Sum.integersPerKey());
+```
+手动指定提前和延迟触发。
 
+但是，这很罗嗦。并鉴于`repeated-early | on-time | repeated-late`触发非常普遍，我们在`Dataflow`中提供了一个自定义的(但是语义上相同的)API，使得指定这样的触发器更简单和更清晰：
+```
+PCollection<KV<String, Integer>> scores = input
+  .apply(Window.into(FixedWindows.of(Duration.standardMinutes(2)))
+               .triggering(
+                 AtWatermark()
+                   .withEarlyFirings(AtPeriod(Duration.standardMinutes(1)))
+                   .withLateFirings(AtCount(1))))
+  .apply(Sum.integersPerKey());
+```
+通过`early/late`API进行提早或延迟触发。
 
+在流式引擎上执行上述两段代码(与之前一样使用完`Perfect watermarks`和`Heuristic watermarks`)，然后生成如下所示的结果：
 
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Stream/%E6%89%B9%E5%A4%84%E7%90%86%E4%B9%8B%E5%A4%96%E7%9A%84%E6%B5%81%E5%BC%8F%E4%B8%96%E7%95%8C%E4%B9%8B%E4%BA%8C-8.png?raw=true)
 
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Stream/%E6%89%B9%E5%A4%84%E7%90%86%E4%B9%8B%E5%A4%96%E7%9A%84%E6%B5%81%E5%BC%8F%E4%B8%96%E7%95%8C%E4%B9%8B%E4%BA%8C-9.png?raw=true)
 
-
-
-
-
+对于第二个窗口中的`watermark`太慢的情况，[12：02,12：04]：我们现在每分钟提供一次定期的提早更新。在`Perfect watermarks`情况下，差异是最为严峻的，时间从首次输出的几乎七分钟减少一半到三分半；`Heuristic watermarks`的情况下也有明显的改善。现在两个版本都可以随着时间的推移提供稳定的修改(值为7,14，然后是22)，在输入变为完成和实现窗口的最终输出窗格之间具有相对最小的延迟。
 
 
 
