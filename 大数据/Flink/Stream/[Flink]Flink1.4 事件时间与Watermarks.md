@@ -24,11 +24,11 @@ categories: Flink
 
 下图显示了具有时间戳(逻辑上)的事件流以及内嵌的`watermark`。在这个例子中，事件是有序的(相对于它们的时间戳)，这意味着`watermark`只是数据流中的周期性标记。
 
-![](https://ci.apache.org/projects/flink/flink-docs-release-1.3/fig/stream_watermark_in_order.svg)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Flink/%E4%BA%8B%E4%BB%B6%E6%97%B6%E9%97%B4%E4%B8%8EWatermarks-1.png?raw=true)
 
 `watermark`对于乱序数据流至关重要，如下图所示，事件并未按照时间戳进行排序。通常，`watermark`表示在数据流中那个时刻小于时间戳的所有事件都已经到达。一旦`watermark`到达算子，算子就可以将其内部的事件时间提到`watermark`的那个值。
 
-![](https://ci.apache.org/projects/flink/flink-docs-release-1.3/fig/stream_watermark_out_of_order.svg)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Flink/%E4%BA%8B%E4%BB%B6%E6%97%B6%E9%97%B4%E4%B8%8EWatermarks-2.png?raw=true)
 
 
 ### 2. 数据流中的并行Watermarks
@@ -41,7 +41,7 @@ categories: Flink
 
 下图显示了事件和`watermarks`流经并行流的的示例，以及跟踪事件时间的算子:
 
-![](https://ci.apache.org/projects/flink/flink-docs-release-1.3/fig/parallel_streams_watermarks.svg)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Flink/%E4%BA%8B%E4%BB%B6%E6%97%B6%E9%97%B4%E4%B8%8EWatermarks-3.png?raw=true)
 
 ### 3. 延迟元素
 
