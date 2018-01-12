@@ -110,22 +110,31 @@ PCollection<KV<String, Integer>> scores = input
 
 ![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Stream/%E6%89%B9%E5%A4%84%E7%90%86%E4%B9%8B%E5%A4%96%E7%9A%84%E6%B5%81%E5%BC%8F%E4%B8%96%E7%95%8C%E4%B9%8B%E4%BA%8C-5.png?raw=true)
 
-代表现实世界的那个弯弯曲曲的红线，实际上就是`watermark`；随着处理时间的推移能够获取事件时间完整性的进展(it captures the progress of event time completeness as processing time progresses.)。从概念上将，可以`watermark`看作为一个函数，`F（P） - > E`，输入一个处理时间点输出一个事件时间点。(更准确地说，函数的输入实际上是某个时间点在管道中观察到`watermark`的上游的所有东西的当前状态：输入源，缓冲的数据，正在处理的数据等；但从概念上讲，可以简单的理解为将处理时间到事件时间的映射)(More accurately, the input to the function is really the current state of everything upstream of the point in the pipeline where the watermark is being observed: the input source, buffered data, data actively being processed, etc.; but conceptually, it’s simpler to think of it as a mapping from processing time to event time.)。事件时间点E是表示事件时间小于E的那些所有输入数据都已经被看到了。换句话说，我们断言不会再看到事件时间小于E的其他数据了。根据`watermark`的类型，完美或启发式，上述断言可能分别是一个严格的保证或一个受过教育的猜测：
+代表现实世界的那个弯弯曲曲的红线，实际上就是`watermark`；随着处理时间的推移能够获取事件时间完整性的进展(it captures the progress of event time completeness as processing time progresses.)。从概念上将，可以`watermark`看作为一个函数，`F（P） - > E`，输入一个处理时间点输出一个事件时间点。(更准确地说，函数的输入实际上是某个时间点在管道中观察到`watermark`的上游的所有东西的当前状态：输入源，缓冲的数据，正在处理的数据等；但从概念上讲，可以简单的理解为将处理时间到事件时间的映射)(More accurately, the input to the function is really the current state of everything upstream of the point in the pipeline where the watermark is being observed: the input source, buffered data, data actively being processed, etc.; but conceptually, it’s simpler to think of it as a mapping from processing time to event time.)。事件时间点E是表示事件时间小于E的那些所有输入数据都已经被看到了。换句话说，我们断言不会再看到事件时间小于E的其他数据了。根据`watermark`的类型，完美或启发式，上述断言分别是一个严格保证的或一个与依据的猜测：
+- `Perfect watermarks:`：在对所有输入数据充分了解的情况下，可以构建`Perfect watermarks`；在这种情况下，没有延迟的数据；所有数据要不提前，要不准时。
+- `Heuristic watermarks`：对于许多分布式输入源，充分了解输入数据是不切实际的，在这种情况下，下一个最佳选择是`Heuristic watermarks`。`Heuristic watermarks`使用任何可以获取到的输入信息(分区，分区内的排序(如果有的话)，文件的增长率等)来提供尽可能准确的进度估计。在许多情况下，这样的`watermark`在预测中是非常准确的。即使如此，`Heuristic watermarks`的使用意味着有时可能是错误的，这将导致延迟数据。我们将在下面的触发器部分中了解如何处理延迟数据。
 
+`watermark`是一个非常吸引人并且复杂的话题。现在，为了更好地理解`watermark`的作用以及它的一些缺点，我们来看看两个仅使用`watermark`的流引擎的例子，确定在执上述代码中的窗口化管道时何时实现输出(materialize output)。左边的例子使用的是`Perfect watermarks`; 右边使用的是`Heuristic watermarks`。
 
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Stream/%E6%89%B9%E5%A4%84%E7%90%86%E4%B9%8B%E5%A4%96%E7%9A%84%E6%B5%81%E5%BC%8F%E4%B8%96%E7%95%8C%E4%B9%8B%E4%BA%8C-6.png?raw=true)
 
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Stream/%E6%89%B9%E5%A4%84%E7%90%86%E4%B9%8B%E5%A4%96%E7%9A%84%E6%B5%81%E5%BC%8F%E4%B8%96%E7%95%8C%E4%B9%8B%E4%BA%8C-7.png?raw=true)
 
+在这两种情况下，随着`watermark`到达窗口的末端，窗口被实现(windows are materialized)。两次执行的主要区别在于右侧的`watermark`计算使用的是启发式算法没有考虑到`9`这个值，这很大程度上改变了`watermark`的形状。这些例子突出了`watermark`(以及其他的完整性概念)的两个缺点，具体来说可以是：
 
+(1)太慢：当任何类型的`watermark`由于已知未处理的数据(例如，由于网络带宽限制而缓慢增长的输入日志)明确地延迟时，如果`watermark`的前进是唯一影响结果的因素，那么直接转换为在输出中的延迟(When a watermark of any type is correctly delayed due to known unprocessed data that translates directly into delays in output if advancement of the watermark is the only thing you depend on for stimulating results.)。
 
+这在左图中是最明显的，其中延迟到达的数据9在所有后续窗口中都保持`watermark`，即使这些窗口的输入数据更早完成。这对于第二个窗口`[12：02,12：04]`尤其明显，从窗口中第一个值出现开始，直到我们看到窗口的所有结果为止，花费将近7分钟的时间。这个例子中的`Heuristic watermarks`不会遇到相同的问题(到输出5分钟)，但不要认为`Heuristic watermarks`永远不会受到`watermark`延迟的影响；这实际上只是我在这个具体例子中选择从启发式水印中省略的记录的结果。
 
+这里非常重要的一点是：虽然`watermark`提供了一个非常有用的完整性概念，但是从延迟角度来看，根据完整性生成输出往往不是很理想的。设想一个仪表板，其中包含有价值的指标，按小时或天划分窗口。你不太可能要等一小时或一天才能看到当前窗口的结果；这是相比于此系统使用经典批处理系统的难点之一。相反，随着时间推移，窗口根据输入进行更改，最终变的完整，这种方式更好一些。
 
+(2)太快：当`Heuristic watermarks`错误的比原本的提前了，在`watermark`之前的带有事件时间的数据可能延迟到达，并产生延迟数据。在右边的例子就发生了这样的情况：在观察到该窗口的所有输入数据之前，`watermark`就提前到达第一个窗口末端，导致错误的输出值`5`而不是`14`。这个缺点是`Heuristic watermarks`的一个严重问题；它们的启发特性意味着它们有时会出错。因此，如果你关心正确性，只依靠它们来确定何时输出是不够的。
 
+在`Streaming 101`中，我对完整性的概念做了一些强调性的描述，它不足以应对无限数据流的无序处理。上述两个缺点，`watermark`太慢或太快，是这个论点的基础。你不能寄希望系统只依赖完整性就能获得低延迟和正确性。触发器就是为了解决这些缺点而引入的。
 
+#### 3.2 When: Triggers
 
-
-
-
-
+触发器(`Triggers`)是"处理时间什么时候被物化的？"问题答案的后半部分。触发器声明基于处理时间窗口什么时候输出(尽管触发器本身可以根据其他时间概念作出上述决策，例如基于事件时间的`watermark`处理)。窗口的每个特定输出都称为窗口的窗格。
 
 
 
