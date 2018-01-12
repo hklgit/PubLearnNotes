@@ -3,6 +3,7 @@
 - [ ] https://data-artisans.com/blog/how-apache-flink-enables-new-streaming-applications-part-1
 - [ ] https://flink.apache.org/news/2015/12/04/Introducing-windows.html
 - [ ] https://data-artisans.com/blog/high-throughput-low-latency-and-exactly-once-stream-processing-with-apache-flink
+- [ ] https://data-artisans.com/blog/queryable-state-use-case-demo
 
 > Hadoop
 
