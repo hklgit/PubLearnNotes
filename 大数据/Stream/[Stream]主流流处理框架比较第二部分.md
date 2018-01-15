@@ -1,7 +1,7 @@
 ---
 layout: post
 author: 侠天
-title: Stream 主流流处理框架比较(2)
+title: Stream 主流流处理框架比较第二部分
 date: 2018-01-10 16:31:01
 tags:
   - Stream
