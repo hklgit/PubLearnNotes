@@ -31,11 +31,11 @@ counts.print
 senv.execute("ProcessingTime processing example")
 ```
 
-#### 1.1 消息到达无延迟
+#### 1.1 消息无延迟到达
 
 假设源分别在第13秒产生两个类型a的消息以及在第16秒产生一个消息。(小时和分钟不重要，因为窗口大小只有10秒)。
 
-![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Flink/%E5%9B%BE%E8%A7%A3%E4%BA%8B%E4%BB%B6%E6%97%B6%E9%97%B4%E4%B8%8EWatermarks-1.png?raw=true)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Flink/%E5%9B%BE%E8%A7%A3%E4%BA%8B%E4%BB%B6%E6%97%B6%E9%97%B4%E4%B8%8EWatermarks-0.png?raw=true)
 
 这些消息将落入如下所示窗口中。前两个在第13秒产生的消息将落入窗口1`[5s-15s]`和窗口2`[10s-20s]`中，第三个在第16秒产生的消息将落入窗口2`[10s-20s]`和窗口3`[15s-25s]`中。每个窗口发出的最终计数分别为(a，2)，(a，3)和(a，1)。
 
