@@ -9,7 +9,7 @@ tags:
 categories: Flink
 ---
 
-本节适用于在事件时间上运行的程序。有关事件时间，处理时间和提取时间的介绍，请参阅[[Flink]Flink1.3 Stream指南六 事件时间与处理时间]()。
+本节适用于在事件时间上运行的程序。有关事件时间，处理时间和提取时间的介绍，请参阅[Flink1.4 事件时间与处理时间](http://smartsi.club/2018/01/04/Flink/[Flink]Flink1.4%20%E4%BA%8B%E4%BB%B6%E6%97%B6%E9%97%B4%E4%B8%8E%E5%A4%84%E7%90%86%E6%97%B6%E9%97%B4/)。
 
 为了处理事件时间，流处理程序需要相应地设置`TimeCharacteristic`。
 
