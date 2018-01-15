@@ -279,7 +279,7 @@ class PunctuatedAssigner extends AssignerWithPunctuatedWatermarks[MyEvent] {
 
 下图显示了如何使用每个`Kafka`分区生成`watermark`，以及在这种情况下`watermark`如何通过流数据流进行传播:
 
-![](https://ci.apache.org/projects/flink/flink-docs-release-1.3/fig/parallel_kafka_watermarks.svg)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Flink/%E7%94%9F%E6%88%90%E6%97%B6%E9%97%B4%E6%88%B3%E4%B8%8EWatermarks-1.png?raw=true)
 
 Java版本:
 ```java
