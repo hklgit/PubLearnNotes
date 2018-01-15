@@ -1,6 +1,17 @@
-本节适用于在事件时间上运行的程序。有关事件时间，处理时间和提取时间的介绍，请参阅[[Flink]Flink1.3 Stream指南六 事件时间与处理时间](http://blog.csdn.net/sunnyyoona/article/details/78363438)。
+---
+layout: post
+author: sjf0115
+title: Flink1.4 生成时间戳与Watermarks
+date: 2018-01-15 09:47:01
+tags:
+  - Flink
 
-为了处理事件时间，流处理程序需要相应地设置时间特性(time characteristic)。
+categories: Flink
+---
+
+本节适用于在事件时间上运行的程序。有关事件时间，处理时间和提取时间的介绍，请参阅[[Flink]Flink1.3 Stream指南六 事件时间与处理时间]()。
+
+为了处理事件时间，流处理程序需要相应地设置`TimeCharacteristic`。
 
 Java版本:
 ```java
@@ -16,27 +27,27 @@ env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
 
 ### 1. 分配时间戳
 
-为了处理事件时间，Flink需要知道事件的时间戳，这意味着流中的每个元素都需要分配事件时间戳。这通常通过访问/提取元素中某个字段的时间戳来完成。时间戳分配与生成`watermarks`相结合，告诉系统有关事件时间的进度。分配时间戳和生成`watermarks`有两种方法：
+为了处理事件时间，Flink需要知道事件的时间戳，这意味着流中的每个元素都需要分配事件时间戳。这通常通过访问/提取元素中某个字段的时间戳来完成。时间戳分配与生成`watermarks`相结合，告诉系统有关事件时间的进度`progress`。分配时间戳和生成`watermarks`有两种方法：
 - 直接在数据流源中分配与生成
-- 通过时间戳分配器/`watermark`生成器：在`Flink`时间戳分配器中同时定义要发送的watermarks
+- 通过时间戳分配器/`watermark`生成器：在`Flink`时间戳分配器中也会定义要发送的`watermarks`
 
 备注:
 ```
 时间戳和watermarks都是从Java历元1970-01-01T00：00：00Z以来的毫秒数。
 ```
 
-#### 1.1 带有时间戳和watermarks的源函数
+#### 1.1 带有时间戳和watermarks的数据源函数
 
-数据流的源还可以直接为它们产生的元素分配时间戳，并且它们也可以生成watermarks。这样完成以后，就不再需要时间戳分配器。
+流数据源还可以直接为它们产生的元素分配时间戳，并且也可以发送`watermarks`。如果数据源分配了时间戳，那么就不需要时间戳分配器。
 
 备注:
 ```
-如果继续使用时间戳分配器，源提供的任何时间戳和watermarks将被覆盖。
+如果继续使用时间戳分配器，将会覆盖数据源提供的时间戳和watermarks。
 ```
 
-如果直接向源中的元素分配时间戳，源必须在`SourceContext上`使用`collectWithTimestamp()`方法。如果要生成watermarks，源必须调用`emitWatermark（Watermark）`函数。
+如果直接向数据源中的元素分配时间戳，数据源必须使用`SourceContext上`的`collectWithTimestamp()`方法。如果要生成`watermarks`，数据源必须调用`emitWatermark（Watermark）`函数。
 
-以下是分配时间戳并生成watermarks的(非检查点)源的简单示例：
+以下是分配时间戳并生成`watermarks`的源(non-checkpointed)的简单示例：
 
 Java版本:
 ```java
@@ -69,13 +80,13 @@ override def run(ctx: SourceContext[MyType]): Unit = {
 
 #### 1.2 时间戳分配器/Watermark生成器
 
-时间戳分配器接收数据流并产生具有时间戳元素和Watermark的新数据流。如果原始流已经拥有时间戳或watermarks，那么时间戳分配器将覆盖它们。
+时间戳分配器接收数据流并产生一个新的数据流，包含带有时间戳的元素和`Watermark`。如果原始流已经拥有时间戳或`watermarks`，那么如果使用时间戳分配器将会覆盖它们。
 
-时间戳分配器通常在数据源之后立马指定，但也不是严格遵循这样的规则。例如，一个常见的模式是在时间戳分配器之前需要进行解析(MapFunction)和过滤(FilterFunction)。无论如何，时间戳分配器都需要在第一个基于事件时间的操作(例如第一个窗口操作)之前被指定。但也有特殊情况，当使用Kafka作为流作业的源时，Flink允许在源(消费者)内部定义时间戳分配器/watermarks生成器。有关如何执行此操作的更多信息，请参见[Kafka Connector文档](https://ci.apache.org/projects/flink/flink-docs-release-1.3/dev/connectors/kafka.html)。
+时间戳分配器通常在数据源之后立马指定，但也不是严格遵循这样的原则。例如，一个常见的模式是在时间戳分配器之前需要进行解析(`MapFunction`)和过滤(`FilterFunction`)。无论如何，时间戳分配器都需要在第一个基于事件时间的操作(例如第一个窗口操作)之前被指定。但也有特殊情况，当使用`Kafka`作为流作业的数据源时，`Flink`允许在数据源(消费者)内部定义时间戳分配器/`watermarks`生成器。有关如何执行此操作的更多信息，请参见[Kafka Connector文档](https://ci.apache.org/projects/flink/flink-docs-release-1.3/dev/connectors/kafka.html)。
 
 备注:
 ```
-本节的其余部分介绍了程序员为了创建自己的时间戳提取器/watermarks生成器而必须实现的主要接口。
+本节的其余部分介绍了程序员为了创建自己的时间戳提取器/watermarks生成器而必须实现的主要接口。如果要查看Flink内置的执行器，请参阅[Pre-defined Timestamp Extractors / Watermark Emitters](https://ci.apache.org/projects/flink/flink-docs-release-1.4/dev/event_timestamp_extractors.html)
 ```
 
 Java版本:
@@ -118,13 +129,13 @@ withTimestampsAndWatermarks
         .addSink(...)
 ```
 
-##### 1.2.1 周期性生成Watermarks
+##### 1.2.1 Periodic Watermarks 分配器
 
-`AssignerWithPeriodicWatermarks`分配时间戳并定期生成Watermarks(可能取决于流元素，或纯粹基于处理时间)。
+`AssignerWithPeriodicWatermarks`分配时间戳并定期生成`Watermarks`(可能取决于流元素，或纯粹基于处理时间)。
 
-通过`ExecutionConfig.setAutoWatermarkInterval()`定义生成Watermarks的时间间隔（每n毫秒）。每次调用分配器的`getCurrentWatermark()`方法，如果返回的Watermark非null，并且大于先前的Watermark，则会生成新的Watermarks。
+通过`ExecutionConfig.setAutoWatermarkInterval()`定义`Watermarks`的时间间隔(每n毫秒)。每次调用分配器的`getCurrentWatermark()`方法，如果返回的`Watermark`非null，并且大于先前的`Watermark`，则会发送(emitted)这个新的`Watermarks`。
 
-以下是带有周期性生成Watermark的时间戳分配器的两个简单示例:
+以下是带有周期性`Watermark`的时间戳分配器的两个简单示例:
 
 Java版本:
 ```java
@@ -218,11 +229,11 @@ class TimeLagWatermarkGenerator extends AssignerWithPeriodicWatermarks[MyEvent] 
 }
 ```
 
-##### 1.2.2 间断性生成Watermarks
+##### 1.2.2 Punctuated Watermarks 分配器
 
-只要某个事件表明一个新的Watermarks可能要生成时，都要生成Watermarks(To generate watermarks whenever a certain event indicates that a new watermark might be generated)，请使用`AssignerWithPunctuatedWatermarks`方法。对于此类，Flink将首先调用`extractTimestamp()`方法为元素分配时间戳，然后立即调用该元素上的`checkAndGetNextWatermark()`方法。
+每当某个事件表明一个新的`Watermarks`可能要生成时，需要调用`AssignerWithPunctuatedWatermarks`方法来生成`Watermarks`(To generate watermarks whenever a certain event indicates that a new watermark might be generated, use AssignerWithPunctuatedWatermarks)。对于这个类，`Flink`首先调用`extractTimestamp()`方法为元素分配时间戳，然后立即调用该元素上的`checkAndGetNextWatermark()`方法。
 
-把在`extractTimestamp()`方法中分配的时间戳传递给`checkAndGetNextWatermark()`方法，并且可以决定是否要生成Watermarks。只要`checkAndGetNextWatermark()`方法返回非null的Watermark，并且该Watermark比以前最新的Watermark都大，则会发送新的Watermark。
+把在`extractTimestamp()`方法中分配的时间戳传递给`checkAndGetNextWatermark()`方法，并且可以决定是否要生成`Watermarks`。只要`checkAndGetNextWatermark()`方法返回非null的`Watermark`，并且该`Watermark`比以前最新的`Watermark`都大，则会发送这个新的`Watermark`。
 
 Java版本:
 ```java
@@ -260,13 +271,13 @@ class PunctuatedAssigner extends AssignerWithPunctuatedWatermarks[MyEvent] {
 
 ### 2. 每个Kafka分区一个时间戳
 
-当使用Apache Kafka作为数据源时，每个Kafka分区都可能有一个简单的事件时间模式(时间戳按升序递增或有界无序)。然而，当消耗来自Kafka的流时，多个分区通常并行消耗，来自多个分区的事件会交叉在一起，破坏每个分区模式(interleaving the events from the partitions and destroying the per-partition patterns)。
+当使用`Apache Kafka`作为数据源时，每个`Kafka`分区都可能有一个简单的事件时间模式(时间戳按升序递增或有界无序)。然而，当消费`Kafka`中的流时，多个分区通常并行消费，来自多个分区的事件会交叉在一起，破坏每个分区模式。
 
-在这种情况下，你可以使用Flink的Kafka分区感知Watermark的生成(Flink’s Kafka-partition-aware watermark generation)。使用该特性，在Kafka消费者中，每个Kafka分区都生成watermark，并且每个分区的watermark的合并方式与在数据流shuffle上合并方式相同(the per-partition watermarks are merged in the same way as watermarks are merged on stream shuffles.)。
+在这种情况下，你可以使用`Flink`的`Kafka`分区感知`Watermark`的生成(Kafka-partition-aware watermark generation)。使用该特性，在`Kafka`消费者中，每个`Kafka`分区都生成`watermark`，并且每个分区的`watermark`的合并方式与在数据流`shuffle`上合并方式相同(the per-partition watermarks are merged in the same way as watermarks are merged on stream shuffles.)。
 
-例如，如果在每个Kafka分区中的事件时间戳严格递增，则使用递增时间戳watermark生成器生成每个分区的watermark，整体上将会产生完美的watermark。
+例如，如果在每个`Kafka`分区中的事件时间戳严格递增，则使用[递增时间戳`watermark`](https://ci.apache.org/projects/flink/flink-docs-release-1.4/dev/event_timestamp_extractors.html#assigners-with-ascending-timestamps)生成器生成每个分区的`watermark`，在整体`watermark`上产生的结果也非常好。
 
-下面的插图显示了如何使用每个Kafka分区生成watermark，以及在这种情况下watermark如何通过流数据流进行传播:
+下图显示了如何使用每个`Kafka`分区生成`watermark`，以及在这种情况下`watermark`如何通过流数据流进行传播:
 
 ![](https://ci.apache.org/projects/flink/flink-docs-release-1.3/fig/parallel_kafka_watermarks.svg)
 
@@ -294,5 +305,9 @@ kafkaSource.assignTimestampsAndWatermarks(new AscendingTimestampExtractor[MyType
 val stream: DataStream[MyType] = env.addSource(kafkaSource)
 ```
 
+备注:
+```
+Flink版本:1.4
+```
 
-原文:https://ci.apache.org/projects/flink/flink-docs-release-1.3/dev/event_timestamps_watermarks.html#timestamp-assigners--watermark-generators
+原文:https://ci.apache.org/projects/flink/flink-docs-release-1.4/dev/event_timestamps_watermarks.html
