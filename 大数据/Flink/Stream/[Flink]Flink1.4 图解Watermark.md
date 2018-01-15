@@ -1,7 +1,7 @@
 ---
 layout: post
 author: sjf0115
-title: Flink1.4 图解事件时间戳与Watermarks
+title: Flink1.4 图解Watermark
 date: 2018-01-15 14:47:01
 tags:
   - Flink
@@ -37,7 +37,7 @@ senv.execute("ProcessingTime processing example")
 
 ![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Flink/%E5%9B%BE%E8%A7%A3%E4%BA%8B%E4%BB%B6%E6%97%B6%E9%97%B4%E4%B8%8EWatermarks-0.png?raw=true)
 
-这些消息将落入如下所示窗口中。前两个在第13秒产生的消息将落入窗口1`[5s-15s]`和窗口2`[10s-20s]`中，第三个在第16秒产生的消息将落入窗口2`[10s-20s]`和窗口3`[15s-25s]`中。每个窗口发出的最终计数分别为(a，2)，(a，3)和(a，1)。
+这些消息将落入如下所示窗口中。前两个在第13秒产生的消息将落入窗口1`[5s-15s]`和窗口2`[10s-20s]`中，第三个在第16秒产生的消息将落入窗口2`[10s-20s]`和窗口3`[15s-25s]`中。每个窗口得到的最终计数分别为(a，2)，(a，3)和(a，1)。
 
 ![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Flink/%E5%9B%BE%E8%A7%A3%E4%BA%8B%E4%BB%B6%E6%97%B6%E9%97%B4%E4%B8%8EWatermarks-2.png?raw=true)
 
@@ -45,15 +45,15 @@ senv.execute("ProcessingTime processing example")
 
 #### 1.2 消息延迟到达
 
-现在假设其中一条消息(在第13秒产生)延迟到达6秒(第19秒到达)，可能是由于某些网络拥塞。你能猜测这个消息会落入哪个窗口？
+现在假设其中一条消息(在第13秒产生)可能由于网络拥塞延迟6秒(第19秒到达)。你能猜测出这个消息会落入哪个窗口？
 
 ![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Flink/%E5%9B%BE%E8%A7%A3%E4%BA%8B%E4%BB%B6%E6%97%B6%E9%97%B4%E4%B8%8EWatermarks-3.png?raw=true)
 
-延迟的消息落入窗口2和窗口3中，因为19在10-20和15-25之间。在窗口2中计算没有任何问题(因为消息本应该落入这个窗口)，但是它影响了窗口1和窗口3的计算结果。我们现在将尝试使用`EventTime`处理来解决这个问题。
+延迟的消息落入窗口2和窗口3中，因为19在10-20和15-25之间。窗口2的计算没有任何问题(因为消息本应该落入这个窗口)，但是它影响了窗口1和窗口3的计算结果。现在我们将尝试使用基于`EventTime`处理来解决这个问题。
 
 ### 2. 基于EventTime的系统
 
-要使用`EventTime`处理，我们需要一个时间戳提取器，从消息中提取事件时间信息。请记住，消息是有格式值，时间戳。 `extractTimestamp`方法获取时间戳部分并将其作为Long类型返回。现在忽略`getCurrentWatermark`方法，我们稍后再回来：
+要使用基于`EventTime`处理，我们需要一个时间戳提取器，从消息中提取事件时间信息。请记住，消息是有格式值，时间戳。 `extractTimestamp`方法获取时间戳并将其作为Long类型返回。现在忽略`getCurrentWatermark`方法，我们稍后会介绍：
 
 ```
 class TimestampExtractor extends AssignerWithPeriodicWatermarks[String] with Serializable {
@@ -83,31 +83,36 @@ senv.execute("EventTime processing example")
 
 ![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Flink/%E5%9B%BE%E8%A7%A3%E4%BA%8B%E4%BB%B6%E6%97%B6%E9%97%B4%E4%B8%8EWatermarks-4.png?raw=true)
 
-结果看起来更好一些，窗口2和3现在是正确的结果，但是窗口1仍然是有问题的。Flink没有将延迟的消息分配给窗口3，因为现在检查消息的事件时间，并且知道它不应该在那个窗口中。但是为什么没有将消息分配给窗口1？原因是当延迟的信息到达系统时(第19秒)，窗口1的评估(
-evaluation)已经完成了(第15秒)。现在让我们尝试通过使用Watermark来解决这个问题。
+结果看起来更好一些，窗口2和3现在是正确的结果，但是窗口1仍然是有问题的。Flink没有将延迟的消息分配给窗口3，是因为在当前检查消息的事件时间，知道它不应该出现在窗口3中。但是为什么没有将消息分配给窗口1？原因是当延迟的信息到达系统时(第19秒)，窗口1的评估(
+evaluation)已经完成了(第15秒)。现在让我们尝试通过使用`Watermark`来解决这个问题。
 
 ### 3. Watermark
 
-Watermark是一个非常重要同时也是非常有趣的想法，我将尽力给你一个简短的概述。如果你有兴趣了解更多信息，你可以从Google中观看这个令人敬畏的[演讲](https://www.youtube.com/watch?v=3UfZN59Nsk8)，还可以从dataArtisans那里阅读此[博客](https://data-artisans.com/blog/how-apache-flink-enables-new-streaming-applications-part-1)。 Watermark本质上是一个时间戳。当Flink中的算子(operator)接收到Watermark时，它明白它不会看到比该时间戳更早的消息。因此，在`EventTime`中，Watermark也可以被认为是告诉Flink它有多远的一种方式(Hence watermark can also be thought of as a way of telling Flink how far it is, in the “EventTime”.)。
+`Watermark`是一个非常重要概念，我将尽力给你一个简短的概述。如果你有兴趣了解更多信息，你可以从`Google`中观看这个[演讲](https://www.youtube.com/watch?v=3UfZN59Nsk8)，还可以从`dataArtisans`那里阅读此[博客](https://data-artisans.com/blog/how-apache-flink-enables-new-streaming-applications-part-1)。 `Watermark`本质上是一个时间戳。当`Flink`中的算子(operator)接收到`Watermark`时，它明白它不会再看到比该时间戳更早的消息。因此`Watermark`也可以被认为是告诉`Flink`在`EventTime`中多远的一种方式。
 
-在这个例子中Watermark的目的，就是把它看作是告诉Flink一个消息延迟多少的方式。在最后一次尝试中，我们将Watermark设置为当前系统时间。因此，不会有任何延迟的消息。我们现在将Watermark设置为当前时间减去5秒，这告诉Flink希望消息最多延迟5秒钟，这是因为每个窗口仅在Watermark通过时被评估。由于我们的Watermark是当前时间减去5秒，所以第一个窗口[5s-15s]将会在第20秒被评估。类似地，窗口[10s-20s]将会在第25秒进行评估，依此类推(译者注:窗口延迟评估)。
+在这个例子的目的，就是把`Watermark`看作是告诉`Flink`一个消息可能延迟多少的方式。在上一次尝试中，我们将`Watermark`设置为当前系统时间。因此，期望消息没有任何的延迟。现在我们将`Watermark`设置为当前时间减去5秒，这就告诉`Flink`我们期望消息最多延迟5秒钟，这是因为每个窗口仅在`Watermark`通过时被评估。由于我们的`Watermark`是当前时间减去5秒，所以第一个窗口`[5s-15s]`将会在第20秒被评估。类似地，窗口`[10s-20s]`将会在第25秒进行评估，依此类推(译者注:窗口延迟评估)。
 
 ```
 override def getCurrentWatermark(): Watermark = {
       new Watermark(System.currentTimeMillis - 5000)
 }
 ```
-通常最好保持接收到的最大时间戳，并创建最大时间减去预期延迟时间的Watermark，而不是用当前系统时间减去延迟时间(create the watermark with max - expected delay, instead of subtracting from the current system time)。
+这里我们假定事件时间比当前系统时间晚5秒，但事实并非总是如此(有可能6秒，7秒等等)。在许多情况下，最好保留迄今为止收到的最大时间戳(从消息中提取)。使用迄今为止收到的最大时间戳减去预期的延迟时间来代替用当前系统时间减去预期的延迟时间。
 
 进行上述更改后运行代码的结果是：
 
 ![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Flink/%E5%9B%BE%E8%A7%A3%E4%BA%8B%E4%BB%B6%E6%97%B6%E9%97%B4%E4%B8%8EWatermarks-5.png?raw=true)
 
-最后我们得到了正确的结果，所有这三个窗口现在都按照预期的方式发送计数，就是(a，2)，(a，3)和(a，1)。
+
+最后我们得到了正确的结果，所有窗口都按照预期输出计数，(a，2)，(a，3)和(a，1)。
+
+### 4. Allowed Lateness
 
 我们也可以使用`AllowedLateness`功能设置消息的最大允许延迟时间来解决这个问题。
 
-### 4. 结论
+在我们之前使用`Watermark - delay`的方法中，只有当`Watermark`超过`window_length + delay`时，窗口才会被触发计算。如果你想要适应延迟事件，并希望窗口按时触发，则可以使用`Allowed Lateness`。 如果设置了允许延迟，`Flink`不会丢弃消息，除非它超过了`window_end_time + delay`的延迟时间。一旦收到一个延迟消息，`Flink`会提取它的时间戳并检查是否在允许的延迟时间内，然后检查是否触发窗口(按照触发器设置)。 因此，请注意，在这种方法中可能会多次触发窗口，如果你仅需要一次处理，你需要使你的`sink`具有幂等性。
+
+### 5. 结论
 
 实时流处理系统的重要性日益增长，延迟消息的处理是你构建任何此类系统的一部分。在这篇博文中，我们看到延迟到达的消息会影响系统的结果，以及如何使用ApacheFlink的事件时间功能来解决它们。
 
