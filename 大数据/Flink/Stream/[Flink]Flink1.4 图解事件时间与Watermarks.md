@@ -35,11 +35,11 @@ senv.execute("ProcessingTime processing example")
 
 假设源分别在第13秒产生两个类型a的消息以及在第16秒产生一个消息。(小时和分钟不重要，因为窗口大小只有10秒)。
 
-![](http://img.blog.csdn.net/20171029180052930?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvU3VubnlZb29uYQ==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Flink/%E5%9B%BE%E8%A7%A3%E4%BA%8B%E4%BB%B6%E6%97%B6%E9%97%B4%E4%B8%8EWatermarks-1.png?raw=true)
 
 这些消息将落入如下所示窗口中。前两个在第13秒产生的消息将落入窗口1`[5s-15s]`和窗口2`[10s-20s]`中，第三个在第16秒产生的消息将落入窗口2`[10s-20s]`和窗口3`[15s-25s]`中。每个窗口发出的最终计数分别为(a，2)，(a，3)和(a，1)。
 
-![](http://img.blog.csdn.net/20171029180104306?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvU3VubnlZb29uYQ==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Flink/%E5%9B%BE%E8%A7%A3%E4%BA%8B%E4%BB%B6%E6%97%B6%E9%97%B4%E4%B8%8EWatermarks-2.png?raw=true)
 
 该输出跟预期的输出是一样的。现在我们看看当一个消息延迟到达系统时会发生什么。
 
@@ -47,7 +47,7 @@ senv.execute("ProcessingTime processing example")
 
 现在假设其中一条消息(在第13秒产生)延迟到达6秒(第19秒到达)，可能是由于某些网络拥塞。你能猜测这个消息会落入哪个窗口？
 
-![](http://img.blog.csdn.net/20171029180114828?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvU3VubnlZb29uYQ==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Flink/%E5%9B%BE%E8%A7%A3%E4%BA%8B%E4%BB%B6%E6%97%B6%E9%97%B4%E4%B8%8EWatermarks-3.png?raw=true)
 
 延迟的消息落入窗口2和窗口3中，因为19在10-20和15-25之间。在窗口2中计算没有任何问题(因为消息本应该落入这个窗口)，但是它影响了窗口1和窗口3的计算结果。我们现在将尝试使用`EventTime`处理来解决这个问题。
 
@@ -81,7 +81,7 @@ senv.execute("EventTime processing example")
 ```
 运行上述代码的结果如下图所示：
 
-![](http://img.blog.csdn.net/20171029180023621?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvU3VubnlZb29uYQ==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Flink/%E5%9B%BE%E8%A7%A3%E4%BA%8B%E4%BB%B6%E6%97%B6%E9%97%B4%E4%B8%8EWatermarks-4.png?raw=true)
 
 结果看起来更好一些，窗口2和3现在是正确的结果，但是窗口1仍然是有问题的。Flink没有将延迟的消息分配给窗口3，因为现在检查消息的事件时间，并且知道它不应该在那个窗口中。但是为什么没有将消息分配给窗口1？原因是当延迟的信息到达系统时(第19秒)，窗口1的评估(
 evaluation)已经完成了(第15秒)。现在让我们尝试通过使用Watermark来解决这个问题。
@@ -101,7 +101,7 @@ override def getCurrentWatermark(): Watermark = {
 
 进行上述更改后运行代码的结果是：
 
-![](http://img.blog.csdn.net/20171029180041319?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvU3VubnlZb29uYQ==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Flink/%E5%9B%BE%E8%A7%A3%E4%BA%8B%E4%BB%B6%E6%97%B6%E9%97%B4%E4%B8%8EWatermarks-5.png?raw=true)
 
 最后我们得到了正确的结果，所有这三个窗口现在都按照预期的方式发送计数，就是(a，2)，(a，3)和(a，1)。
 
