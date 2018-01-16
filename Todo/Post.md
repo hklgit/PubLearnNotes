@@ -4,6 +4,8 @@
 - [ ] https://flink.apache.org/news/2015/12/04/Introducing-windows.html
 - [ ] https://data-artisans.com/blog/high-throughput-low-latency-and-exactly-once-stream-processing-with-apache-flink
 - [ ] https://data-artisans.com/blog/queryable-state-use-case-demo
+- [ ] http://vishnuviswanath.com/flink_trigger_evictor.html
+
 
 > Hadoop
 
