@@ -5,7 +5,7 @@
 - [ ] https://data-artisans.com/blog/high-throughput-low-latency-and-exactly-once-stream-processing-with-apache-flink
 - [ ] https://data-artisans.com/blog/queryable-state-use-case-demo
 - [ ] http://vishnuviswanath.com/flink_trigger_evictor.html
-
+- [ ] http://vishnuviswanath.com/flink_queryable_state1.html
 
 > Hadoop
 
