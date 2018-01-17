@@ -51,7 +51,8 @@
       - [2.2.5.1 Side Outputs](https://ci.apache.org/projects/flink/flink-docs-release-1.4/dev/stream/side_output.html)
     - [2.2.6 Testing]()
       - [2.2.6.1 Testing](https://ci.apache.org/projects/flink/flink-docs-release-1.4/dev/stream/testing.html)
-
+    - [2.2.7 基础]
+      - [2.2.7.1 数据流类型与转换关系](大数据/Flink/Stream/[Flink]Flink1.4 数据流类型与转换关系.md)
   - [2.3 Batch]()
     - [2.3.1 Flink DataSet API Programming Guide](https://ci.apache.org/projects/flink/flink-docs-release-1.4/dev/batch/index.html)
     - [2.3.2 DataSet Transformations](https://ci.apache.org/projects/flink/flink-docs-release-1.4/dev/batch/dataset_transformations.html)
