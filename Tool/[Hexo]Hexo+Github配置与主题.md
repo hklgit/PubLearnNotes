@@ -1,5 +1,6 @@
 ---
 title: Hexo+Github配置与主题
+author: sjf0115
 date: 2017-12-01 19:17:23
 tags:
 - Hexo
@@ -151,27 +152,119 @@ social:
 ```
 如果没有指定图标（带或不带分隔符），则会加载默认图标。
 ```
+Example:
 
-(2) 设定链接的图标，对应的字段是 `social_icons`。其键值格式是 匹配键: Font Awesome 图标名称， 匹配键 与上一步所配置的链接的 显示文本 相同（大小写严格匹配），图标名称 是 Font Awesome 图标的名字（不必带 fa- 前缀）。 enable 选项用于控制是否显示图标，你可以设置成 false 来去掉图标。
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hexo/Hexo+Github%E9%85%8D%E7%BD%AE%E4%B8%8E%E4%B8%BB%E9%A2%98-1.png?raw=true)
 
+(2) 设定链接的图标，对应的字段是 `social_icons`。其键值格式是: `匹配键: Font Awesome 图标名称`， 匹配键与上一步所配置的链接的显示文本相同（大小写严格匹配），图标名称是 `Font Awesome` 图标的名字（不必带 fa- 前缀）。 `enable` 选项用于控制是否显示图标，你可以设置成 `false` 来去掉图标:
+```
+# Social Icons
+social_icons:
+  enable: true
+  # Icon Mappings
+  GitHub: github
+  Twitter: twitter
+  微博: weibo
+```
 
+### 8. 友情链接
 
+编辑 `主题配置文件` 添加：
+```
+友情链接配置示例
+# Blog rolls
+links_icon: link
+links_title: Links
+links_layout: block
+#links_layout: inline
+links:
+  CSDN: http://blog.csdn.net/sunnyyoona
+```
+Example:
 
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hexo/Hexo+Github%E9%85%8D%E7%BD%AE%E4%B8%8E%E4%B8%BB%E9%A2%98-2.png?raw=true)
 
+### 9. 站点建立时间
 
+这个时间将在站点的底部显示，例如 `© 2017 - 2018`。 编辑 `主题配置文件`，新增字段 `since`:
+```
+配置示例
+since: 2017
+```
 
+### 10. 腾讯公益404页面
 
+腾讯公益404页面，寻找丢失儿童，让大家一起关注此项公益事业！效果如下 http://smartsi.club/404.html
 
+使用方法，新建 `404.html` 页面，放到主题的 `source` 目录下，内容如下：
+```
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html;charset=utf-8;"/>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+  <meta name="robots" content="all" />
+  <meta name="robots" content="index,follow"/>
+  <link rel="stylesheet" type="text/css" href="https://qzone.qq.com/gy/404/style/404style.css">
+</head>
+<body>
+  <script type="text/plain" src="http://www.qq.com/404/search_children.js"
+          charset="utf-8" homePageUrl="/"
+          homePageName="回到我的主页">
+  </script>
+  <script src="https://qzone.qq.com/gy/404/data.js" charset="utf-8"></script>
+  <script src="https://qzone.qq.com/gy/404/page.js" charset="utf-8"></script>
+</body>
+</html>
+```
 
+### 11. 开启打赏功能
 
+越来越多的平台（微信公众平台，新浪微博，简书，百度打赏等）支持打赏功能，付费阅读时代越来越近，特此增加了打赏功能，支持微信打赏和支付宝打赏。 只需要 `主题配置文件` 中填入 `微信` 和 `支付宝` 收款二维码图片地址 即可开启该功能：
+```
+打赏功能配置示例
+reward_comment: 坚持原创技术分享，您的支持将鼓励我继续创作！
+wechatpay: /path/to/wechat-reward-image
+alipay: /path/to/alipay-reward-image
+```
 
+### 12. 订阅微信公众号
 
+备注:
+```
+此特性在版本 5.0.1 中引入，要使用此功能请确保所使用的 NexT 版本在此之后
+```
+在每篇文章的末尾显示微信公众号二维码，扫一扫，轻松订阅博客。
 
+在微信公众号平台下载您的二维码，并将它存放于博客`source/uploads/`目录下。
 
+然后编辑 主题配置文件，如下：
+```
+配置示例
+# Wechat Subscriber
+wechat_subscriber:
+  enabled: true
+  qcode: /uploads/wechat-qcode.jpg
+  description: 欢迎您扫一扫上面的微信公众号，订阅我的博客！
+```
 
+### 13. 设置背景动画
 
+`NexT` 自带两种背景动画效果，编辑 `主题配置文件`， 搜索 `canvas_nest` 或 `three_waves`，根据你的需求设置值为 `true` 或者 `false` 即可：
 
-
-### 3. 插件
-
-现在，在NexT配置中，您可以找到每个移动到外部存储库的模块的依赖关系，这些存储库可以通过主要组织链接找到。
+备注:
+```
+three_waves 在版本 5.1.1 中引入。只能同时开启一种背景动画效果。
+```
+canvas_nest 配置示例
+```
+# canvas_nest
+canvas_nest: true //开启动画
+canvas_nest: false //关闭动画
+```
+three_waves 配置示例
+```
+# three_waves
+three_waves: true //开启动画
+three_waves: false //关闭动画
+```
