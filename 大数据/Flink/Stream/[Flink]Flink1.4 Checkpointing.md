@@ -9,12 +9,13 @@ tags:
 categories: Flink
 ---
 
+Flink中的每个函数和操作符都可以是有状态的（请参阅[使用状态]()了解详细信息）。有状态函数在处理单个元素/事件时存储数据。
 
-Every function and operator in Flink can be stateful (see working with state for details). Stateful functions store data across the processing of individual elements/events, making state a critical building block for any type of more elaborate operation.
-
-In order to make state fault tolerant, Flink needs to checkpoint the state. Checkpoints allow Flink to recover state and positions in the streams to give the application the same semantics as a failure-free execution.
+为了使状态容错，Flink需要对状态进行`checkpoint`。`checkpoint`允许`Flink`恢复流中的状态和位置，为应用程序提供与无故障执行相同的语义。
 
 The documentation on streaming fault tolerance describes in detail the technique behind Flink’s streaming fault tolerance mechanism.
+
+关于`Flink`流式容错机制背后的技术请参阅[流式容错]()的详细文档。
 
 ### 1. Prerequisites
 

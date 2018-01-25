@@ -224,8 +224,8 @@ void initializeState(FunctionInitializationContext context) throws Exception;
 每当执行检查点时，将调用`snapshotState（）`。每当用户自定义函数被初始化时，对应的`initializeState（）`都被调用，或当函数被初始化时，或者当函数实际上从早期的检查点恢复时被调用(The counterpart, initializeState(), is called every time the user-defined function is initialized, be that when the function is first initialized or be that when the function is actually recovering from an earlier checkpoint. )。鉴于此，`initializeState（）`不仅是初始化不同类型的状态的地方，而且还包括状态恢复逻辑的位置。
 
 目前支持列表式的`Managed Operator State`。状态应该是一个可序列化的对象列表，相互间彼此独立，因此可以在扩展时重新分配。换句话说，这些对象可以在非`Keyed State`中重新分配比较细的粒度。根据状态访问方法，定义了以下重新分配方案：
-- 均分再分配: Each operator returns a List of state elements. The whole state is logically a concatenation of all lists. On restore/redistribution, the list is evenly divided into as many sublists as there are parallel operators. Each operator gets a sublist, which can be empty, or contain one or more elements. As an example, if with parallelism 1 the checkpointed state of an operator contains elements element1 and element2, when increasing the parallelism to 2, element1 may end up in operator instance 0, while element2 will go to operator instance 1.
-- 合并再分配: Each operator returns a List of state elements. The whole state is logically a concatenation of all lists. On restore/redistribution, each operator gets the complete list of state elements.
+- 均分再分配: 每个算子都返回一个状态元素列表。整个状态在逻辑上是所有列表的连接。在恢复/重新分配时，列表被平分为与并行算子一样多的子列表。每个算子都可以得到一个可以为空或者包含一个或多个元素的子列表。例如，如果并行度为`1`，算子的检查点状态包含元素`element1`和`element2`，将并行度增加到`2`时，`element1`在算子实例0上运行，而`element2`将转至算子实例1。
+- 合并再分配: 每个算子都返回一个状态元素列表。整个状态在逻辑上是所有列表的连接。在恢复/重新分配时，每个算子都可以获得完整的状态元素列表。
 
 下面是一个有状态的`SinkFunction`的例子，它使用`CheckpointedFunction`在将元素输出到外部之前进行缓冲元素。它演示了基本的均分再分配列表状态：
 
@@ -340,9 +340,9 @@ class BufferingSink(threshold: Int = 0)
 }
 ```
 
-The initializeState method takes as argument a FunctionInitializationContext. This is used to initialize the non-keyed state “containers”. These are a container of type ListState where the non-keyed state objects are going to be stored upon checkpointing.
+`initializeState`方法以`FunctionInitializationContext`为参数。这用来初始化非`keyed state`"容器"。这是一个`ListState`类型的容器，非`keyed state`对象将在检查点时存储。
 
-Note how the state is initialized, similar to keyed state, with a StateDescriptor that contains the state name and information about the type of the value that the state holds:
+注意一下状态是如何被初始化，类似于`keyed state`状态，使用包含状态名称和状态值类型相关信息的`StateDescriptor`：
 
 Java版本:
 ```Java
@@ -364,17 +364,17 @@ val descriptor = new ListStateDescriptor[(String, Long)](
 checkpointedState = context.getOperatorStateStore.getListState(descriptor)
 ```
 
-The naming convention of the state access methods contain its redistribution pattern followed by its state structure. For example, to use list state with the union redistribution scheme on restore, access the state by using getUnionListState(descriptor). If the method name does not contain the redistribution pattern, e.g. getListState(descriptor), it simply implies that the basic even-split redistribution scheme will be used.
+状态访问方法的命名约定包含其重新分配模式及其状态结构。 例如，要使用带有联合重新分配方案的列表状态进行恢复，请使用`getUnionListState（descriptor）`访问状态。如果方法名称不包含重新分配模式，例如 `getListState（descriptor）`，这表示使用基本的均分重分配方案。
 
-After initializing the container, we use the isRestored() method of the context to check if we are recovering after a failure. If this is true, i.e. we are recovering, the restore logic is applied.
+在初始化容器之后，我们使用上下文的`isRestored（）`方法来检查失败后是否正在恢复。如果是，即我们正在恢复，将会应用恢复逻辑。
 
-As shown in the code of the modified BufferingSink, this ListState recovered during state initialization is kept in a class variable for future use in snapshotState(). There the ListState is cleared of all objects included by the previous checkpoint, and is then filled with the new ones we want to checkpoint.
+如修改后的`BufferingSink`的代码所示，在状态初始化期间恢复的这个`ListState`被保存在类变量中，以备将来在`snapshotState（）`中使用。 在那里`ListState`清除了前一个检查点包含的所有对象，然后用我们想要进行检查点的新对象填充。
 
-As a side note, the keyed state can also be initialized in the initializeState() method. This can be done using the provided FunctionInitializationContext.
+`Keyed State`也可以在`initializeState（）`方法中初始化。这可以使用提供的`FunctionInitializationContext`完成。
 
 #### 4.2 ListCheckpointed
 
-`ListCheckpointed`接口是`CheckpointedFunction`进行限制的一种变体，它只支持在还原时使用均分再分配方案的列表样式状态。还需要实现以下两种方法：
+`ListCheckpointed`接口是`CheckpointedFunction`进行限制的一种变体，它只支持在恢复时使用均分再分配方案的列表样式状态。还需要实现以下两种方法：
 
 ```
 List<T> snapshotState(long checkpointId, long timestamp) throws Exception;
@@ -382,7 +382,7 @@ List<T> snapshotState(long checkpointId, long timestamp) throws Exception;
 void restoreState(List<T> state) throws Exception;
 ```
 
-On snapshotState() the operator should return a list of objects to checkpoint and restoreState has to handle such a list upon recovery. If the state is not re-partitionable, you can always return a Collections.singletonList(MY_STATE) in the snapshotState().
+`snapshotState()`方法应该返回一个对象列表来进行checkpoint，而`restoreState()`方法在恢复时必须处理这样一个列表。如果状态是不可重分区的，则可以在`snapshotState()`中返回一个`Collections.singletonList(MY_STATE)`。
 
 #### 4.2.1 Stateful Source Functions
 

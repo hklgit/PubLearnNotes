@@ -29,3 +29,5 @@ xiaosi@yoona:~/code/PubLearnNotes$ git remote add origin git@github.com:sjf0115/
 ```
 xiaosi@yoona:~/code/PubLearnNotes$ git push origin master
 ```
+
+git remote add origin git@github.com:sjf0115/HexoBlog.git
