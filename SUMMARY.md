@@ -31,7 +31,7 @@
       - [2.2.1.5 内置的时间戳提取器和Watermark生成器](大数据/Flink/Stream/[Flink]Flink1.4 内置的时间戳提取器和Watermark生成器.md)
     - [2.2.2 State与容错]()
       - [2.2.2.1 使用状态](大数据/Flink/Stream/[Flink]Flink1.4 使用状态.md)
-      - [2.2.2.2 Checkpointing](https://ci.apache.org/projects/flink/flink-docs-release-1.4/dev/stream/state/checkpointing.html)
+      - [2.2.2.2 检查点](大数据/Flink/Stream/[Flink]Flink1.4 检查点.md)
       - [2.2.2.3 可查询状态](https://ci.apache.org/projects/flink/flink-docs-release-1.4/dev/stream/state/queryable_state.html)
       - [2.2.2.4 State Backends](https://ci.apache.org/projects/flink/flink-docs-release-1.4/dev/stream/state/state_backends.html)
       - [2.2.2.5 Custom Serialization](https://ci.apache.org/projects/flink/flink-docs-release-1.4/dev/stream/state/custom_serialization.html)
