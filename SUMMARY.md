@@ -66,4 +66,6 @@
     - [2.3.9 Local Execution](https://ci.apache.org/projects/flink/flink-docs-release-1.4/dev/local_execution.html)
     - [2.3.10 Cluster Execution](https://ci.apache.org/projects/flink/flink-docs-release-1.4/dev/cluster_execution.html)
 
+  - [2.4 内部原理]()
+    - [2.4.1 数据流容错](大数据/Flink/基础/[Flink]Flink1.4 内部原理之数据流容错.md)
 * [3. Hadoop]()

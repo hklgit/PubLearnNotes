@@ -7,6 +7,7 @@ tags:
   - Flink
 
 categories: Flink
+permalink: flink_data_streaming_fault_tolerance
 ---
 
 ### 1. 概述
