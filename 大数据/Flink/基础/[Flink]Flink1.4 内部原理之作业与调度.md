@@ -11,7 +11,9 @@ permalink: flink_internals_job_scheduling
 ---
 
 
+### 1. 调度
 
+`Flink`中的执行资源是通过任务槽定义的。每个`TaskManager`将有一个或多个任务槽，每个任务槽可以运行一个并行任务的管道。 流水线由多个连续的任务组成，例如一个MapFunction的第n个并行实例和一个ReduceFunction的第n个并行实例。 请注意，Flink经常同时执行连续的任务：对于任何情况下发生的流式处理程序，对于批处理程序也经常发生。
 
 
 
