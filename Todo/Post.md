@@ -6,6 +6,10 @@
 - [ ] https://data-artisans.com/blog/queryable-state-use-case-demo
 - [ ] http://vishnuviswanath.com/flink_trigger_evictor.html
 - [ ] http://vishnuviswanath.com/flink_queryable_state1.html
+- [ ] https://data-artisans.com/blog/continuous-queries-on-dynamic-tables-analyzing-data-streams-with-sql
+- [ ] https://data-artisans.com/blog/managing-large-state-apache-flink-incremental-checkpointing-overview
+- [ ] https://data-artisans.com/blog/complex-event-processing-flink-cep-update
+- [ ] https://data-artisans.com/blog/apache-flink-at-mediamath-rescaling-stateful-applications
 
 > Hadoop
 
