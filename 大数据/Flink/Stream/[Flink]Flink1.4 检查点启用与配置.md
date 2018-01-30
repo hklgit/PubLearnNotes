@@ -1,13 +1,14 @@
 ---
 layout: post
 author: sjf0115
-title: Flink1.4 检查点
+title: Flink1.4 检查点启用与配置
 date: 2018-01-17 12:30:17
 tags:
   - Flink
+  - Flink 容错
 
 categories: Flink
-permalink: flink_stream_checkpointing
+permalink: flink_stream_development_checkpointing_enable_config
 ---
 
 Flink中的每个函数和操作符都可以是有状态的（请参阅[使用状态]()了解详细信息）。有状态函数在处理单个元素/事件时存储数据。
