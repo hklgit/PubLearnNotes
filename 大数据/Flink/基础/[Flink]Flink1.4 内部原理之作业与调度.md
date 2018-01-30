@@ -5,6 +5,7 @@ title: Flink1.4 内部原理之作业与调度
 date: 2018-01-29 17:31:01
 tags:
   - Flink
+  - Flink内部原理
 
 categories: Flink
 permalink: flink_internals_job_scheduling
