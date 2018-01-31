@@ -2,7 +2,7 @@
 layout: post
 author: sjf0115
 title: Flink1.4 保存点之回溯时间
-date: 2018-01-30 15:30:17
+date: 2018-01-31 15:30:17
 tags:
   - Flink
   - Flink 容错
