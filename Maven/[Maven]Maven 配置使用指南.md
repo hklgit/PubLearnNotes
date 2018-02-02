@@ -301,11 +301,58 @@ mvn jetty:run
 
 ##### 2.5.3 Repositories
 
+~~仓库是 `Maven` 用来填充构建系统的本地仓库的所使用的远程仓库集合~~。来自于 `Maven` 称之为插件和依赖的本地仓库。不同的远程仓库可能包含不同的项目，在激活的 `profile` 下，可以用来搜索匹配的发行版或快照工件。
 
+```
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
+                      https://maven.apache.org/xsd/settings-1.0.0.xsd">
+  ...
+  <profiles>
+    <profile>
+      ...
+      <repositories>
+        <repository>
+          <id>codehausSnapshots</id>
+          <name>Codehaus Snapshots</name>
+          <releases>
+            <enabled>false</enabled>
+            <updatePolicy>always</updatePolicy>
+            <checksumPolicy>warn</checksumPolicy>
+          </releases>
+          <snapshots>
+            <enabled>true</enabled>
+            <updatePolicy>never</updatePolicy>
+            <checksumPolicy>fail</checksumPolicy>
+          </snapshots>
+          <url>http://snapshots.maven.codehaus.org/maven2</url>
+          <layout>default</layout>
+        </repository>
+      </repositories>
+      <pluginRepositories>
+        ...
+      </pluginRepositories>
+      ...
+    </profile>
+  </profiles>
+  ...
+</settings>
+```
+
+(1) releases, snapshots
+
+(2) enabled
+
+(3) updatePolicy
+
+(4) checksumPolicy
+
+(5) layout
 
 ##### 2.5.4 Plugin Repositories
 
-仓库是两种主要类型工件的家。第一个工件作为其他工件的依赖。这是中央存储仓库中存储的大部分构件类型。另一种类型的工件就是插件。`Maven` 插件本身就是一种特殊类型的工件。正因为如此，插件仓库可能会从其他库中分离出来（尽管如此，我还没有听到有说服力的理由）。无论如何， `pluginRepositories` 元素块的结构与 `repositories` 元素相似。`pluginRepository` 元素分别指定 `Maven` 可以在哪里找到新插件的远程地址。
+仓库是两种主要类型工件的家。第一个工件作为其他工件的依赖。这是中央存储仓库中存储的大部分构件类型。另一种类型的工件就是插件。`Maven` 插件本身就是一种特殊类型的工件。正因为如此，插件仓库可能会从其他库中分离出来（尽管如此，我还没有听到有说服力的理由）。无论如何， `pluginRepositories` 元素块的结构与 `repositories` 元素相似。`pluginRepository` 元素分别指定 `Maven` 可以在哪里找到新插件的远程地址（译者注： 和 `repository` 类似，只是 `repository` 是管理 `jar` 包依赖的仓库， `pluginRepositories` 则是管理插件的仓库）。
 
 ```
 <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
