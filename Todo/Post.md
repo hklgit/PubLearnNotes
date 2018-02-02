@@ -15,6 +15,7 @@
 - [ ] https://data-artisans.com/blog/curious-case-broken-benchmark-revisiting-apache-flink-vs-databricks-runtime
 - [ ] https://data-artisans.com/blog/looking-ahead-apache-flink-1-4-1-5
 - [ ] https://data-artisans.com/blog/announcing-the-apache-flink-1-4-0-release
+- [ ] http://flink.apache.org/news/2017/03/29/table-sql-api-update.html
 
 
 > Hadoop
