@@ -10,6 +10,12 @@
 - [ ] https://data-artisans.com/blog/managing-large-state-apache-flink-incremental-checkpointing-overview
 - [ ] https://data-artisans.com/blog/complex-event-processing-flink-cep-update
 - [ ] https://data-artisans.com/blog/apache-flink-at-mediamath-rescaling-stateful-applications
+- [ ] https://data-artisans.com/blog/how-to-size-your-apache-flink-cluster-general-guidelines
+- [ ] https://data-artisans.com/blog/managing-large-state-apache-flink-incremental-checkpointing-overview
+- [ ] https://data-artisans.com/blog/curious-case-broken-benchmark-revisiting-apache-flink-vs-databricks-runtime
+- [ ] https://data-artisans.com/blog/looking-ahead-apache-flink-1-4-1-5
+- [ ] https://data-artisans.com/blog/announcing-the-apache-flink-1-4-0-release
+
 
 > Hadoop
 
@@ -45,3 +51,7 @@
 > airflow
 
 - [ ] https://medium.com/handy-tech/airflow-tips-tricks-and-pitfalls-9ba53fba14eb
+
+> maven
+
+- [x] http://maven.apache.org/settings.html
