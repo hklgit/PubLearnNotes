@@ -12,20 +12,20 @@ permalink: maven-settings
 
 ### 1. 概述
 
-`settings.xml` 文件中的 `settings` 元素包含用于定义各种值的元素，可以使用不同方式（如 `pom.xml`）配置 `Maven` 的运行，但是不应该捆绑到任何指定的项目上或分发给一个用户。其中值包括本地存储库位置，备用远程存储库服务器以及身份验证信息等。
+`settings.xml` 文件中的 `settings` 元素包含用于定义各种值的元素，这些值可以配置 `Maven` 以使用不同方式（如 `pom.xml`）执行，但是 `settings.xml` 不应该绑定到任何指定的项目上或分发给一个用户。其中包括本地仓库存储位置，备用远程仓库服务器以及身份验证信息等值。
 
 `settings.xml` 文件可能存在两个位置中：
 - Maven安装目录中： `${maven.home}/conf/settings.xml`
 - 用户安装目录中： `${user.home}/.m2/settings.xml`
 
-前一个 `settings.xml` 也被称为全局设置，后一个 `settings.xml` 被称为用户设置。如果两个文件都存在，它们的内容将被合并，用户指定的 `settings.xml` 占主导地位。
+前一个 `settings.xml` 也被称为全局配置，后一个 `settings.xml` 被称为用户配置。如果两个文件都存在，它们的内容将被合并，用户指定的 `settings.xml` 占主导地位，会覆盖全局配置。
 
 备注:
 ```
-如果你需要从头开始创建特定用户设置，将全局设置从 Maven 安装目录中复制到 ${user.home}/.m2 目录中是最简单的方法。Maven 的默认 settings.xml文件 是一个包含注释和示例的模板，因此可以快速的调整来满足你的需求。
+如果你需要从头开始创建用户指定配置，将全局配置从 Maven 安装目录中复制到 ${user.home}/.m2 目录中是最简单的方法。Maven 默认 settings.xml文件 是一个包含注释和示例的模板，因此可以快速的修改来满足你的需求。
 ```
 
-以下是`settings`元素下的顶级元素的概述：
+以下是 `settings` 下的顶级元素概述：
 ```
 <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -47,21 +47,28 @@ permalink: maven-settings
 - `${user.home}`和其他系统配置（从`Maven 3.0`版本开始）
 - `${env.HOME}`等环境变量
 
-Note that properties defined in profiles within the settings.xml cannot be used for interpolation.
+备注：
+```
+settings.xml 文件中定义的 profile 定义的 property 不能使用上述方式。
+```
 
 ### 2. 详情
 
 #### 2.1 简单值
 
-一半的顶级 `settings` 元素都是简单值，表示一系列值，描述了全天活跃的构建系统的元素。
+一半的顶级 `settings` 元素都是简单值，表示描述一直活跃的构建系统元素的一系列值。
 ```
 <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
                       https://maven.apache.org/xsd/settings-1.0.0.xsd">
+  <!-- 本地仓库路径 -->
   <localRepository>${user.home}/.m2/repository</localRepository>
+  <!-- 交互方式 -->
   <interactiveMode>true</interactiveMode>
+  <!-- 管理插件版本的方式  -->
   <usePluginRegistry>false</usePluginRegistry>
+  <!-- 是否需要在离线模式下运行 -->
   <offline>false</offline>
   ...
 </settings>
@@ -69,7 +76,7 @@ Note that properties defined in profiles within the settings.xml cannot be used 
 
 (1) localRepository
 
-该值表示构建系统本地存储库的路径。默认值是 `${user.home}/.m2/repository`。这个元素对于主构建服务器特别有用，允许所有登录用户从一个本地存储库进行构建。
+表示构建系统本地仓库的路径。默认值为 `${user.home}/.m2/repository`。这个元素对于主构建服务器特别有用，允许所有登录用户从一个本地仓库进行构建。
 
 (2) interactiveMode
 
@@ -77,11 +84,11 @@ Note that properties defined in profiles within the settings.xml cannot be used 
 
 (3) usePluginRegistry
 
-`Maven` 是否使用 `${user.home}/.m2/plugin-registry.xml`文件来管理插件版本，如果需要，该值为 `true`，默认为 `false`。请注意，对于`Maven 2.0`的当前版本，不需要 `plugin-registry.xml` 文件。
+`Maven` 是否使用 `${user.home}/.m2/plugin-registry.xml` 文件来管理插件版本，如果需要，该值为 `true`，默认为 `false`。请注意，对于`Maven 2.0`的当前版本，不需要 `plugin-registry.xml` 文件。
 
 (4) offline
 
-`Maven` 是否需要在离线模式下运行，如果需要，该值为 `true`，否则为 `false`。由于网络设置或安全原因，此元素对于构建服务器不能连接到远程存储库时非常有用。
+`Maven` 是否需要在离线模式下运行，如果需要，该值为 `true`，否则为 `false`。此元素对于由于网络设置或安全原因构建服务器不能连接到远程仓库时非常有用。
 
 #### 2.2 Plugin Groups 插件组
 
@@ -299,9 +306,37 @@ mvn jetty:run
 
 ##### 2.5.2 Properties
 
+`Maven` 属性是值占位符，就像 `Ant` 中的属性一样。可以在 `POM` 中的任何地方通过使用 `${X}` 符号来访问这些值，其中 `X` 是属性名称。有五种不同样式的属性，都可以通过 `settings.xml` 文件访问：
+- `env.X` ：以 `env.` 为前缀的变量返回一个 `shell` 环境变量。 例如，`${env.PATH}` 包含 `$path` 环境变量（ `Windows` 中的 `％PATH％` ）。
+- `project.x` ：`POM` 中的以 `.` 表示的路径包含对应元素的值。例如：可通过 `${project.version}` 来访问 `<project> <version> 1.0 </ version> </ project>` 对应的值。
+- `settings.x` ：`settings.xml` 中以 `.` 表示的路径包含对应元素的值。例如：可通过`${settings.offline}` 来访问 `<settings> <offline> false </ offline> </ settings>` 对应的值。
+- Java系统属性：通过 `java.lang.System.getProperties()` 可以访问的所有属性都可用作 `POM` 的属性，如 `${java.home}`。
+- `x` ：在 `<properties />` 元素或外部文件中设置，该值可以通过 `${someVar}` 形式引用。
+
+```
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0
+                      https://maven.apache.org/xsd/settings-1.0.0.xsd">
+  ...
+  <profiles>
+    <profile>
+      ...
+      <properties>
+        <user.install>${user.home}/our-project</user.install>
+      </properties>
+      ...
+    </profile>
+  </profiles>
+  ...
+</settings>
+```
+
+如果此配置文件被激活，那么可以在 `POM` 中访问属性 `${user.install}`。
+
 ##### 2.5.3 Repositories
 
-~~仓库是 `Maven` 用来填充构建系统的本地仓库的所使用的远程仓库集合~~。来自于 `Maven` 称之为插件和依赖的本地仓库。不同的远程仓库可能包含不同的项目，在激活的 `profile` 下，可以用来搜索匹配的发行版或快照工件。
+~~仓库是 `Maven` 用来填充构建系统的本地仓库的所使用的远程仓库集合~~。来自于 `Maven` 称之为插件和依赖的本地仓库。不同的远程仓库可能包含不同的项目，在激活的 `profile` 下，可以用来搜索匹配的发行版或快照构件。
 
 ```
 <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
@@ -342,17 +377,27 @@ mvn jetty:run
 
 (1) releases, snapshots
 
+这些是每种类型构件的的策略（发行版或快照）。有了这两个策略，一个 `POM` 就可以在一个仓库中改变每个类型的策略，而与另一个类型无关。例如，可能决定只启用快照下载，用于开发目的。
+
 (2) enabled
+
+`true` 或者 `false` 表示使用哪种策略（发行版或快照）来启用该仓库。
 
 (3) updatePolicy
 
+表示更新发生的频率。`Maven` 会将本地 `POM` 的时间戳（存储在仓库的 `maven-metadata` 文件中）与远程的进行比较。选项有：`always`，`daily`（默认），`interval：X`（其中 `X` 是以分钟为单位的整数）或 `never`。
+
 (4) checksumPolicy
+
+当 `Maven` 将文件部署到仓库时，同时也会部署相应的校验和文件。你可以在校验和丢失或者不正确的时候选择 `ignore`, `fail` 或者 `warn` 选项。
 
 (5) layout
 
+在上面对仓库的描述中，有人提到它们都遵循一个共同的布局。这在大部分情况下是正确的。 `Maven 2` 有一个默认的仓库布局；然而，`Maven 1.x` 会有不同的布局。使用这个元素来指定它是默认布局还是遗留布局。
+
 ##### 2.5.4 Plugin Repositories
 
-仓库是两种主要类型工件的家。第一个工件作为其他工件的依赖。这是中央存储仓库中存储的大部分构件类型。另一种类型的工件就是插件。`Maven` 插件本身就是一种特殊类型的工件。正因为如此，插件仓库可能会从其他库中分离出来（尽管如此，我还没有听到有说服力的理由）。无论如何， `pluginRepositories` 元素块的结构与 `repositories` 元素相似。`pluginRepository` 元素分别指定 `Maven` 可以在哪里找到新插件的远程地址（译者注： 和 `repository` 类似，只是 `repository` 是管理 `jar` 包依赖的仓库， `pluginRepositories` 则是管理插件的仓库）。
+仓库是两种主要类型构件的家。第一个构件作为其他构件的依赖。这是中央存储仓库中存储的大部分构件类型。另一种类型的构件就是插件。`Maven` 插件本身就是一种特殊类型的构件。正因为如此，插件仓库可能会从其他库中分离出来（尽管如此，我还没有听到有说服力的理由）。无论如何， `pluginRepositories` 元素块的结构与 `repositories` 元素相似。`pluginRepository` 元素分别指定 `Maven` 可以在哪里找到新插件的远程地址（译者注： 和 `repository` 类似，只是 `repository` 是管理 `jar` 包依赖的仓库， `pluginRepositories` 则是管理插件的仓库）。
 
 ```
 <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
