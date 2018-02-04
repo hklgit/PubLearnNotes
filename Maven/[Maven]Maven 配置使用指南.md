@@ -92,7 +92,7 @@ settings.xml 文件中定义的 profile 定义的 property 不能使用上述方
 
 #### 2.2 Plugin Groups 插件组
 
-该元素包含一个 `pluginGroup` 元素的列表，每个 `pluginGroup` 都包含一个 `groupId`。当使用一个插件并且在命令行中没有提供 `groupId` 时，会搜索该列表。这个列表自动包含 `org.apache.maven.plugins` 和 `org.codehaus.mojo`。
+该元素一个包含 `pluginGroup` 元素的列表，每个 `pluginGroup` 都有一个 `groupId`。当在在命令行中使用插件并没有提供 `groupId` 时，会搜索该列表。这个列表自动包含 `org.apache.maven.plugins` 和 `org.codehaus.mojo`。
 
 ```
 <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
@@ -101,20 +101,21 @@ settings.xml 文件中定义的 profile 定义的 property 不能使用上述方
                       https://maven.apache.org/xsd/settings-1.0.0.xsd">
   ...
   <pluginGroups>
+    <!-- pluginGroup 的 groupId -->
     <pluginGroup>org.mortbay.jetty</pluginGroup>
   </pluginGroups>
   ...
 </settings>
 ```
 
-例如，给定上述设置 `Maven` 命令行可以使用如下简短命令来运行 `org.mortbay.jetty：jetty-maven-plugin：run`：
+例如，给定上述配置, `Maven` 命令行可以使用如下简短命令来运行 `org.mortbay.jetty：jetty-maven-plugin：run`：
 ```
 mvn jetty:run
 ```
 
 #### 2.3 Servers 服务器
 
-下载和部署仓库是由 `POM` 的 `repositories` 和 `distributionManagement` 元素定义。但是，某些设置（如用户名和密码）不应该在 `pom.xml` 上配置 。这种类型的信息应该在 `settings.xml` 中构建的 `server` 上存在。
+下载和部署仓库是由 `POM` 的 `repositories` 和 `distributionManagement` 元素定义。但是，某些配置（如用户名和密码）不应该在 `pom.xml` 上配置 。这种类型的信息可以在 `settings.xml` 中 `server` 上配置。
 
 ```
 <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
@@ -124,12 +125,19 @@ mvn jetty:run
   ...
   <servers>
     <server>
+      <!-- 服务器 id -->
       <id>server001</id>
+      <!-- 服务器认证所需要的登录名 -->
       <username>my_login</username>
+      <!-- 服务器认证所需要的密码 -->
       <password>my_password</password>
+      <!-- 服务器认证使用的私钥位置 -->
       <privateKey>${user.home}/.ssh/id_dsa</privateKey>
+      <!-- 服务器认证使用的私钥密码 -->
       <passphrase>some_passphrase</passphrase>
+      <!-- 部署时创建的仓库文件权限-->
       <filePermissions>664</filePermissions>
+      <!-- 部署时创建的仓库目录权限-->
       <directoryPermissions>775</directoryPermissions>
       <configuration></configuration>
     </server>
@@ -139,19 +147,19 @@ mvn jetty:run
 ```
 (1) id
 
-这是服务器 `server` 的Id（不是登录用户的Id），与 `Maven` 尝试连接的仓库/镜像的 `id` 元素匹配。
+服务端 `server` 的Id（不是登录用户的Id），与 `Maven` 尝试连接的仓库/镜像的 `id` 元素匹配。
 
 (2) username, password
 
-这些元素成对出现，表示对此服务器进行身份验证所需的登录名和密码。
+这两个元素是成对出现的，表示服务器进行身份验证所需的登录名和密码。
 
 (3) privateKey, passphrase
 
-与前两个元素一样，也是成对出现，指定了私钥的路径（默认为 `${user.home}/.ssh/id_dsa`）以及在需要时提供一个`passphrase`。`passphrase` 和 `password` 元素在不久的将来可能存储在外部，但是目前它们必须在 `settings.xml` 文件中以纯文本的形式出现。
+与前两个元素一样，这两个元素也是成对出现。指定了私钥的路径（默认为 `${user.home}/.ssh/id_dsa`）以及一个 `passphrase` (需要时提供)。 `passphrase` 和 `password` 可能在不久的将来可以存储在外部，但是目前它们只能在 `settings.xml` 文件中以纯文本的形式出现。
 
 (4) filePermissions, directoryPermissions
 
-如果在部署时创建仓库文件或目录，这些是需要使用权限的（译者注：这两个元素指定了创建的文件或目录的权限）。它们的合法值是一个对应于 `*nix`（`unix`或`linux`） 文件的权限的三位数的数字，例如上述配置中的 `664` 或 `775`。
+在部署时创建仓库文件或目录，需要使用权限，这两个元素指定了创建的文件或目录的权限。它们的合法值是一个三位数数字，对应于 `*nix`（`unix`或`linux`） 文件权限，例如上述配置中的 `664` 或 `775`。
 
 #### 2.4 Mirrors 镜像
 
@@ -163,9 +171,13 @@ mvn jetty:run
   ...
   <mirrors>
     <mirror>
+      <!-- 镜像 id -->
       <id>planetmirror.com</id>
+      <!-- 镜像名称 -->
       <name>PlanetMirror Australia</name>
+      <!-- 镜像 URL -->
       <url>http://downloads.planetmirror.com/pub/maven2</url>
+      <!-- 被镜像的仓库 id -->
       <mirrorOf>central</mirrorOf>
     </mirror>
   </mirrors>
@@ -175,15 +187,15 @@ mvn jetty:run
 
 (1) id, name
 
-该镜像的唯一标识符以及名称。`id` 用来区分不同 `mirror` 元素，~~并在连接镜像时从 `<servers>` 章节选择相应的证书~~。
+镜像的唯一标识符和名称。`id` 用来区分不同 `mirror` 元素，以及在连接镜像时从 `<servers>` 中选择相应的认证。
 
 (2) url
 
-该镜像的URL。构建系统使用此URL来连接到仓库，而不是使用原始仓库的URL。
+镜像的URL。构建系统使用此URL来连接到仓库，而不是使用原始仓库的URL。
 
 (3) mirrorOf
 
-被镜像仓库的 `id`。例如，指向 `Maven central` 存储仓库（https://repo.maven.apache.org/maven2/）的镜像，就将此元素设置为 `central`。更高级的映射，如 `repo1`，`repo2` 或 `*`，`！inhouse`也是可以的。这不能与镜像 `id` 一致。
+被镜像的仓库 `id`。例如，指向 `Maven central` 仓库（https://repo.maven.apache.org/maven2/）的镜像，就将此元素设置为 `central`。更高级的映射，如 `repo1`，`repo2` 或 `*`，`！inhouse`也是可以的。这不能与镜像 `id` 一致。
 
 有关更深入的镜像介绍，请阅读[镜像设置指南](http://maven.apache.org/guides/mini/guide-mirror-settings.html)。
 
@@ -197,13 +209,21 @@ mvn jetty:run
   ...
   <proxies>
     <proxy>
+      <!-- 代理 id -->
       <id>myproxy</id>
+      <!-- 是否激活该代理 -->
       <active>true</active>
+      <!-- 代理的协议 -->
       <protocol>http</protocol>
+      <!-- 代理的主机名称 -->
       <host>proxy.somewhere.com</host>
+      <!-- 代理的端口号 -->
       <port>8080</port>
+      <!-- 代理服务器进行身份验证所需的登录名 -->
       <username>proxyuser</username>
+      <!-- 代理服务器进行身份验证所需的密码 -->
       <password>somepassword</password>
+      <!-- 不被代理的主机名列表 -->
       <nonProxyHosts>*.google.com|ibiblio.org</nonProxyHosts>
     </proxy>
   </proxies>
@@ -213,11 +233,11 @@ mvn jetty:run
 
 (1) id
 
-该代理的唯一标识符。这用于区分不同 `proxy` 元素。
+代理的唯一标识符。这用于区分不同 `proxy` 元素。
 
 (2) active
 
-是否需要激活该代理，如果需要，则为 `true`。这在声明一组代理时是非常有用的，一次只能激活一个代理（译者注：一组代理智能激活一个，可以使用该项来控制激活哪个代理）。
+是否需要激活该代理，如果需要，则为 `true`。这在声明一组代理时是非常有用的，一组代理只能激活一个，可以使用该元素来控制激活哪个代理。
 
 (3) protocol, host, port
 
@@ -225,21 +245,21 @@ mvn jetty:run
 
 (4) username, password
 
-这些元素成对出现，表示对此代理服务器进行身份验证所需的登录名和密码。
+这两个元素成对出现，表示代理服务器进行身份验证所需的登录名和密码。
 
 (5) nonProxyHosts
 
-不被代理的主机名列表。列表的分隔符是代理服务器的指定类型（译者注：列表分隔符由代理服务器指定）; 在上面的例子中分隔符为`|`，以逗号分隔也是经常见的。
+不被代理的主机名列表。列表的分隔符是代理服务器的指定类型，即由代理服务器指定; 在上面的例子中分隔符为`|`，以逗号分隔也是经常见的。
 
 #### 2.5 Profiles
 
-`settings.xml` 中的 `profile` 元素是 `pom.xml profile` 元素的简化版本。由 `activation`, `repositories`, `pluginRepositories` 和 `properties` 元素组成。`profile` 元素只包含这四个元素，~~因为这里只关心构建系统这个整体（作为 `settings.xml` 文件的角色），而不关心个别项目对象模型的设置~~。
+`settings.xml` 中的 `profile` 元素是 `pom.xml` 中 `profile` 元素的删减版本。由 `activation`, `repositories`, `pluginRepositories` 和 `properties` 元素组成。`profile` 元素只包含这四个元素，因为这里只关心构建系统的整体（这正是 `settings.xml` 文件的角色定位），而不关心个别项目对象模型的设置。
 
 如果 `settings` 中的一个 `profile` 被激活，那么其值将会覆盖 `POM` 或 `profiles.xml` 文件中相同的 `ID` 的 `profile`。
 
 ##### 2.5.1  Activation
 
-`Activation` 是 `profile` 的关键。与 `POM` 的 `profile` 一样， `profile` 的作用在于它只能在特定情况下修改一些值。这些特定情况是通过 `activation` 元素指定的（译者注：`activation` 指定了激活 `profile` 的条件）。
+`activation` 是 `profile` 的关键。与 `POM` 的 `profile` 一样， `profile` 的作用在于它能够在一些特定情况下修改元素值。这些特定情况正是通过 `activation` 元素指定的（译者注：`activation` 指定了激活 `profile` 的条件）。
 
 ```
 <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
@@ -251,7 +271,7 @@ mvn jetty:run
     <profile>
       <id>test</id>
       <activation>
-        <!-- profile 默认是否激活的标识 -->
+        <!-- profile 默认是否激活 -->
         <activeByDefault>false</activeByDefault>
         <!-- 当匹配的jdk被检测到，profile 被激活 -->
         <jdk>1.5</jdk>
@@ -284,11 +304,11 @@ mvn jetty:run
   ...
 </settings>
 ```
-~~当 `activation` 所有指定的条件都被满足的时，`profile`会被激活，同一次不需要所有的 `activation`~~。
+当 `activation` 所有指定的条件都被满足的时，对应的 `profile` 会被激活，尽管不需要所有的条件都必须得到满足。
 
 (1) jdk
 
-~~`activation` 在 `jdk` 元素中内置了一个Java版本检测~~。如果jdk版本号与给定的前缀相匹配，`profile` 将被激活。在上面的例子中，`1.5.0_06` 会匹配。`Maven 2.1` 也支持范围值。有关可支持的范围的更多详细信息，请参阅 [maven-enforcer-plugin](https://maven.apache.org/enforcer/enforcer-rules/versionRanges.html)。
+`activation` 在 `jdk` 元素中内置了一个Java版本检测。如果jdk版本号与给定的前缀相匹配，`profile` 将被激活。在上面的例子中，`1.5.0_06` 会匹配。`Maven 2.1` 也支持范围值。有关可支持的范围的更多详细信息，请参阅 [maven-enforcer-plugin](https://maven.apache.org/enforcer/enforcer-rules/versionRanges.html)。
 
 (2) os
 
@@ -302,14 +322,14 @@ mvn jetty:run
 
 最后，通过检测给定的文件存在或丢失来激活 `profile`。`exists` 表示如果指定的文件存在，则激活 `profile`，`missing` 表示如果指定的文件不存在，则激活 `profile`。
 
-`activation` 元素不是激活 `profile` 的唯一方法。`settings.xml` 文件的 `activeProfile` 元素可能包含 `profile` 的 `id`,从而激活 `profile`。它们也可以使用 `-P` 标志后逗号分隔的列表的命令行方式激活 `profile`（例如-P test）。
+`activation` 元素不是激活 `profile` 的唯一方法。`settings.xml` 文件的 `activeProfile` 元素可能会包含 `profile` 的 `id`,从而激活该 `profile`。它们也可以使用 `-P` 标志后逗号分隔的列表的命令行方式激活 `profile`（例如 `-P test` ）。
 
 ##### 2.5.2 Properties
 
 `Maven` 属性是值占位符，就像 `Ant` 中的属性一样。可以在 `POM` 中的任何地方通过使用 `${X}` 符号来访问这些值，其中 `X` 是属性名称。有五种不同样式的属性，都可以通过 `settings.xml` 文件访问：
 - `env.X` ：以 `env.` 为前缀的变量返回一个 `shell` 环境变量。 例如，`${env.PATH}` 包含 `$path` 环境变量（ `Windows` 中的 `％PATH％` ）。
-- `project.x` ：`POM` 中的以 `.` 表示的路径包含对应元素的值。例如：可通过 `${project.version}` 来访问 `<project> <version> 1.0 </ version> </ project>` 对应的值。
-- `settings.x` ：`settings.xml` 中以 `.` 表示的路径包含对应元素的值。例如：可通过`${settings.offline}` 来访问 `<settings> <offline> false </ offline> </ settings>` 对应的值。
+- `project.x` ：指定了 `POM` 中对应元素的值。例如：可通过 `${project.version}` 来访问 `<project> <version> 1.0 </ version> </ project>` 对应的值。
+- `settings.x` ：指定了 `settings.xml` 中对应元素的值。例如：可通过`${settings.offline}` 来访问 `<settings> <offline> false </ offline> </ settings>` 对应的值。
 - Java系统属性：通过 `java.lang.System.getProperties()` 可以访问的所有属性都可用作 `POM` 的属性，如 `${java.home}`。
 - `x` ：在 `<properties />` 元素或外部文件中设置，该值可以通过 `${someVar}` 形式引用。
 
@@ -332,11 +352,11 @@ mvn jetty:run
 </settings>
 ```
 
-如果此配置文件被激活，那么可以在 `POM` 中访问属性 `${user.install}`。
+如果此 `profile` 被激活，那么可以在 `POM` 中访问其属性 `${user.install}`。
 
 ##### 2.5.3 Repositories
 
-~~仓库是 `Maven` 用来填充构建系统的本地仓库的所使用的远程仓库集合~~。来自于 `Maven` 称之为插件和依赖的本地仓库。不同的远程仓库可能包含不同的项目，在激活的 `profile` 下，可以用来搜索匹配的发行版或快照构件。
+仓库是 `Maven` 用来填充构建系统本地仓库的项目的远程集合。来自于本地仓库的，`Maven` 称之为插件和依赖。不同的远程仓库可能包含不同的项目，在激活的 `profile` 下，可以用来搜索匹配的发行版或快照构件。
 
 ```
 <settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
@@ -349,13 +369,20 @@ mvn jetty:run
       ...
       <repositories>
         <repository>
+          <!-- 远程仓库 id -->
           <id>codehausSnapshots</id>
+          <!-- 远程仓库名称 -->
           <name>Codehaus Snapshots</name>
+          <!-- 如何处理远程仓库里发布版本的下载 -->
           <releases>
+            <!-- 是否启用发行版下载策略 -->
             <enabled>false</enabled>
+            <!-- 更新频率选项 -->
             <updatePolicy>always</updatePolicy>
+            <!-- 检验和策略 -->
             <checksumPolicy>warn</checksumPolicy>
           </releases>
+          <!-- 如何处理远程仓库里快照版本的下载 -->
           <snapshots>
             <enabled>true</enabled>
             <updatePolicy>never</updatePolicy>
@@ -377,11 +404,11 @@ mvn jetty:run
 
 (1) releases, snapshots
 
-这些是每种类型构件的的策略（发行版或快照）。有了这两个策略，一个 `POM` 就可以在一个仓库中改变每个类型的策略，而与另一个类型无关。例如，可能决定只启用快照下载，用于开发目的。
+上述是每种类型构件的下载策略（发行版还是快照）。有了这两个策略，`POM` 就可以在一个仓库中改变每个类型的策略，而与其他无关。例如，可能决定只启用快照下载，用于开发目的。
 
 (2) enabled
 
-`true` 或者 `false` 表示使用哪种策略（发行版或快照）来启用该仓库。
+`true` 或者 `false` 表示该仓库使用哪种策略（发行版或快照）。
 
 (3) updatePolicy
 
@@ -430,7 +457,3 @@ mvn jetty:run
 
 
 原文: http://maven.apache.org/settings.html
-
-参考： https://www.jianshu.com/p/110d897a5442
-
-http://blog.csdn.net/u012152619/article/details/51485152
