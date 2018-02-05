@@ -69,7 +69,7 @@ Spark 支持通用的计算框架，如 Java Serialization和 Kryo。其缺点�
 
 [Project Tungsten](https://databricks.com/blog/2015/04/28/project-tungsten-bringing-spark-closer-to-bare-metal.html) 提供了一种更好的解决方式，针对于DataFrame API（Spark针对结构化数据的类SQL分析API，参考 [Spark DataFrame Blog](https://databricks.com/blog/2015/02/17/introducing-dataframes-in-spark-for-large-scale-data-science.html)），由于其数据集是有固定Schema的Tuple（可大概类比为数据库中的行），序列化是针对每个Tuple存储其类型信息以及其成员的类型信息是非常浪费内存的，对于Spark来说，Tuple类型信息是全局可知的，所以其定制的序列化工具只存储Tuple的数据，如下图所示
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hadoop/hadoop-ecosystem-break-away-jvm-1.jpg?raw=true)
 
 对于固定大小的成员，如int，long等，其按照偏移量直接内联存储。对于变长的成员，如String，其存储一个指针，指向真正的数据存储位置，并在数据存储开始处存储其长度。通过这种存储方式，保证了在反序列化时，当只需访问某一个成员时，只需根据偏移量反序列化这个成员，并不需要反序列化整个Tuple。
 
@@ -88,7 +88,7 @@ Flink在系统设计之初，就借鉴了很多传统 RDBMS 的设计，其中�
 
 前6种类型数据集几乎覆盖了绝大部分的Flink程序，针对前6种类型数据集，Flink皆可以自动生成对应的TypeSerializer定制序列化工具，非常有效率的对数据集进行序列化和反序列化。对于第7中类型，Flink使用Kryo进行序列化和反序列化。此外，对于可被用作Key的类型，Flink还同时自动生成TypeComparator，用来辅助直接对序列化后的二进制数据直接进行compare，hash等之类的操作。对于Tuple，CaseClass，Pojo等组合类型，Flink自动生成的TypeSerializer，TypeComparator同样是组合的，并把其成员的序列化/反序列化代理给其成员对应的TypeSerializer，TypeComparator，如下图所示：
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hadoop/hadoop-ecosystem-break-away-jvm-2.jpg?raw=true)
 
 此外，如有需要，用户可通过集成TypeInformation接口，定制实现自己的序列化工具。
 
@@ -138,7 +138,7 @@ Spark的off-heap内存管理与Flink off-heap模式比较相似，也是通过Ja
 - 对第二个MemorySegment集中的Key进行排序，如需交换Key位置，只需交换对应的Key+Pointer的位置，第一个MemorySegment集中的数据无需改变。 当比较两个Key大小时，TypeComparator提供了直接基于二进制数据的对比方法，无需反序列化任何数据。
 - 排序完成后，访问数据时，按照第二个MemorySegment集中Key的顺序访问，并通过Pinter值找到数据在第一个MemorySegment集中的位置，通过TypeSerializer反序列化成Java对象返回。
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hadoop/hadoop-ecosystem-break-away-jvm-3.jpg?raw=true)
 
 这样实现的好处有：
 - 通过Key和Full data分离存储的方式，尽量将被操作的数据最小化，提高Cache命中的概率，从而提高CPU的吞吐量。
