@@ -1,3 +1,15 @@
+---
+layout: post
+author: sjf0115
+title: Hive Hive安装与启动
+date: 2018-02-02 11:40:01
+tags:
+  - Hive
+
+categories: Hive
+permalink: hive-install-and-config
+---
+
 ### 1. 下载
 
 可以从http://hive.apache.org/downloads.html下载你想要的版本，在这我们使用的是2.1.0版本
@@ -75,16 +87,6 @@ SLF4J: See http://www.slf4j.org/codes.html#multiple_bindings for an explanation.
 SLF4J: Actual binding is of type [org.apache.logging.slf4j.Log4jLoggerFactory]
 Logging initialized using configuration in file:/home/xiaosi/opt/hive-2.1.0/conf/hive-log4j2.properties Async: true
 Hive-on-MR is deprecated in Hive 2 and may not be available in the future versions. Consider using a different execution engine (i.e. spark, tez) or using Hive 1.X releases.
-hive> 
+hive>
 ```
 如果遇到问题，可以查看[Hive]那些年踩过的Hive坑：http://blog.csdn.net/sunnyyoona/article/details/51648871
-
-
-
-
-
-
-
-
-
-
