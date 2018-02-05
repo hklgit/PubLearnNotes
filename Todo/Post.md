@@ -16,7 +16,9 @@
 - [ ] https://data-artisans.com/blog/looking-ahead-apache-flink-1-4-1-5
 - [ ] https://data-artisans.com/blog/announcing-the-apache-flink-1-4-0-release
 - [ ] http://flink.apache.org/news/2017/03/29/table-sql-api-update.html
-
+- [ ] https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=53741525
+- [ ] http://www.bigsynapse.com/addressing-big-data-performance
+- [ ] https://flink.apache.org/news/2015/05/11/Juggling-with-Bits-and-Bytes.html
 
 > Hadoop
 
@@ -43,6 +45,8 @@
 > Spark
 
 - [ ] http://blog.cloudera.com/blog/2017/04/blacklisting-in-apache-spark/
+- [ ] https://databricks.com/blog/2015/05/28/tuning-java-garbage-collection-for-spark-applications.html
+- [ ] https://databricks.com/blog/2015/02/17/introducing-dataframes-in-spark-for-large-scale-data-science.html
 
 > 算法
 
