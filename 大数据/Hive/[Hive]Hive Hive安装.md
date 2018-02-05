@@ -2,7 +2,7 @@
 layout: post
 author: sjf0115
 title: Hive Hive安装与启动
-date: 2018-02-02 11:40:01
+date: 2018-02-02 12:01:01
 tags:
   - Hive
 
