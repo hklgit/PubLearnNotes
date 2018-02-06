@@ -59,11 +59,40 @@ Flink中的内存管理用于控制特定运行时操作使用的内存量。内
 
 为了进一步提高性能，使用 `Memory Segments` 的算法尝试可以在序列化的数据上工作。这是通过可扩展类型实用类 [TypeSerializer](https://github.com/apache/flink/blob/master/flink-core/src/main/java/org/apache/flink/api/common/typeutils/TypeSerializer.java) 和 [TypeComparator](https://github.com/apache/flink/blob/master/flink-core/src/main/java/org/apache/flink/api/common/typeutils/TypeComparator.java) 实现的。例如，分类器中的大多数比较可以归结为比较某些页面的字节（如memcmp）即可。这样，使用一起使用序列化和序列化数据的具有更高性能，同时也能够控制分配的内存量。
 
+`MemoryManager` 管理 `Memory Segments`，并将它们提供给请求它们的算法，并在算法完成后进行垃圾收集。因此算法显式地请求内存（考虑32k的分配）并释放它。
 
+算法有一个严格的预算，可以使用多少内存（多少页）。当内存使用完时，他们必须回退到一个`out-of-core variant`。 这是一个非常健壮的机制，不会考虑堆碎片和数据大小的估计。由于数据已经在序列化页面，因此在内存和磁盘之间移动数据非常容易。
 
-### 3. 对垃圾回收的影响
+#### 3.1 Memory Segments vs ByteBuffers
 
-### 4. 内存管理算法
+为什么 `Flink` 不能简单地使用 `java.nio.ByteBuffer`？ `MemorySegment` 相对 `ByteBuffer `有一些优点：
+- 在其字节数组上使用了 `sun.misc.Unsafe` 方法，因此像 `long` 这样的类型的获取要容易得多（不需要移位）。
+- 只有绝对的 `get/put` 方法，并且所有类型都具有这些方法，这使得它是线程安全的。字节缓冲区对于字节数组和其他`ByteBuffers`类型缺少绝对 `get/put`方法，迫使你使用相对方法，这需要锁定或放弃线程安全。
+- 由于 `MemorySegment` 只有一个最终实现类，所以 `JIT` 在去虚拟化和内联方法方面比 `ByteBuffer`（至少5个不同的实现） 执行更好。
+
+### 4. 对垃圾回收的影响
+
+这种内存机制对 `Flink` 的垃圾回收有很好的影响。`Flink` 不会回收任何记录对象，而是将它们序列化到长期存在的缓冲区中。这意味着实际上不存在长期存在的记录 - 只存在通过用户函数传递的记录，并被序列化到 `MemorySegment` 中。长期存在的对象是 `MemorySegment` 本身，从来不进行垃圾回收。当运行 `Flink` 任务时，`JVM` 将在 `新生代` 中的临时对象上执行垃圾回收。这些垃圾回收通常非常廉价。老年代的垃圾回收（时间长且昂贵）发生的频率比较小，因为老年代几乎从未对缓冲区进行垃圾回收。
+
+当 `OldGen`（老年代）堆的大小与 `Network buffers` 和 `MemoryManager` 的聚合大小相匹配时，这种方式效果最好。这个比率由 `JVM` 选项 `-XX：NewRatio` 控制，它定义了 `OldGen` 老年代是 `NewGen` 新生代的多少倍。默认情况下，`Flink` 的目标是配置 `OldGen`是 `NewGen` 两倍（`-XX：NewRatio = 2`），`MemoryManager` 和 `NetworkBuffers` 使用70％的堆。剩余的堆空间留给用户函数和 `TaskManager` 的数据结构（通常比较小，所以绝大多数可用于用户函数）。
+
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Flink/flink-batch-internals-memory-management-3.png?raw=true)
+
+### 5. 配置
+
+`Flink` 试图保持内存管理器的简单配置。配置只定义内存管理器将使用多少内存（可用于排序，哈希，缓存...）。`Flink` 的托管内存的数量可以通过两种方式进行配置：
+- 相对值（默认模式）：在这种模式下，`MemoryManager` 将评估所有其他 `TaskManager` 服务启动后还剩余多少堆空间。然后，它会将该空间的一部分（默认为0.7）分配为托管页面。这个数可以通过 `taskmanager.memory.fraction` 来指定。
+- 绝对值（固定大小） ： 当在 `flink-conf.yaml` 配置文件中指定 `taskmanager.memory.size` 时，内存管理器将在启动时将分配许多兆字节的内存作为托管页面。
+
+### 6. 堆外内存
+
+由于所有对 `Flink` 中的托管内存的访问都是通过 `MemorySegment` 抽象类来实现的，所以我们可以轻松地添加一个不是由 `byte []` 支持的 `MemorySegment` 的变体，而是通过 `JVM` 堆外内存。
+
+这个[pull](https://github.com/apache/flink/pull/290)正好引入了这个实现（正在进行）。其基本思想与 `Java` 的 `ByteBuffer` 非常相似，存在各种实现 - 支持堆字节数组或直接内存。为什么我们不简单地使用 `ByteBuffer` 的说法与上面相同（参见 `MemorySegment`）。
+
+注意：对堆外存储器的这种实现远比在JVM之外的某处存储操作符的结果（如存储器映射文件或分布式存储器文件系统）更为重要。 有了这个补充，Flink实际上可以在JVM堆外部完成所有数据（排序，连接）的工作，让排序缓冲区和散列表增长到垃圾收集堆非常具有挑战性的大小。
+
+### 7. 内存管理算法
 
 
 
