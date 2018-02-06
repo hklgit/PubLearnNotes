@@ -17,10 +17,10 @@ permalink: cache-update-policy
 这里，我们先不讨论更新缓存和更新数据这两个事是一个事务的事，或是会有失败的可能，我们先假设更新数据库和更新缓存都可以成功的情况（我们先把成功的代码逻辑先写对）。
 
 更新缓存的的策略有四种：
-- Cache aside
-- Read through
-- Write through
-- Write behind caching
+- `Cache aside`
+- `Read through`
+- `Write through`
+- `Write behind caching`
 
 我们下面一一来看一下这四种策略。
 
@@ -31,7 +31,7 @@ permalink: cache-update-policy
 - 命中：应用程序从 `cache` 中取数据，取到后返回。
 - 更新：先把数据存到数据库中，成功后，再让缓存失效。
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Other/cache-update-policy-1.png?raw=true)
 
 注意，我们的更新是先更新数据库，成功后，让缓存失效。那么，这种方式是否可以没有文章前面提到过的那个问题呢？我们可以脑补一下。
 
@@ -59,7 +59,7 @@ permalink: cache-update-policy
 
 下图自来 Wikipedia 的 [Cache](https://en.wikipedia.org/wiki/Cache_(computing)) 词条。其中的 `Memory` 你可以理解为就是我们例子里的数据库。
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Other/cache-update-policy-2.png?raw=true)
 
 ### 3. Write Behind Caching
 
@@ -73,7 +73,7 @@ permalink: cache-update-policy
 
 在 wikipedia 上有一张 `write back` 的流程图，基本逻辑如下：
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Other/cache-update-policy-3.png?raw=true)
 
 
 转载于： https://coolshell.cn/articles/17416.html
