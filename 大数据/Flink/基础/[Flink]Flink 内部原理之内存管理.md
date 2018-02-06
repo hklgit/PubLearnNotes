@@ -47,7 +47,19 @@ Flink中的内存管理用于控制特定运行时操作使用的内存量。内
 
 ### 3. Memory Segments
 
-`Flink` 将其所有内存表示为内存段的集合。内存段表示一个内存区域（默认为32 KB），并提供根据偏移量访问数据的各种方法（get/put longs，int，bytes，段和数组之间的复制...）。
+`Flink` 将其所有内存表示为内存段的集合。内存段表示一个内存区域（默认为32 KB），并提供根据偏移量访问数据的各种方法（get/put longs，int，bytes，段和数组之间的复制...）。你可以将其视为专用于 `Flink` 的 `java.nio.ByteBuffer` 的一个版本（请参阅下面为什么我们不使用 `java.nio.ByteBuffer`）。
+
+每当 `Flink` 在某个地方存储记录时，它实际上将其序列化到一个或多个内存段中。系统可以在另一个数据结构中存储一个指向该记录的 `指针`（通常也构建为内存段的集合）。这意味着 `Flink` 依靠高效的序列化来识别页面以及实现记录跨越不同页面。为了这个目的，`Flink` 带来了自己的类型信息系统和序列化堆栈。
+
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Flink/flink-batch-internals-memory-management-2.png?raw=true)
+
+序列化到 `Memory Segments` 的一组记录
+
+序列化格式由 `Flink` 的序列化器定义，并知道记录的各个字段。尽管这个特性目前还没有广泛使用（此博客写于2015年），但它允许在处理过程中部分反序列化记录，以提高性能。
+
+为了进一步提高性能，使用 `Memory Segments` 的算法尝试可以在序列化的数据上工作。这是通过可扩展类型实用类 [TypeSerializer](https://github.com/apache/flink/blob/master/flink-core/src/main/java/org/apache/flink/api/common/typeutils/TypeSerializer.java) 和 [TypeComparator](https://github.com/apache/flink/blob/master/flink-core/src/main/java/org/apache/flink/api/common/typeutils/TypeComparator.java) 实现的。例如，分类器中的大多数比较可以归结为比较某些页面的字节（如memcmp）即可。这样，使用一起使用序列化和序列化数据的具有更高性能，同时也能够控制分配的内存量。
+
+
 
 ### 3. 对垃圾回收的影响
 
