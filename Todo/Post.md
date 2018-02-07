@@ -18,8 +18,9 @@
 - [ ] http://flink.apache.org/news/2017/03/29/table-sql-api-update.html
 - [x] https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=53741525
 - [ ] http://www.bigsynapse.com/addressing-big-data-performance
-- [ ] https://flink.apache.org/news/2015/05/11/Juggling-with-Bits-and-Bytes.html
+- [x] https://flink.apache.org/news/2015/05/11/Juggling-with-Bits-and-Bytes.html
 - [ ] http://flink.apache.org/news/2015/09/16/off-heap-memory.html
+- [ ] https://cwiki.apache.org/confluence/display/FLINK/Data+exchange+between+tasks
 
 
 > Hadoop
@@ -68,4 +69,4 @@
 > java
 
 - [ ] https://www.javamex.com/tutorials/memory/object_memory_usage.shtml
-- [ ] https://www.cubrid.org/blog/understanding-java-garbage-collection 
+- [ ] https://www.cubrid.org/blog/understanding-java-garbage-collection

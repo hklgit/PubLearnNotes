@@ -1,14 +1,14 @@
 ---
 layout: post
 author: sjf0115
-title: Flink1.4 内部原理之内存管理
+title: Flink1.4 内部原理之内存管理简介
 date: 2018-02-02 11:40:01
 tags:
   - Flink
   - Flink内部原理
 
 categories: Flink
-permalink: flink-batch-internals-memory-management
+permalink: flink-batch-internals-memory-management-introduction
 ---
 
 ### 1. 概述
@@ -40,7 +40,7 @@ Flink中的内存管理用于控制特定运行时操作使用的内存量。内
 
 在分配 `Network buffers` 和 `MemoryManager buffers` 的同时，`JVM` 通常会执行一个或多个 `Full GC`。这会导致 `TaskManager` 的启动时多增加一些时间，但是在执行任务时会节省垃圾回收时间（saves in garbage collection time later）。`Network buffers` 和 `MemoryManager buffers` 在 `TaskManager` 的整个生命周期中存在。他们转移到 `JVM` 的内部存储区域的老年代，成为存活更长时间，不被回收的对象。
 
-> 注意
+> 注意:
 - 缓冲区的大小可以通过 `taskmanager.network.bufferSizeInBytes` 进行调整，在大多数情况下，`32K` 已经是一个不错的大小了。
 - 有想法去如何统一 `NetworkBuffer Pool`和 `Memory Manager` 区域。
 - 有想法添加一个模式，由 `MemoryManager` 惰性分配（需要时分配）内存缓冲区。这会减少 `TaskManager` 的启动时间，但是当实际分配缓冲区时，会导致更多的垃圾回收。
@@ -90,7 +90,7 @@ Flink中的内存管理用于控制特定运行时操作使用的内存量。内
 
 这个[pull](https://github.com/apache/flink/pull/290)正好引入了这个实现（正在进行）。其基本思想与 `Java` 的 `ByteBuffer` 非常相似，存在各种实现 - 支持堆字节数组或直接内存。为什么我们不简单地使用 `ByteBuffer` 的说法与上面相同（参见 `MemorySegment`）。
 
-> 注意
+> 注意:
 堆外内存的这种实现比在 `JVM` 之外的某处存储算子的结果（如内存映射文件或分布式内存文件系统）更为深入。有了这个补充，`Flink` 实际上可以在 `JVM` 堆外完成所有数据（排序，连接）的工作，让排序缓冲区和哈希表增长到对垃圾回收堆具有非常挑战性的大小。
 
 由于堆外内存不被垃圾回收，因此垃圾回收的内存量变得更小。对于百万GB的 `JVM` 堆大小来说，这可能是一个很好的改进。此外，堆外内存可以 `zero-copy` 溢写到磁盘/SSD以及通过网络发送。
