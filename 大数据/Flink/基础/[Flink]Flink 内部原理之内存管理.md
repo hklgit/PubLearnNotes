@@ -91,47 +91,12 @@ Flink中的内存管理用于控制特定运行时操作使用的内存量。内
 这个[pull](https://github.com/apache/flink/pull/290)正好引入了这个实现（正在进行）。其基本思想与 `Java` 的 `ByteBuffer` 非常相似，存在各种实现 - 支持堆字节数组或直接内存。为什么我们不简单地使用 `ByteBuffer` 的说法与上面相同（参见 `MemorySegment`）。
 
 > 注意
-
 堆外内存的这种实现比在 `JVM` 之外的某处存储算子的结果（如内存映射文件或分布式内存文件系统）更为深入。有了这个补充，`Flink` 实际上可以在 `JVM` 堆外完成所有数据（排序，连接）的工作，让排序缓冲区和哈希表增长到对垃圾回收堆具有非常挑战性的大小。
 
 由于堆外内存不被垃圾回收，因此垃圾回收的内存量变得更小。对于百万GB的 `JVM` 堆大小来说，这可能是一个很好的改进。此外，堆外内存可以 `zero-copy` 溢写到磁盘/SSD以及通过网络发送。
 
 使用 `Off-Heap` 内存的注意事项：
 - `JVM` 需要正确配置。堆大小变小，直接内存的最大大小应该增大（`-XX：MaxDirectMemorySize`）
-- 系统有两个 `MemorySegment` 的实现，`HeapMemorySegment` 和 `OffHeapMemorySegment`。`MemorySegment` 类是抽象类，就像放置/获取数据的方法一样。 当只有两个类中的一个被加载时，可以实现最好的JIT /内联特性（通过类层次分析进行去虚拟化）
-
-### 7. 内存管理算法
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+- 系统有两个 `MemorySegment` 的实现，`HeapMemorySegment` 和 `OffHeapMemorySegment`。`MemorySegment` 类是抽象的，就像`put/get`数据的方法一样。当只有两个类中的一个被加载时，可以实现最好的JIT/内联特性（通过类层次分析进行去虚拟化）
 
 原文: https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=53741525

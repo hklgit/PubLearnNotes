@@ -68,3 +68,4 @@
 > java
 
 - [ ] https://www.javamex.com/tutorials/memory/object_memory_usage.shtml
+- [ ] https://www.cubrid.org/blog/understanding-java-garbage-collection 
