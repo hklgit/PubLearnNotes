@@ -44,9 +44,16 @@ Flink的主动内存管理和二进制数据操作的风格有几个好处：
 
 ### 3. Flink 如何分配内存？
 
-`TaskManager` 由几个内部组件组成，比如与 `Flink master` 协调的 `actor` 系统，负责将数据溢出到磁盘并读取的 `IOManager`，以及协调内存使用情况的 `MemoryManager`。在这篇博文的背景下，MemoryManager是最受关注的。
+`TaskManager` 由几个内部组件组成，比如与 `Flink master` 协调的 `actor` 系统，负责将数据溢出到磁盘并读取的 `IOManager`，以及协调内存使用情况的 `MemoryManager`。在这篇博文中，`MemoryManager` 是最受关注的。
+
+`MemoryManager` 负责内存分配，汇总以及分配 `MemorySegments` 给数据处理算子，例如排序和连接算子。`MemorySegment` 是 `Flink` 内存分配单元，由常规 `Java` 字节数组（默认大小为32 KB）支持。`MemorySegment` 使用 `Java` 的 `unsafe` 方法提供对其支持的字节数组高效的读写操作。你可以将 `MemorySegment` 视为 `Java` 的 `NIO ByteBuffer` 的定制版本。为了像在一个连续的内存块上操作多个 `MemorySegments` ， `Flink` 需要使用实现 `Java` `java.io.DataOutput` 和 `java.io.DataInput` 接口的逻辑视图。
+
+`MemorySegments` 在 `TaskManager` 启动时分配一次，并在 `TaskManager` 关闭时销毁。因此，在 `TaskManager` 的整个生命周期内它们可以被复用而不被垃圾收集。在 `TaskManager` 所有内部数据结构已经初始化并且所有核心服务启动后，`MemoryManager` 开始创建 `MemorySegments`。默认情况下，服务初始化后可用 `JVM` 堆的 `70％` 由 `MemoryManager` 分配。也可以配置绝对数量的管理内存（例如，多少MB）。剩余的 `JVM` 堆用于在任务处理期间实例化的对象，包括由用户定义的函数创建的对象。下图显示了启动 `TaskManager` 后 `JVM` 中的内存分配情况。
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Flink/flink-batch-internals-memory-management-juggling-2.png?raw=true)
 
 ### 4. Flink 如何序列化对象？
+
+`Java` 生态系统提供了几个库来将对象转换成二进制形式并返回。常见的选择有 `Java` 序列化，`Kryo`， `Apache Avro`， `Apache Thrift`或 `Protobuf`。`Flink` 包含自己的自定义序列化框架，来控制数据的二进制表示。这一点很重要，因为在二进制数据上进行操作比如进行比较操作以及操作二进制数据都需要精确的序列化布局。此外，配置关于在二进制数据上执行的操作的串行化布局可以产生显着的性能提升。 Flink的序列化堆栈还利用了这样一个事实，即在执行程序之前，正在经历de / serialization的对象的类型是已知的。
 
 ### 5. Flink 如何操作二进制数据？
 
