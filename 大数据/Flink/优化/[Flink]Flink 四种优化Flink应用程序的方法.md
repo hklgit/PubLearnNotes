@@ -1,7 +1,7 @@
 ---
 layout: post
 author: sjf0115
-title: Flink1.4 四种优化Flink应用程序的方法
+title: Flink 四种优化Flink应用程序的方法
 date: 2018-02-11 10:39:01
 tags:
   - Flink
