@@ -11,7 +11,6 @@
 - [ ] https://data-artisans.com/blog/complex-event-processing-flink-cep-update
 - [ ] https://data-artisans.com/blog/apache-flink-at-mediamath-rescaling-stateful-applications
 - [ ] https://data-artisans.com/blog/how-to-size-your-apache-flink-cluster-general-guidelines
-- [ ] https://data-artisans.com/blog/managing-large-state-apache-flink-incremental-checkpointing-overview
 - [ ] https://data-artisans.com/blog/curious-case-broken-benchmark-revisiting-apache-flink-vs-databricks-runtime
 - [ ] https://data-artisans.com/blog/looking-ahead-apache-flink-1-4-1-5
 - [ ] https://data-artisans.com/blog/announcing-the-apache-flink-1-4-0-release
@@ -22,6 +21,12 @@
 - [ ] http://flink.apache.org/news/2015/09/16/off-heap-memory.html
 - [ ] https://cwiki.apache.org/confluence/display/FLINK/Data+exchange+between+tasks
 - [x] https://data-artisans.com/blog/how-flink-handles-backpressure
+- [ ] https://brewing.codes/2017/10/24/flink-additional-data/
+- [x] https://brewing.codes/2017/10/17/flink-optimize/
+- [ ] https://brewing.codes/2017/02/13/graphs-processing-with-apache-flink/
+- [ ] https://brewing.codes/2017/02/06/implementing-flink-batch-data-connector/
+- [ ] https://brewing.codes/2017/01/31/using-apache-flink-with-java-8/
+- [ ] https://flink.apache.org/news/2015/03/13/peeking-into-Apache-Flinks-Engine-Room.html
 
 > Hadoop
 
