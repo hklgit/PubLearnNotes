@@ -21,7 +21,7 @@
 - [x] https://flink.apache.org/news/2015/05/11/Juggling-with-Bits-and-Bytes.html
 - [ ] http://flink.apache.org/news/2015/09/16/off-heap-memory.html
 - [ ] https://cwiki.apache.org/confluence/display/FLINK/Data+exchange+between+tasks
-
+- [x] https://data-artisans.com/blog/how-flink-handles-backpressure
 
 > Hadoop
 

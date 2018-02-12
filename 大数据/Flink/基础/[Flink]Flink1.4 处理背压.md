@@ -1,3 +1,14 @@
+---
+layout: post
+author: sjf0115
+title: Flink1.4 处理背压
+date: 2018-02-11 10:39:01
+tags:
+  - Flink
+
+categories: Flink
+permalink: how-flink-handles-backpressure
+---
 
 人们经常会问Flink是如何处理背压(backpressure)效应的。 答案很简单：Flink不使用任何复杂的机制，因为它不需要任何处理机制。它只凭借数据流引擎，就可以从容地应对背压。在这篇博文中，我们介绍背压的问题。然后，我们深入了解Flink的运行时(runtime)如何在任务之间传送缓冲区中的数据，并展示流数据如何作为背压机制自然双倍下降(how streaming data shipping naturally doubles down as a backpressure mechanism)。 我们最终通过一个小实验展示了这一点。
 
