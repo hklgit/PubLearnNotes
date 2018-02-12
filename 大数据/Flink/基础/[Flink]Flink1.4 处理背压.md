@@ -10,13 +10,13 @@ categories: Flink
 permalink: how-flink-handles-backpressure
 ---
 
-人们经常会问`Flink`是如何处理背压(backpressure)效应的。 答案很简单：`Flink`不使用任何复杂的机制，因为它不需要任何处理机制。它只凭借数据流引擎，就可以从容地应对背压。在这篇博文中，我们介绍背压的问题。然后，我们深入了解`Flink`的运行时(runtime)如何在任务之间传送缓冲区中的数据，并展示流数据如何作为背压机制自然双倍下降(how streaming data shipping naturally doubles down as a backpressure mechanism)。 我们最终通过一个小实验展示了这一点。
+人们经常会问`Flink`是如何处理背压(backpressure)效应的。 答案很简单：`Flink`不使用任何复杂的机制，因为它不需要任何处理机制。它只凭借数据流引擎，就可以从容地应对背压。在这篇博文中，我们介绍一下背压。然后，我们深入了解 `Flink` 运行时如何在任务之间传送缓冲区中的数据，并展示流数传输自然双倍下降的背压机制(how streaming data shipping naturally doubles down as a backpressure mechanism)。 我们最终通过一个小实验展示了这一点。
 
 ### 1. 什么是背压
 
 像`Flink`这样的流处理系统需要能够从容地处理背压。背压是指系统在一个临时负载峰值期间接收数据的速率大于其处理速率的一种场景(备注:就是处理速度慢，接收速度快，系统处理不了接收的数据)。许多日常情况都会导致背压。例如，垃圾回收卡顿可能导致流入的数据堆积起来，或者数据源可能出现发送数据过快的峰值。如果处理不当，背压会导致资源耗尽，甚至导致数据丢失。
 
-让我们看一个简单的例子。 假设一个数据流管道包含一个数据源，一个流作业和一个接收器sink，它以稳定状态以每秒500万个元素的速度处理数据，如下所示(一个黑条代表100万个元素，下图是系统一秒内的一个快照)：
+让我们看一个简单的例子。 假设一个数据流管道包含一个数据源，一个流作业和一个接收器sink，它稳定的以每秒500万个元素的速度处理数据，如下所示(一个黑条代表100万个元素，下图是系统某一秒的快照)：
 
 ![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Flink/how-flink-handles-backpressure-1.png?raw=true)
 
@@ -24,19 +24,19 @@ permalink: how-flink-handles-backpressure
 
 ![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Flink/how-flink-handles-backpressure-2.png?raw=true)
 
-我们如何处理这样的情况(如上数据源出现一个峰值，一秒内以双倍的速度产生数据)呢？ 当然，可以放弃这些元素(一秒内只能处理一半的数据)。但是，对于许多按`Exactly One`处理语义处理记录的流式应用程序来说，数据丢失是不可接受的。额外的数据可以缓存在某个地方。缓存也应该是可以持久化的，因为在失败的情况下，这些数据需要被重新读取以防止数据丢失。理想情况下，这些数据应该被缓存在一个持久化的通道中(例如，如果数据源自己能保证持久性，Apache Kafka就是这种通道的主要例子)。理想状态下应对背压的措施是将整个管道从sink回压到数据源，并对源头进行限流，以便将速度调整到管道最慢部分的速度，达到稳定状态:
+我们如何处理这样的情况(如上数据源出现一个峰值，一秒内以双倍的速度产生数据)呢？ 当然，可以放弃这些元素(一秒内只能处理一半的数据)。但是，对于许多按`Exactly One`处理语义处理记录的流式应用程序来说，数据丢失是不可接受的。额外的数据可以缓存在某个地方。缓存也应该是可持久化的，因为在失败的情况下，这些数据需要被重新读取以防止数据丢失。理想情况下，这些数据应该被缓存在一个持久化的通道中(例如，如果数据源自己能保证持久性，`Apache Kafka` 就是这样的一种数据源)。理想状态下应对背压的措施是将整个管道从 `sink` 回压到数据源，并对源头进行限流，以将速度调整到管道最慢部分的速度，从而达到稳定状态:
 
 ![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Flink/how-flink-handles-backpressure-3.png?raw=true)
 
 ### 2. Flink中的背压
 
-`Flink`运行时的构建组件是算子和流。每个算子消费中间数据流，并对其进行转换，并产生新的数据流。描述这种机制的最好的比喻是`Flink`充分使用有有界容量的分布式阻塞队列。与Java连接线程的常规阻塞队列一样，一旦队列的有效缓冲耗尽(有界容量)，较慢的接收者就会使发送者放慢发送速度。
+`Flink`运行时的构建组件是算子和流。每个算子消费中间数据流，并对其进行转换，并产生新的数据流。描述这种机制的最好比喻是`Flink`充分使用有界容量的分布式阻塞队列。与 `Java` 连接线程的常规阻塞队列一样，一旦队列的有效缓冲耗尽(有界容量)，较慢的接收者就会使发送者放慢发送速度。
 
-以两个任务之间的简单流程为例，说明`Flink`如何实现背压：
+以两个任务之间的简单流程为例，说明 `Flink` 如何实现背压：
 
-![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Flink/how-flink-handles-backpressure-4.png?raw=true)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Flink/how-flink-handles-backpressure-4.jpg?raw=true)
 
-(1) 记录“A”进入`Flink`并由任务1处理。
+(1) 记录 `A` 进入`Flink`并由任务1处理。
 
 (2) 记录被序列化在缓冲区，
 
