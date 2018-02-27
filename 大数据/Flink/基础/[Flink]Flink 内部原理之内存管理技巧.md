@@ -59,42 +59,40 @@ Flink的主动内存管理和二进制数据操作的风格有几个好处：
 - `BasicTypeInfo`：任何（封装）`Java` 基元类型或 `java.lang.String`。
 - `BasicArrayTypeInfo`：任何（封装）`Java` 基元类型或 `java.lang.String` 的数组。
 - `WritableTypeInfo`：`Hadoop` 的 `Writable` 接口的任何实现。
-- `TupleTypeInfo`：任何 `Flink` 元组（`Tuple1` 到 `Tuple25`）。`Flink` 元组是具有类型字段的固定长度元组的一种 `Java` 表示。
+- `TupleTypeInfo`：任何 `Flink` 元组（`Tuple1` 到 `Tuple25`）。`Flink` 元组是具有类型字段的定长元组的一种 `Java` 表示。
 - `CaseClassTypeInfo`：任何 `Scala` `CaseClass`（包括Scala元组）。
 - `PojoTypeInfo`：任何 `POJO`（`Java` 或 `Scala`），即所有字段都是 `public` 的，并且通过遵循常用命名约定的 `getter` 和 `setter` 来访问的对象。
 - `GenericTypeInfo`：任何不能被识别为另一种类型的数据类型。
 
-每个 `TypeInformation` 为它所表示的数据类型提供一个序列化器。 例如，BasicTypeInfo返回写入相应基本类型的序列化程序，WritableTypeInfo的序列化程序将de /序列化委派给实现Hadoop的Writable接口的对象的write（）和readFields（）方法，并且GenericTypeInfo返回一个序列化程序， 序列化到Kryo。 对由Flink MemorySegments支持的DataOutput的对象序列化通过Java的高效不安全操作自动进行。 对于可用作键的数据类型，即比较和散列，TypeInformation提供了TypeComparator。 TypeComparator比较和散列对象，并且可以 - 根据具体的数据类型 - 还可以有效比较二进制表示并提取固定长度的二进制密钥前缀。
+每个 `TypeInformation` 为它所表示的数据类型提供一个序列化器。 例如，`BasicTypeInfo` 返回写入相应基本类型的序列化器， `WritableTypeInfo` 的序列化器将序列化/反序列化委派给实现 `Hadoop` `Writable` 接口对象的 `write()`和 `readFields()`方法，`GenericTypeInfo` 返回一个将序列化委托给 `Kryo` 的序列化器。对象序列化到由 `Flink MemorySegments` 支持的 `DataOutput` 将通过 Java 的高效的 `unsafe` 操作自动进行。对于可用作键的数据类型，即可以比较和哈希，`TypeInformation` 提供了 `TypeComparator`。`TypeComparator` 进行比较和哈希对象，并且根据具体的数据类型还可以有效的比较二进制数据并提取定长的二进制键前缀。
 
+元组，`Pojo` 和 `CaseClass` 类型是复合类型，即含有一个或多个可能嵌套数据类型的容器。因此，它们的序列化器和比较器也是复合的，并将其成员数据类型的序列化和比较委托给相应的序列化器和比较器。下图说明了一个（嵌套的）`Tuple3 <Integer，Double，Person>` 对象的序列化，其中 `Person` 是 `POJO`，定义如下：
+```java
+public class Person {
+    public int id;
+    public String name;
+}
+```
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Flink/flink-batch-internals-memory-management-juggling-3.png?raw=true)
 
-
-
+Flink的类型系统可以通过提供自定义的 `TypeInformations`， `Serializer` 和 `Comparators` 来扩展，以提高序列化和比较自定义数据类型的性能。
 
 ### 5. Flink 如何操作二进制数据？
 
-### 6. 性能对比
+与许多其他数据处理API（包括SQL）类似，Flink的API提供了对数据集进行分组，排序和连接的转换。这些转换可能在非常大的数据集进行操作。关系数据库系统为此提供了非常高效的算法，几十年来，发展出包括外部合并排序，合并连接和混合哈希连接等算法。Flink在这项技术基础之上，但将其推广到使用其自定义序列化和比较堆栈来处理任意对象。在下文中，我们通过 Flink 的内存排序算法的示例演示 Flink 如何在二进制数据进行操作。
 
+Flink为其数据处理算子分配内存预算。初始化后，排序算法从 `MemoryManager` 请求其内存预算并接收相应的一组 `MemorySegments`。`MemorySegments` 集合成为所谓排序缓冲区的内存池，用于收集要排序的数据。下图说明了如何将数据对象序列化到排序缓冲区中。
 
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Flink/flink-batch-internals-memory-management-juggling-4.png?raw=true)
 
+排序缓冲区内部由两个内存区域组成。第一个区域保存所有对象的完整二进制数据。第二个区域包含指向完整二进制对象数据的指针和定长的排序键(取决于键的数据类型)。当一个对象被添加到排序缓冲区时，它的二进制数据被追加到第一个区域，并且一个指针（可能还有一个键）被追加到第二个区域。将实际数据与指针加定长键分离主要为了两个目的。它可以有效地交换定长条目（键+指针），并且还减少了排序时需要移动的数据。如果排序键是可变长度的数据类型（例如 String），那么定长排序键必须是键的前缀，例如字符串的前n个字符。请注意，并非所有数据类型都提供定长（前缀）排序键。将对象序列化到排序缓冲区时，两个内存区域都会使用内存池中的 `MemorySegments` 进行扩展。一旦内存池为空，并且不能添加更多对象，那么排序缓冲区将被完全填满并可以排序。Flink的排序缓冲区提供了比较和交换元素的方法。这使得在实际上排序算法可插拔。默认情况下，Flink使用`Quicksort`的实现。下图显示了两个对象的比较。
 
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Flink/flink-batch-internals-memory-management-juggling-5.png?raw=true)
 
+排序缓冲区通过比较它们的二进制定长排序键来比较两个元素。如果在完整键（而不是前缀键）上比较，或者二进制前缀键不相等，则比较成功。如果前缀键是相同的（或者排序键数据类型不提供二进制前缀键），排序缓冲区将遵循指向实际对象数据的指针，对两个对象进行反序列化并比较对象。根据比较结果，排序算法决定是否交换比较的元素。排序缓冲区通过移动它们的定长键和指针来交换两个元素。实际的数据不会被移动。一旦排序算法完成，排序缓冲区中的指针就会正确排序。下图显示了如何从排序缓冲区中返回排序后的数据。
 
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Flink/flink-batch-internals-memory-management-juggling-6.png?raw=true)
 
-
-
-
-
-
-
-> 疑问
-
-(1) `Memory Segments` 位于哪？不在堆上吗？
-(2) 基于二进制数据进行排序或者连接操作。
-(3) TaskManager内部组件
-
-
-
-
-
+排序后的数据通过顺序读取排序缓冲区的指针区域，跳过排序键并按照排序后的指针找到实际数据来返回。这些数据被反序列化并作为对象返回，或者在外部合并排序的情况下将二进制表示复制并写入磁盘（有关Flink中的联接，请参阅此[博客文章](http://flink.apache.org/news/2015/03/13/peeking-into-Apache-Flinks-Engine-Room.html)）。
 
 原文:https://flink.apache.org/news/2015/05/11/Juggling-with-Bits-and-Bytes.html
