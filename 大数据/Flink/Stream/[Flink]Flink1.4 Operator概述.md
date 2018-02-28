@@ -515,8 +515,7 @@ DataStream → DataStream
 存在不同并行度不是成倍数关系，或者多个下游操作具有来自上游操作的不同数量的输入的情况。
 
 这个图显示了在上面的例子中的连接模式：
-
-
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Flink/flink-stream-operators-overall.png?raw=true)
 
 ```java
 dataStream.rescale();
@@ -531,8 +530,13 @@ DataStream → DataStream
 dataStream.broadcast()
 ```
 
-### 3. Task chaining and resource groups
+### 3. 任务链 和 资源组
 
+链接两个连续的转换操作意味着将它们共同定位在同一个线程中以获得更好的性能。如果可能的话，Flink默认链接算子（例如，两个连续的 `map` 转换）。如果需要，API可以对链接进行精细控制。
+
+如果要禁用整个作业中的链接，请使用 `StreamExecutionEnvironment.disableOperatorChaining（）`。对于更细粒度的控制，可用使用以下函数。请注意，这些函数只能在 `DataStream` 转换操作之后使用，因为它们引用上一个转换。例如，你可以使用 `someStream.map（...）.startNewChain（）`，但不能使用 `someStream.startNewChain（）`。
+
+资源组是 Flink 中的插槽，请参阅[插槽](https://ci.apache.org/projects/flink/flink-docs-release-1.4/ops/config.html#configuring-taskmanager-processing-slots)。如果需要，你可以在不同的插槽中手动隔离算子。
 
 #### 3.1 开始一个新链
 
