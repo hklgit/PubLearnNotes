@@ -5,7 +5,7 @@ title: Flink 内部原理之内存管理技巧
 date: 2018-02-02 11:40:01
 tags:
   - Flink
-  - Flink内部原理
+  - Flink 内部原理
 
 categories: Flink
 permalink: flink-batch-internals-memory-management-juggling
