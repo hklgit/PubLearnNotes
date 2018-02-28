@@ -1,6 +1,19 @@
-Windows(窗口)是处理无限数据流的核心。Windows将流分解成有限大小的"桶"，在上面我们可以进行计算。本文档重点介绍如何在Flink中处理窗口，以及如何从它提供的功能中获得最大的收益。
+---
+layout: post
+author: sjf0115
+title: Flink1.4 窗口概述
+date: 2018-02-28 17:17:17
+tags:
+  - Flink
+  - Flink Stream
 
-窗口Flink程序的一般结构如下。第一个片段指的是指定key的数据流，而第二个到未指定key的数据流。可以看出，唯一的区别是指定key的数据流调用`keyBy()`以及`window()`方法变为未指定key数据流下的`windowAll()`方法。
+categories: Flink
+permalink: flink-stream-windows-overall
+---
+
+Windows(窗口)是处理无限数据流的核心。窗口将流分解成有限大小的"桶"，在上面我们可以进行计算。本文将重点介绍 Flink 中的窗口，以及常见的窗口类型。
+
+一个窗口化的 Flink 程序一般结构如下。第一个片段指的是指定 key 的数据流（`keyed streams`），而第二个未指定key的数据流。可以看出，唯一的区别是指定 key 的数据流调用了 `keyBy()` 以及 `window()` 方法变为未指定 key 数据流下的 `windowAll()` 方法。
 
 Keyed Windows：
 ```
@@ -23,31 +36,29 @@ stream
        .reduce/fold/apply() <-  required: "function"
 ```
 
-在上面，方括号([...])中的命令是可选的。这表明Flink允许你可以以多种不同的方式自定义你的窗口逻辑，以便更好的满足你的需求。
+在上面，方括号 `[...]` 中的命令是可选的。这表明 Flink 允许你可以以多种不同的方式自定义你的窗口逻辑，以便更好的满足你的需求。
 
 ### 1. 窗口生命周期
 
-简而言之，一旦属于此窗口的第一个元素到达，就会创建一个窗口，当时间(事件时间或处理时间)到达其结束时间加上用户指定的允许延迟时间，窗口将被完全删除(a window is created as soon as the first element that should belong to this window arrives, and the window is completely removed when the time (event or processing time) passes its end timestamp plus the user-specified allowed lateness)。Flink保证仅对基于时间的窗口进行删除，而不适用于其他类型的窗口，例如，全局窗口。 举个例子，使用基于事件时间的窗口策略，每5分钟创建不重叠窗口，并且允许可以有1分钟的延迟时间，当时间戳落在12:00至12:05时间间隔的第一个元素到达时，Flink将为这个时间间隔创建一个新窗口，当时间戳到达12:06时，窗口将被删除(Flink will create a new window for the interval between 12:00 and 12:05 when the first element with a timestamp that falls into this interval arrives, and it will remove it when the watermark passes the 12:06 timestamp)。
+简而言之，一旦属于这个窗口的第一个元素到达，就会创建该窗口，当时间(事件时间或处理时间)到达其结束时间戳加上用户指定的可允许延迟的时间戳，窗口将被完全删除。Flink 保证仅对基于时间的窗口进行删除，并不适用于其他类型的窗口，例如，全局窗口（具体请参阅下面的窗口分配器）。举个例子，使用基于事件时间的窗口策略，每隔5分钟创建一个不重叠的窗口，并且允许可以有1分钟的延迟时间。当第一个带有时间戳的元素落入12:00至12:05时间间隔内时，Flink 创建一个新窗口，当时间戳到达 12:06 时，窗口将被删除。
 
-另外，每个窗口都将有一个触发器和一个函数(WindowFunction，ReduceFunction或FoldFunction)(参阅下面的Window函数)。该函数包含应用于窗口内容的计算，而触发器指定了窗口使用该函数的条件，即指定了哪个窗口应用该函数。触发策略可能是"当窗口中的元素个数大于4"时，或"当watermark通过窗口末尾"时。触发器还可以决定在创建窗口和删除窗口之间的任何时间清除窗口内容。在这种情况下，清除仅指窗口中的元素，而不是窗口元数据。这意味着新数据仍然可以添加到该窗口。
+另外，每个窗口都将有一个触发器和一个函数(例如 `WindowFunction`， `ReduceFunction` 或 `FoldFunction`)。这个函数包含应用于窗口内容的计算，而触发器指定了窗口使用该函数的条件。触发策略可能是"当窗口中的元素个数大于4"，或"当 `watermark` 通过窗口末尾"。触发器还可以决定在创建窗口和删除窗口之间的任何时间内清除窗口内容。在这种情况下，清除仅指窗口中的元素，而不是窗口的元数据。这意味着新数据仍然可以添加到该窗口。
 
-除了上述之外，你还可以指定一个Evictor(参阅下面的Evictors)，在触发器触发之后以及在应用该函数之前和/或之后从窗口中移除元素。
-
-下面我们将详细介绍上述各个组件。我们从上面的代码片段(Keyed Windows，Non-Keyed Windows， Window Assigner以及Window Function)开始，然后再到可选部分。
+除了上述之外，你还可以指定一个 `Evictor`，在触发器触发之后以及在应用该函数之前和/或之后从窗口中移除元素。
 
 ### 2. Keyed vs Non-Keyed Windows
 
-首先要指定的第一件事就是你的数据流是否应该指定key。这必须在定义窗口之前完成。使用`keyBy()`可以将无限数据流分解成指定key的逻辑数据流(split your infinite stream into logical keyed streams)。如果未调用`keyBy()`，则你的数据流未指定key。
+首先要指定的第一件事就是你的数据流是否应该指定 `key`。这必须在定义窗口之前完成。使用 `keyBy()` 可以将无限数据流分解成指定 key 的逻辑上的数据流。如果未调用 `keyBy()`，则你的数据流未指定 key。
 
-在指定key的数据流的情况下，你传入进来的事件的任何属性都可以用作key([更多细节](https://ci.apache.org/projects/flink/flink-docs-release-1.3/dev/api_concepts.html#specifying-keys))。指定key的数据流可以允许通过多个任务并行执行窗口计算，因为每个逻辑数据流可以独立于其余的进行处理。引用相同key的所有元素将被发送到相同的并行任务。
+在指定 key 的数据流的情况下，你传入进来的事件的任何属性都可以用作 key([更多细节](http://smartsi.club/2018/01/04/flink-how-to-specifying-keys/))。指定 key 的数据流可以允许通过多个任务并行执行窗口计算，因为每个逻辑数据流可以独立于其余的进行处理。指向相同 key 的所有元素将被发送到相同的并行任务上。
 
-在未指定key的数据流的情况下，你的原始数据流不会被分割成多个逻辑数据流，并且所有窗口逻辑将由单个任务执行，即以1个的并行度执行。
+在未指定 key 的数据流的情况下，你的原始数据流不会被分割成多个逻辑数据流，并且所有窗口逻辑将由单个任务执行，即以1个的并行度执行。
 
 ### 3. 窗口分配器
 
-在数据流是否指定key之后，下一步是定义窗口分配器。窗口分配器定义元素如何分配给窗口。这通过在`window()`(指定key数据流)或`windowAll()`(未指定key数据流)调用中指定你选择的窗口分配器来完成。
+在确定数据流是否指定 key 之后，下一步就是定义窗口分配器。窗口分配器定义了元素如何分配给窗口。这通过在 `window()`(指定key数据流)或 `windowAll()`(未指定key数据流)调用中指定你选择的窗口分配器来完成。
 
-窗口分配器负责将每个传入元素分配给一个或多个窗口。Flink内置一些用于解决常见用例的窗口分配器，有滚动窗口，滑动窗口，会话窗口和全局窗口。你还可以通过继承`WindowAssigner`类实现自定义窗口分配器。所有内置窗口分配器(全局窗口除外)根据时间将元素分配给窗口，可以是处理时间或事件时间。请参阅[事件时间](https://ci.apache.org/projects/flink/flink-docs-release-1.3/dev/event_time.html)，了解处理时间和事件时间之间的差异以及如何生成时间戳和`watermarks`。
+窗口分配器负责将每个传入的元素分配给一个或多个窗口。Flink 内置了一些用于解决常见用例的窗口分配器，有滚动窗口，滑动窗口，会话窗口和全局窗口。你还可以通过继承 `WindowAssigner` 类实现自定义窗口分配器。所有内置窗口分配器(全局窗口除外)根据时间将元素分配给窗口，可以是处理时间或事件时间。请参阅[事件时间](https://ci.apache.org/projects/flink/flink-docs-release-1.3/dev/event_time.html)，了解处理时间和事件时间之间的差异以及如何生成时间戳和`watermarks`。
 
 在下文中，我们将展示Flink的内置窗口分配器的工作原理以及它们在DataStream程序中的使用方式。 以下图形可视化每个分配器的运行。 紫色圆圈表示数据流中的元素，它们被某些key（在我们这个例子下为用户1，用户2和用户3）分区。x轴显示时间进度。
 
@@ -83,7 +94,7 @@ input
 ```
 
 Scala版本:
-```
+```scala
 val input: DataStream[T] = ...
 
 // tumbling event-time windows
@@ -243,9 +254,8 @@ input
 ```
 
 
-备注:
-```
-Flink版本:1.3
-```
+> 备注:
 
-原文:https://ci.apache.org/projects/flink/flink-docs-release-1.3/dev/windows.html#window-assigners
+> Flink版本:1.4
+
+原文:https://ci.apache.org/projects/flink/flink-docs-release-1.4/dev/stream/operators/windows.html

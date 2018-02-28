@@ -1,13 +1,14 @@
 ---
 layout: post
 author: sjf0115
-title: Flink1.4 检查点
+title: Flink1.4 状态终端
 date: 2018-01-17 12:30:17
 tags:
   - Flink
+  - Flink Stream
 
 categories: Flink
-permalink: flink_stream_state_backends
+permalink: flink-stream-state-backends
 ---
 
 ### 1. 概述

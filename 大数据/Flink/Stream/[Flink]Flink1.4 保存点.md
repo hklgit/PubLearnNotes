@@ -8,7 +8,7 @@ tags:
   - Flink 容错
 
 categories: Flink
-permalink: flink_stream_deployment_savepoints
+permalink: flink-stream-deployment-savepoints
 ---
 
 ### 1. 概述

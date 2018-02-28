@@ -8,7 +8,7 @@ tags:
   - Flink 容错
 
 categories: Flink
-permalink: flink_stream_development_checkpointing_enable_config
+permalink: flink-stream-development-checkpointing-enable-config
 ---
 
 Flink中的每个函数和操作符都可以是有状态的（请参阅[使用状态]()了解详细信息）。有状态函数在处理单个元素/事件时存储数据。

@@ -5,9 +5,10 @@ title: Flink1.4 可查询状态
 date: 2018-01-26 19:11:17
 tags:
   - Flink
+  - Flink 容错
 
 categories: Flink
-permalink: flink_stream_queryable_state
+permalink: flink-stream-queryable-state
 ---
 
 备注:
