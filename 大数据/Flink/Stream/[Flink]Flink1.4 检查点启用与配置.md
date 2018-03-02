@@ -113,7 +113,7 @@ env.getCheckpointConfig.setMaxConcurrentCheckpoints(1)
 
 默认情况下，状态保存在 `TaskManager` 的内存中，检查点存储在 `JobManager` 的内存中。为了适当地存储较大的状态，`Flink` 也支持多种方法在其他状态终端存储状态以及对状态进行检查点操作。状态终端的选择可以通过 `StreamExecutionEnvironment.setStateBackend（...）` 来配置。
 
-有关可用状态终端以及作业范围和群集范围内配置选项的的详细信息，请参阅[状态终端](https://ci.apache.org/projects/flink/flink-docs-release-1.4/ops/state/state_backends.html)。
+有关可用状态终端以及作业范围和群集范围内配置选项的的详细信息，请参阅[状态终端](http://smartsi.club/2018/01/17/flink-stream-state-backends/)。
 
 ### 5. 迭代作业中的状态检查点
 
