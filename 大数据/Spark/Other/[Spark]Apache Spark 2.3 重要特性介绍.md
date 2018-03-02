@@ -33,6 +33,8 @@ permalink: introducing-apache-spark-2-3
 
 在持续模式下，流处理器持续不断地从数据源拉取和处理数据，而不是每隔一段时间读取一个批次的数据，这样就可以及时地处理刚到达的数据。如下图所示，延迟被降低到毫秒级别，完全满足了低延迟的要求。
 
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/introducing-apache-spark-2-3-2.png?raw=true)
+
 持续模式目前支持的 `Dataset` 操作包括 `Projection`、`Selection` 以及除 `current_timestamp()`、`current_date()`、聚合函数之外的 `SQL` 操作。它还支持将 `Kafka` 作为数据源和数据池（Sink），也支持将控制台和内存作为数据池。
 
 开发者可以根据实际的延迟需求来选择使用持续模式还是微批次模式，总之，`Structured Streaming` 为开发者提供了容错和可靠性方面的保证。
@@ -48,7 +50,7 @@ permalink: introducing-apache-spark-2-3
 
 广告变现是流到流连接的一个典型应用场景。例如，广告 impression 流和用户点击流包含相同的键（如 adld）和相关数据，而你需要基于这些数据进行流式分析，找出哪些用户的点击与 adld 相关。
 
-![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/introducing-apache-spark-2-3-2.png?raw=true)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/introducing-apache-spark-2-3-3.png?raw=true)
 
 虽然看起来很简单，但实际上流到流的连接解决了一些技术性难题：
 - 将迟到的数据缓冲起来，直到在另一个流中找到与之匹配的数据。
@@ -60,11 +62,11 @@ permalink: introducing-apache-spark-2-3
 
 `Spark` 和 `Kubernetes` 这两个开源项目之间的功能组合也在意料之内，用于提供大规模分布式的数据处理和编配。在 `Spark 2.3` 中，用户可在 `Kubernetes` 集群上原生地运行 `Spark`，从而更合理地使用资源，不同的工作负载可共享 `Kubernetes` 集群。
 
-![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/introducing-apache-spark-2-3-3.png?raw=true)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/introducing-apache-spark-2-3-4.png?raw=true)
 
 `Spark` 可以使用 `Kubernetes` 的所有管理特性，如资源配额、可插拔的授权和日志。另外，要在已有的 `Kubernetes` 集群上启动 `Spark` 工作负载就像创建一个 `Docker` 镜像那么简单。
 
-![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/introducing-apache-spark-2-3-4.png?raw=true)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/introducing-apache-spark-2-3-5.png?raw=true)
 
 ### 4. 用于 PySpark 的 Pandas UDF
 
@@ -74,7 +76,7 @@ permalink: introducing-apache-spark-2-3
 
 一些基准测试表明，`Pandas UDF` 在性能方面比基于行的 `UDF` 要高出一个数量级。
 
-![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/introducing-apache-spark-2-3-5.png?raw=true)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/introducing-apache-spark-2-3-6.png?raw=true)
 
 包括 Li Jin 在内的一些贡献者计划在 `Pandas UDF` 中引入聚合和窗口功能。
 
