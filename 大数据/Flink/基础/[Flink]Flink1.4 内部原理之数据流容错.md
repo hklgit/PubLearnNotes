@@ -13,13 +13,13 @@ permalink: flink-data-streaming-fault-tolerance
 
 ### 1. 概述
 
-`Apache Flink`提供了一个容错机制来持续恢复数据流应用程序的状态。该机制确保即使在出现故障的情况下，程序的状态也将最终反映每条来自数据流的记录严格一次`exactly once`。 请注意，有一个开关可以降级为保证至少一次(`least once`)（如下所述）。
+`Apache Flink`提供了一个容错机制来持续恢复数据流应用程序的状态。该机制确保即使在出现故障的情况下，程序的状态也将最终反映每条记录来自数据流严格一次`exactly once`。 请注意，有一个开关可以降级为保证至少一次(`least once`)（如下所述）。
 
 容错机制连续生成分布式流数据流的快照。对于状态较小的流式应用程序，这些快照非常轻量级，可以频繁生成，而不会对性能造成太大影响。流应用程序的状态存储在可配置的位置（例如主节点或`HDFS`）。
 
 如果应用程序发生故障（由于机器，网络或软件故障），`Flink`会停止分布式流式数据流。然后系统重新启动算子并将其重置为最新的成功检查点。输入流被重置为状态快照的时间点。作为重新启动的并行数据流处理的任何记录都保证不属于先前检查点状态的一部分。
 
-注意:默认情况下，检查点被禁用。有关如何启用和配置检查点的详细信息，请参[阅检查点](https://ci.apache.org/projects/flink/flink-docs-release-1.4/dev/stream/state/checkpointing.html)。
+注意:默认情况下，检查点被禁用。有关如何启用和配置检查点的详细信息，请参[阅检查点](http://smartsi.club/2018/01/17/flink-stream-development-checkpointing-enable-config/)。
 
 为了实现这个机制的保证，数据流源（如消息队列或代理）需要能够将流重放到定义的最近时间点。`Apache Kafka`有这个能力，而`Flink`的Kafka连接器就是利用这个能力。有关`Flink`连接器提供的保证的更多信息，请参阅[数据源和接收器的容错保证](https://ci.apache.org/projects/flink/flink-docs-release-1.4/dev/connectors/guarantees.html)。
 
@@ -52,7 +52,7 @@ permalink: flink-data-streaming-fault-tolerance
 #### 2.2 State
 
 当算子包含任何形式的状态时，这个状态也必须是快照的一部分。算子状态有不同的形式：
-- 用户自定义状态：这是由转换函数（如`map（）`或`filter（）`）直接创建和修改的状态。有关详细信息，请参阅[状态概述](http://smartsi.club/2018/01/16/Flink/[Flink]Flink1.4%20%E7%8A%B6%E6%80%81%E6%A6%82%E8%BF%B0/)
+- 用户自定义状态：这是由转换函数（如`map（）`或`filter（）`）直接创建和修改的状态。有关详细信息，请参阅[状态概述](http://smartsi.club/2018/01/16/flink-stream-state-overview/)
 - 系统状态：这种状态指的是作为算子计算一部分的数据缓冲区。这种状态的一个典型例子是窗口缓冲区，在窗口缓冲区中，系统为窗口收集（以及聚合）记录，直到窗口被计算和删除。
 
 在算子收到所有输入流中的所有快照`barriers`以及在`barriers`发送到输出流之前，算子对自己的状态进行快照。这时，At that point, all updates to the state from records before the barriers will have been made, and no updates that depend on records from after the barriers have been applied。由于快照的状态可能较大，因此需要其存储在可配置状态终端`state backend`中。默认情况下，会存储在`JobManager`的内存中，但是在生产环境下，应该配置为分布式可靠存储系统（如`HDFS`）。在状态被存储之后，算子确认检查点，将快照`barriers`发送到输出流，然后继续前行。
@@ -81,7 +81,7 @@ permalink: flink-data-streaming-fault-tolerance
 
 在接收到输入端的检查点`barriers`后，算子启动其状态的异步快照复制。`barriers`立即发送到输出流中，并继续进行正常的流处理。一旦后台复制过程完成，它就会向检查点协调器（JobManager）确认检查点。检查点现在只有在所有`sink`接收到`barriers`并且所有有状态的算子已经确认完成备份（可能在`barriers`到达`sink`之后）。
 
-有关状态快照的详细信息，请参阅[状态终端](https://ci.apache.org/projects/flink/flink-docs-release-1.4/ops/state/state_backends.html)。
+有关状态快照的详细信息，请参阅[状态终端](http://smartsi.club/2018/01/17/flink-stream-state-backends/)。
 
 ### 3. 恢复
 
@@ -89,7 +89,7 @@ permalink: flink-data-streaming-fault-tolerance
 
 如果增量对状态进行快照，算子将从最新且完整的快照状态开始，然后对该状态应用一系列增量快照更新。
 
-请参阅[重启策略](http://smartsi.club/2018/01/04/Flink/[Flink]Flink1.4%20%E9%87%8D%E5%90%AF%E7%AD%96%E7%95%A5/)了解更多信息。
+请参阅[重启策略](http://smartsi.club/2018/01/04/flink-restart-strategy/)了解更多信息。
 
 ### 4. 实现算子快照
 
