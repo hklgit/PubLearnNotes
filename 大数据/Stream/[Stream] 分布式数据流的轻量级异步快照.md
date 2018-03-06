@@ -34,8 +34,8 @@ permalink: lightweight-asynchronous-snapshots-for-distributed-dataflows
 
 #### 2.2 分布式数据流执行
 
-当用户执行一个应用程序时，所有的 `DataStream` 算子都将编译成一个执行图，原理上为一个有向图 `G =（T，E）`，其中顶点 `T` 表示任务，边 `E` 表示两个任务之间的数据通道。上图就描绘了一个 `Word Count` 例子的执行图。如图所示，算子的每个实例都封装在相应的任务上。任务可以进一步细分为没有输入通道的数据源（`Source`）以及没有输出通道的 `Sink`。此外，`M` 表示任务在并行执行期间传输的所有记录的集合。每个任务 `t ∈ T` 封装了一个算子实例的独立运行，其由以下内容组成：
-- 一组输入和输出通道 `It , Ot ⊆ E`
+当用户执行一个应用程序时，所有的 `DataStream` 算子都将编译成一个执行图，原理上为一个有向图 `G =（T，E）`，其中顶点 `T` 表示任务，边 `E` 表示两个任务之间的 `data channels`。上图就描绘了一个 `Word Count` 例子的执行图。如图所示，算子的每个实例都封装在相应的任务上。任务可以进一步细分为没有 `input channels` 的 `Source` 以及没有 `output channels` 的 `Sink`。此外，`M` 表示任务在并行执行期间传输的所有记录的集合。每个任务 `t ∈ T` 封装了一个算子实例的独立运行，其由以下内容组成：
+- 一组 `input channels` 和 `output channels`: `It , Ot ⊆ E`
 - 算子状态 `St`
 - 用户自定义函数 `ft` 。
 在执行过程中，每个任务消耗输入记录，更新算子状态并根据其用户自定义函数生成新的记录。对于流入算子的每一条数据 `r ∈ M`，通过 `UDF`，产生一个新的状态值 `st’`，同时产生一个新的输出的集合 `D ⊆ M`。
@@ -46,20 +46,22 @@ permalink: lightweight-asynchronous-snapshots-for-distributed-dataflows
 
 #### 3.1 问题定义
 
-我们别定义了一个执行图 `G =（T，E）` 的全局快照 `G * =（T *，E *）`，其中 `T *` 和 `E *` 分别表示所有任务和边的状态集合。更详细地说，`T *` 由所有算子状态组成 `St * ∈ T *`， `∀t ∈ T`， `E *` 是所有通道状态 `e * ∈ E *` 的集合，其中 `e *` 由在 `e` 上传输的记录组成。
+我们定义了一个执行图 `G =（T，E）` 的全局快照 `G * =（T *，E *）`，其中 `T *` 和 `E *` 分别表示所有任务和边的状态集合。更详细地说，`T *` 由所有算子状态 `St * ∈ T *` 组成， `∀t ∈ T`， `E *` 是所有 `channels` 状态 `e * ∈ E *` 的集合，其中 `e *` 由在 `e` 上传输的记录组成。
 
 我们确保每个快照 `G *` 都保留某些属性，例如最终性 `Termination` 和可行性 `Feasibility`，以便在故障恢复后保证结果的正确性。最终性保证，如果所有进程都处于活跃状态，那么快照算法最终会在启动后的有限时间内完成。可行性表达了快照的意义，即在快照过程中关于计算的信息不会丢失。
 
 #### 3.2 非循环数据流的ABS
 
-当一个执行过程被分成多个阶段 (`Stage`)，在不保留通道状态的情况下执行快照是可行的。`Stage` 将注入的数据流和所有相关的计算划分为一系列可能的执行过程，其中所有先前的输入和生成的输出已经完全处理。在一个 `Stage` 结束时的算子状态集合反映了整个执行历史，因此它可以用于快照。我们算法背后的核心思想是在保持连续数据摄入的同时使用分段快照创建一致性快照（create identical snapshots with staged snapshotting）。
+当一个执行过程被分成多个阶段 (`stage`)，在不保留 `channels` 状态的情况下执行快照是可行的。`stage` 将注入的数据流和所有相关的计算划分为一系列可能的执行过程，其中所有先前的输入和生成的输出已经完全处理。在一个 `Stage` 结束时的算子状态集合反映了整个执行历史，因此它可以用于快照。我们算法背后的核心思想是在保持连续数据摄入的同时使用分段快照创建一致性快照（create identical snapshots with staged snapshotting）。
 
-在我们的方法中，在持续的数据流执行中模拟阶段是通过向数据流中周期性注入特殊屏障 `Barrier` 标记完成的，这些标记在整个执行图中一直推向接收器。全局快照是随着每个任务接收表示执行阶段的 `Barrier` 而逐步构建的。 我们进一步为我们的算法做出以下假设：
-- 网络通道是准确可靠的，遵循 `FIFO` 传递顺序，并且可以被阻塞以及解除阻塞。当一个通道被阻塞时，所有的消息都会被缓存，但是不会被传递，直到它被解除阻塞。
+在我们的方法中，在持续的数据流执行中模拟 `stage` 是通过向数据流中周期性注入特殊屏障 `barrier` 标记完成的，这些标记在整个执行图中一直传输到 `sink`。全局快照是随着每个任务接收表示执行 `stage` 的 `barrier` 而逐步构建的。 我们进一步为我们的算法做出以下假设：
+- 网络通道是准确可靠的，遵循 `FIFO` 先进先出的顺序，并且可以被阻塞以及解除阻塞。当一个 `channels` 被阻塞时，所有的消息都会被缓存，但是不会被传递，直到它被解除阻塞。
 - 任务可以触发其通道组件上的操作，例如阻塞，解除阻塞和发送消息。所有输出通道都支持广播消息。
-- 在 `Source` 任务中注入的消息(即 `stage barrier` )被解析为 `Nil`。
+- 在 `source` 任务中注入的消息(即 `stage barrier` )被解析为 `Nil`。
 
 ![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Flink/lightweight-asynchronous-snapshots-for-distributed-dataflows-3.png?raw=true)
+
+算法执行过程如下：
 
 (1) 中央协调器周期性的给所有 `source` 注入 `stage barrier`（黑色实线）。当 `source` 接收到 `barrier` 时，会为当前的状态生成一个快照，然后将 `barrier` 广播到它的所有输出中（图（a））。
 
@@ -68,6 +70,8 @@ permalink: lightweight-asynchronous-snapshots-for-distributed-dataflows
 (3) 当收到来自所有输入的 `barrier` 时，该任务会生成当前状态的一个快照并将其 `barrier` 广播到其输出（第12-13行 图2（c））。
 
 (4) 然后，该任务解除输入通道的阻塞来继续后续的计算（第15行，图2（d））。完整的全局快照 `G * =（T *，E *）` 仅包含所有算子状态 `T *`，其中 `E * = 0`。
+
+伪代码如下：
 
 ![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Flink/lightweight-asynchronous-snapshots-for-distributed-dataflows-4.png?raw=true)
 
@@ -89,7 +93,7 @@ permalink: lightweight-asynchronous-snapshots-for-distributed-dataflows
 - 恢复备份的日志以及处理所包含的记录
 - 从其 `input channels` 开始摄取记录
 
-仅通过重新调度上游任务依赖（其包到失败任务的 `output channels`）以及它们各自直到 `source` 的上游任务，重新恢复调度部分图也是可能的。下图显示了一个恢复示例。为了提供 `exactly-once` 的语义，应该在所有下游节点中忽略重复记录以避免重新计算。为了达到这个目的，我们用来自`source` 的序列号标记记录，因此，每个下游节点都可以丢弃序号小于他们已经处理的记录。
+仅通过重新调度上游任务依赖（其包含到失败任务的 `output channels`）以及它们各自直到 `source` 的上游任务，重新恢复调度部分图也是可能的。下图显示了一个恢复示例。为了提供 `exactly-once` 的语义，应该在所有下游节点中忽略重复记录以避免重新计算。为了达到这个目的，我们用来自`source` 的序列号标记记录，因此，每个下游节点都可以丢弃序号小于他们已经处理的记录。
 
 ![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Flink/lightweight-asynchronous-snapshots-for-distributed-dataflows-6.png?raw=true)
 
@@ -120,33 +124,4 @@ permalink: lightweight-asynchronous-snapshots-for-distributed-dataflows
 我们的目的是解决在分布式数据流系统上执行定期全局快照的问题。我们引入了 `ABS`，这是一种新的快照技术，可实现良好的吞吐量。`ABS` 是第一种考虑非循环执行拓扑的最小可能状态的算法。此外，我们通过仅存储需要在恢复时重新处理的记录来扩展 `ABS` 以在循环执行图上使用。我们在 `Apache Flink` 上实现了 `ABS`，并对比同步快照算法评估了我们算法的性能。在早期阶段，`ABS` 显示出良好的结果，对整体执行吞吐量影响较小并具有线性可扩展性。
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-原文:
+原文: http://pdfs.semanticscholar.org/541e/cf8c5b9db97eb5fcd1ffdf863d948b8954cc.pdf
