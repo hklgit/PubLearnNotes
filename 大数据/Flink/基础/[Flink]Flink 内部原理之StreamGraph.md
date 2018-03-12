@@ -26,6 +26,16 @@ permalink: flink-internals-how-to-build-streamgraph
 `DataStream` 上常见的 `transformation` 有 `map`、`flatmap`、`filter`等（见 [DataStream Transformation](http://smartsi.club/2018/02/28/flink-stream-operators-overall/#1-DataStream-Transformations)了解更多）。这些 `transformation` 会构造出一棵 `StreamTransformation` 树，通过这棵树转换成 `StreamGraph`。比如 `DataStream.map` 源码如下，其中 `SingleOutputStreamOperator` 为 `DataStream` 的子类：
 
 
+```java
+// 在DataStream上应用 Map 转换。该转换为 DataStream 的每个元素调用 MapFunction，并返回一个元素
+public <R> SingleOutputStreamOperator<R> map(MapFunction<T, R> mapper) {
+
+		TypeInformation<R> outType = TypeExtractor.getMapReturnTypes(clean(mapper), getType(),
+				Utils.getCallLocationName(), true);
+
+		return transform("Map", outType, new StreamMap<>(clean(mapper)));
+}
+```
 
 
 
