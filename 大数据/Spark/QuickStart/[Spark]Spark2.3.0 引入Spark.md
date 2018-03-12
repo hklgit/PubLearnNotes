@@ -64,9 +64,6 @@ import org.apache.spark.SparkConf
 
 > 在 Spark 1.3.0 之前，需要明确导入 org.apache.spark.SparkContext._ 以启用基本的隐式转换。
 
-
-> 备注
-
 > Spark版本: 2.3.0
 
 原文：http://spark.apache.org/docs/2.3.0/rdd-programming-guide.html#linking-with-spark
