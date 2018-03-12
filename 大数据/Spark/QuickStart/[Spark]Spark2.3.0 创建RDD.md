@@ -1,14 +1,14 @@
 ---
 layout: post
 author: sjf0115
-title: Spark2.3.0 弹性分布式数据集RDD
+title: Spark2.3.0 创建RDD
 date: 2018-03-12 19:13:01
 tags:
   - Spark
   - Spark 基础
 
 categories: Spark
-permalink: spark-base-resilient-distributed-datasets
+permalink: spark-base-build-resilient-distributed-datasets
 ---
 
 Spark的核心概念是弹性分布式数据集（RDD），RDD 是一个可容错、并行操作的分布式元素集合。有两种方法可以创建 RDD 对象：

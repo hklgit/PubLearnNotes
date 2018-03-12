@@ -1,7 +1,7 @@
 ---
 layout: post
 author: sjf0115
-title: Flink1.4 Table与SQL的常见API
+title: Flink1.4 Table与SQL的概念以及常见API
 date: 2018-03-12 11:29:01
 tags:
   - Flink

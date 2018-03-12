@@ -1,39 +1,81 @@
+---
+layout: post
+author: sjf0115
+title: Spark2.3.0 RDD操作
+date: 2018-03-12 19:13:01
+tags:
+  - Spark
+  - Spark 基础
+
+categories: Spark
+permalink: spark-base-rdd-operations
+---
+
 RDD支持两种类型的操作：
-```
-转移(transformations):从现有数据集创建一个新数据集
-动作(actions):在数据集上进行计算后将值返回给驱动程序
-```
- 例如，map是一个转移操作，传递给每个数据集元素一个函数并返回一个新RDD表示返回结果。 另一方面，reduce是一个动作操作，使用一些函数聚合RDD的所有元素并将最终结果返回给驱动程序（尽管还有一个并行的reduceByKey返回分布式数据集）。
- 
- 
- 在 Spark 中，所有的转换操作(transformations)都是惰性(lazy)的，它们不会马上计算它们的结果。相反的，它们仅仅记录转换操作是应用到哪些基础数据集(例如一个文件)上的(remember the transformations applied to some base dataset )。只有当动作(action)操作 需要返回一个结果给驱动程序的时候， 转换操作才开始计算。
- 这个设计能够让 Spark 运行得更加高效。例如，我们可以知道：通过 map 创建的新数据集将在 reduce 中使用，并且仅仅返回 reduce 的结果给驱动程序，而不是将整个大的映射过的数据集返回。
- 
- ### 1. 基础
- 
- 为了说明RDD基础知识，请考虑以下简单程序：
- ```
- JavaRDD<String> lines = sc.textFile("data.txt");
+- 转换操作(transformations): 从现有数据集创建一个新数据集
+- 动作操作(actions): 在数据集上进行计算后将值返回给驱动程序
+
+例如，map 是一个转换操作，传递给每个数据集元素一个函数并返回一个新 RDD 表示返回结果。另一方面，reduce 是一个动作操作，使用一些函数聚合 RDD 的所有元素并将最终结果返回给驱动程序（尽管还有一个并行的 reduceByKey 返回一个分布式数据集）。
+
+在 Spark 中，所有的转换操作(transformations)都是惰性(lazy)的，它们不会马上计算它们的结果。相反，它们仅仅记录应用到基础数据集(例如一个文件)上的转换操作。只有当 action 操作需要返回一个结果给驱动程序的时候， 转换操作才开始计算。
+
+这个设计能够让 Spark 运行得更加高效。例如，我们知道：通过 map 创建的新数据集将在 reduce 中使用，并且仅仅返回 reduce 的结果给驱动程序，而不必将比较大的映射后的数据集返回。
+
+### 1. 基础
+
+为了说明 RDD 基础知识，请考虑以下简单程序：
+
+Java版本:
+```java
+JavaRDD<String> lines = sc.textFile("data.txt");
 JavaRDD<Integer> lineLengths = lines.map(s -> s.length());
 int totalLength = lineLengths.reduce((a, b) -> a + b);
- ```
-第一行定义了一个来自外部文件的基本RDD。 这个数据集并未加载到内存中或做其他处理：lines 仅仅是一个指向文件的指针。 第二行将lineLength定义为map转换函数的结果。 其次，由于转换函数的惰性(lazy)，lineLengths不会立即计算。 最后，我们运行reduce，这是一个动作函数。 此时，Spark 把计算分成多个任务(task)，并且让它们运行在多台机器上。每台机器都运行自己的 map 和本地 reduce。然后仅仅将结果返回给驱动程序。
-
-如果稍后还会再次使用lineLength，我们可以在运行reduce之前添加：
 ```
+Scala版本:
+```scala
+val lines = sc.textFile("data.txt")
+val lineLengths = lines.map(s => s.length)
+val totalLength = lineLengths.reduce((a, b) => a + b)
+```
+Python版本:
+```python
+lines = sc.textFile("data.txt")
+lineLengths = lines.map(lambda s: len(s))
+totalLength = lineLengths.reduce(lambda a, b: a + b)
+```
+
+第一行定义了一个来自外部文件的基本 RDD。这个数据集并未加载到内存中或做其他处理：lines 仅仅是一个指向文件的指针。第二行将 lineLengths 定义为 map 转换操作的结果。其次，由于转换操作的惰性(lazy)，lineLengths 并没有立即计算。最后，我们运行 reduce，这是一个动作操作。此时，Spark 把计算分成多个任务(task)，并让它们运行在多台机器上。每台机器都运行 map 的一部分以及本地 reduce。然后仅仅将结果返回给驱动程序。
+
+如果稍后还会再次使用 lineLength，我们可以在运行 reduce 之前添加：
+
+Java版本:
+```java
 lineLengths.persist(StorageLevel.MEMORY_ONLY());
 ```
-这将导致lineLength在第一次计算之后被保存在内存中。
+Scala版本:
+```scala
+lineLengths.persist()
+```
+Python版本:
+```python
+lineLengths.persist()
+```
+这将导致 lineLength 在第一次计算之后被保存在内存中。
 
 ### 2. 传递函数给Spark
 
-Spark的API很大程度上依赖于驱动程序中传递过来的函数在集群上运行。 在Java中，函数由org.apache.spark.api.java.function接口实现。 创建这样的功能有两种方法：
-```
-(1)在类中实现Function接口，作为匿名内部类或命名的内部类，并将其实例传递给Spark。
-(2)在Java 8中，使用lambda表达式来简洁地定义一个实现。
-````
+Spark 的 API 很大程度上依赖于运行在集群上的驱动程序中的函数。
+
+#### 2.1 Java版本
+
+在 Java 中，函数由 [org.apache.spark.api.java.function](http://spark.apache.org/docs/2.3.0/api/java/index.html?org/apache/spark/api/java/function/package-summary.html) 接口实现。创建这样的函数有两种方法：
+- 在你自己类中实现 Function 接口，作为匿名内部类或命名内部类，并将其实例传递给Spark。
+- 使用 [lambda 表达式](https://docs.oracle.com/javase/tutorial/java/javaOO/lambdaexpressions.html) 来简洁地定义一个实现。
+
+虽然本指南的大部分内容都使用 lambda 语法进行简明说明，但很容易以长格式使用所有相同的API。例如，我们可以按照以下方式编写我们的代码：
+
 匿名内部类
-```
+```java
 JavaRDD<String> lines = sc.textFile("data.txt");
 JavaRDD<Integer> lineLengths = lines.map(new Function<String, Integer>() {
   public Integer call(String s) { return s.length(); }
@@ -43,7 +85,7 @@ int totalLength = lineLengths.reduce(new Function2<Integer, Integer, Integer>() 
 });
 ```
 或者命名内部类
-```
+```java
 class GetLength implements Function<String, Integer> {
   public Integer call(String s) { return s.length(); }
 }
@@ -55,6 +97,32 @@ JavaRDD<String> lines = sc.textFile("data.txt");
 JavaRDD<Integer> lineLengths = lines.map(new GetLength());
 int totalLength = lineLengths.reduce(new Sum());
 ```
+
+> 请注意，Java中的匿名内部类也可以访问封闭范围内的变量，只要它们标记为final。 Spark会将这些变量的副本发送给每个工作节点，就像其他语言一样。
+
+#### 2.2 Scala版本
+
+有两种推荐的的方法可以做到这一点：
+- [匿名函数语法](http://docs.scala-lang.org/tour/basics.html#functions)，可用于短片段代码。
+- 全局单例对象中的静态方法。例如，您可以定义对象 MyFunctions，然后传递 MyFunctions.func1，如下所示：
+
+```scala
+object MyFunctions {
+  def func1(s: String): String = { ... }
+}
+
+myRdd.map(MyFunctions.func1)
+```
+
+> 虽然也可以在类实例中传递方法的引用（与单例对象相反），但这需要将包含该类的对象与方法一起发送。 例如，考虑：
+
+```scala
+class MyClass {
+  def func1(s: String): String = { ... }
+  def doStuff(rdd: RDD[String]): RDD[String] = { rdd.map(func1) }
+}
+```
+
 
 下表中列出一些基本的函数接口：
 
@@ -72,7 +140,7 @@ FlatMapFunction<T,R> | Iterable<R> call(T) | 接收一个输入值并返回任�
 ```
 new Tuple2（a，b）
 ```
-来创建一个元组，然后用tuple._1（）和tuple._2（）访问它的字段。
+来创建一个元组，然后用 `tuple._1（）` 和 `tuple._2（）` 访问它的字段。
 
 键值对的RDD由JavaPairRDD类表示。 您可以使用特殊版本的map操作（如mapToPair和flatMapToPair）从JavaRDD来构建JavaPairRDD。 JavaPairRDD将具有标准的RDD的函数以及特殊的键值对函数。
 
@@ -144,7 +212,7 @@ JavaRDD<String> resultRDD = rdd.flatMap(new FlatMapFunction<String, String>() {
 // B
 // 2
 ```
-#### 4.4 distinct([numTasks])) 
+#### 4.4 distinct([numTasks]))
 去重
 ```
 List<String> aList = Lists.newArrayList("1", "3", "2", "3");
@@ -286,11 +354,7 @@ System.out.println(collect); // [aa, bb, cc]
 
 有时需要在驱动器程序中对我们的数据进行采样，takeSample(withReplacement, num, seed)函数可以让我们从数据中获取一个采样，并指定是否替换．
 
-
-==版本==
-
-2.1.1
-
-原文：http://spark.apache.org/docs/latest/programming-guide.html#rdd-operations
+> Spark版本:2.3.0
 
 
+原文：http://spark.apache.org/docs/2.3.0/rdd-programming-guide.html#rdd-operations
