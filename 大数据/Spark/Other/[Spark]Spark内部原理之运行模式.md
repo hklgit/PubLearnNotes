@@ -23,6 +23,8 @@ Spark运行模式主要分为以下几种，如图所示。
 
 Standalone模式如下图所示。
 
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-internal-operating-mode-2.jpg?raw=true)
+
 ### 3. Standalone运行过程
 
 (1) SparkContext连接到Master，向Master注册并申请资源（CPU Core and Memory）；
@@ -35,7 +37,7 @@ Standalone模式如下图所示。
 
 (5) 所有Task完成后，SparkContext向Master注销，释放资源。如图所示。
 
-![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-internal-operating-mode-2.jpg?raw=true)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-internal-operating-mode-3.jpg?raw=true)
 
 ### 4. Spark on Yarn-Client 模式
 
@@ -51,7 +53,7 @@ Standalone模式如下图所示。
 
 (6) 应用程序运行完成后，Client的SparkContext向ResourceManager申请注销并关闭自己。如图所示。
 
-![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-internal-operating-mode-3.jpg?raw=true)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-internal-operating-mode-4.jpg?raw=true)
 
 ### 5. Spark on Yarn-Cluster模式
 
@@ -67,12 +69,12 @@ Standalone模式如下图所示。
 
 (6) 应用程序运行完成后，ApplicationMaster向ResourceManager申请注销并关闭自己。如下图所示。
 
-![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-internal-operating-mode-4.jpg?raw=true)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-internal-operating-mode-5.jpg?raw=true)
 
 ### 6. 几种模式对比（Yarn-Cluster VS Yarn-Client VS Standalone）
 
 官网描述如下图所示，有兴趣的童鞋可以去Apache官网查询。
 
-![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-internal-operating-mode-5.jpg?raw=true)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-internal-operating-mode-6.jpg?raw=true)
 
 原文：https://www.toutiao.com/i6511989220175774222/
