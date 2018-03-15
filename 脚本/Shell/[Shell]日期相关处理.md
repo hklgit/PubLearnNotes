@@ -91,7 +91,6 @@ xiaosi@yoona:~$ sh date.sh 20161210 20161214
 ```
 或者
 ```
-# 执行日期
 if [[ "$1" != "" ]]
 then
     start_date=`date +'%Y%m%d' -d "$1"`
@@ -108,9 +107,8 @@ fi
 
 while [[ ${start_date} -le ${end_date} ]];
 do
-    day=`date +'%d' -d "${start_date}"`
-    month=`date +'%Y%m' -d "${start_date}"`
-    ...
+    day=`date +'%Y%m%d' -d "${start_date}"`
+    echo ${day}
     start_date=`date +'%Y%m%d' -d "${start_date} +1 days"`
 done
 ```
