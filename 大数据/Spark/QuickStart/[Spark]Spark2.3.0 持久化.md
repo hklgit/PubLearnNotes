@@ -1,6 +1,19 @@
+---
+layout: post
+author: sjf0115
+title: Spark2.3.0 持久化
+date: 2018-03-16 11:28:01
+tags:
+  - Spark
+  - Spark 基础
+
+categories: Spark
+permalink: spark-base-rdd-persistence
+---
+
 ### 1. 概述
 
-Spark中最重要的功能之一是操作时在内存中持久化(缓存)数据集(persisting (or caching) a dataset in memory across operations)。当我们让Spark持久化存储一个RDD时，每个节点都会将其计算的任何分区存储在内存中，并将其重用于该数据集（或从其派生的数据集）的其他行动操作(each node stores any partitions of it that it computes in memory and reuses them in other actions on that dataset (or datasets derived from it))。这样可以使以后的动作操作执行的更快（通常超过10倍）。 缓存是迭代算法和快速交互使用的关键工具。
+Spark 中最重要的功能之一是在操作之间将数据集持久化(缓存)在内存中。当持久化一个 RDD 时，每个节点都会将其计算的任何分区存储在内存中，并将其重用于该数据集（或从其派生的数据集）的其他行动操作(each node stores any partitions of it that it computes in memory and reuses them in other actions on that dataset (or datasets derived from it))。这样可以使以后的动作操作执行的更快（通常超过10倍）。 缓存是迭代算法和快速交互使用的关键工具。
 
 可以使用RDD上的`persist()`或`cache()`方法来标记要持久化的RDD(执行persist和cache方法不会持久化RDD)。 当RDD第一次在动作操作中计算时，它将持久化(缓存)到节点的内存中。Spark的缓存是可容错的 - 如果RDD的任何分区丢失，它将使用最初创建的转换操作自动重新计算。
 
@@ -37,5 +50,6 @@ Spark的存储级别旨在提供内存使用率和CPU效率之间的不同权衡
 
 Spark会自动监视每个节点的缓存使用情况，并以最近最少使用（LRU）方式丢弃旧的数据分区。 如果您想手动删除RDD，而不是等待它自动从缓存中删除，请使用`RDD.unpersist()`方法。
 
+> Spark版本: 2.3.0
 
-原文：http://spark.apache.org/docs/latest/programming-guide.html#rdd-persistence
+原文：http://spark.apache.org/docs/2.3.0/rdd-programming-guide.html#rdd-persistence
