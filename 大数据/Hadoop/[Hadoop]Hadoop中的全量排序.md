@@ -219,7 +219,76 @@ ID      Blackfoot
 
 使用我们刚刚生成的简单数据集，这里有一个关于 TotalOrderPartiationer 如何帮助我们在多个 reducer 中对输入进行排序的说明:
 
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hadoop/hadoop-basics-total-order-sorting-mapreduce-1.png?raw=true)
+
+以下是关于整个程序的一些重要细节:
+
+(1) 一个 InputSampler 在所有的 input splits 中对 key 采样，并使用作业的 Sort Comparator 对它们进行排序。Hadoop 库中有不同的输入采样器实现:
+- `RandomSampler`:根据给定频率随机采样。这是我们在这个例子中使用的。
+- `IntervalSampler`:定期取样(例如每5条记录)。
+- `SplitSampler`:从每个 splits 中获取前 n 个样本。
+
+(2) 输入采样器在 HDFS 中写入一个 "分区文件" 序列文件，它根据已排序的样本划分不同的分区边界。
+- 对于n个 reducer，有 n-1 个边界写在这个文件上。在这个例子中有3个 reducer，所以2个边界被创建: "MD" 和 "PA"。
+
+(3) MapReduce 任务从 mapper 任务开始。对于分区，mappers 使用 TotalOrderPartitioner，它将从 HDFS 读取分区文件以获取分区边界。然后，每个 map 输出都存储在基于这些边界的分区中。
+
+(4) 在 shuffle 之后，每个 reducer 都从每个 mapper 拉取了一个 (key, value) 键值对的排好序的分区。在这一点上，reducer 2 上的所有键都比 reducer 1 中的所有键都要大(按字母顺序)，它比 reducer 0 中的所有键都要大。每个 reducer 合并它们已排好序的分区(使用排序的 merge-queue)并将其输出写入到 HDFS 中。
+
 #### 2.3 Java Code for the Example
+
+这里是代码，对于这个示例作业，你也可以在[GitHub](https://github.com/nicomak/blog/blob/master/donors/src/main/java/mapreduce/donation/totalorderpartitioner/TotalOrderPartitionerExample.java)上看到:
+```java
+package mapreduce.donation.totalorderpartitioner;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Mapper;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.KeyValueTextInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.partition.InputSampler;
+import org.apache.hadoop.mapreduce.lib.partition.TotalOrderPartitioner;
+
+public class TotalOrderPartitionerExample {
+
+	public static void main(String[] args) throws Exception {
+
+		// Create job and parse CLI parameters
+		Job job = Job.getInstance(new Configuration(), "Total Order Sorting example");
+		job.setJarByClass(TotalOrderPartitionerExample.class);
+
+		Path inputPath = new Path(args[0]);
+		Path partitionOutputPath = new Path(args[1]);
+		Path outputPath = new Path(args[2]);
+
+		// The following instructions should be executed before writing the partition file
+		job.setNumReduceTasks(3);
+		FileInputFormat.setInputPaths(job, inputPath);
+		TotalOrderPartitioner.setPartitionFile(job.getConfiguration(), partitionOutputPath);
+		job.setInputFormatClass(KeyValueTextInputFormat.class);
+		job.setMapOutputKeyClass(Text.class);
+		job.setMapOutputValueClass(Text.class);
+
+		// Write partition file with random sampler
+		InputSampler.Sampler<Text, Text> sampler = new InputSampler.RandomSampler<>(0.01, 1000, 100);
+		InputSampler.writePartitionFile(job, sampler);
+
+		// Use TotalOrderPartitioner and default identity mapper and reducer
+		job.setPartitionerClass(TotalOrderPartitioner.class);
+		job.setMapperClass(Mapper.class);
+		job.setReducerClass(Reducer.class);
+
+		FileOutputFormat.setOutputPath(job, outputPath);
+		System.exit(job.waitForCompletion(true) ? 0 : 1);
+
+	}
+
+}
+```
 #### 2.4 Execution and Analysis
 #### 2.5 Limitations and Annoyances
 ### 3. Using a different input for sampling
