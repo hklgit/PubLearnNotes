@@ -10,11 +10,11 @@ categories: Hadoop
 permalink: hadoop-basics-secondary-sort-in-mapreduce
 ---
 
-我们将首先解决一个查询，这需要在数据集的多个字段上进行排序。然后，我们将研究 MapReduce `Shuff` 阶段的工作原理，然后再实现我们的二次排序以获得我们想要的查询结果。
+我们首先提出了一个查询问题，为了解决这个问题，需要在数据集的多个字段上进行排序。然后，我们将研究 MapReduce `Shuff` 阶段的工作原理，然后再实现我们的二次排序以获得我们想要的查询结果。
 
 ### 1. 查询
 
-我们想查看具有确定 `state` 和 `city` 的所有捐款的 `id`，捐赠者的 `state`，捐助者的 `city` 和捐款总额 `total`。按以下优先顺序排列结果：
+如果我们想查看确定 `state` 和 `city` 的所有捐款的 `id`，捐赠者的 `state`，捐助者的 `city` 和捐款总额 `total`。按以下优先顺序排列结果：
 - `state` - 按字母顺序升序排序（不区分大小写）
 - `city` - 按字母顺序升序排序（不区分大小写）
 - `total` - 按数字顺序降序排序
@@ -40,19 +40,17 @@ ORDER BY lower(donor_state) ASC, lower(donor_city) ASC, total DESC;
 
 关于不同编号的步骤的一些细节：
 
-(1) mapper 的 `map` 方法从 InputFormat 提供的分片中接收所有 `（key，value）` 键值对。这是我们通常在 Mapper 中编写的最重要的方法。
+(1) `mapper` 的 `map` 方法从 InputFormat 提供的分片中接收所有 `（key，value）` 键值对。这是我们通常在 Mapper 中编写的最重要的方法。
 
-(2) 使用指定的分区器为每个用户的 map 方法输出进行分区。默认情况下，在 MapReduce 中使用 HashPartitioner。它使用 key 的 `hashCode（）` 值并对 reducer 的个数进行取模。这将根据 key 随机确定（key，value） 键值对存储在每个 Reducer 的不同分区中。所有具有相同 key 的键值对位于同一个分区中，并在相同的 reducer 中结束。
+(2) 使用指定的分区器为每个用户的 `map` 方法输出进行分区。默认情况下，在 `MapReduce` 中使用 `HashPartitioner`。它使用 key 的 `hashCode（）` 值并对 `reducer` 的个数进行取模。这将根据 key 随机确定（key，value） 键值对存储在每个 `Reducer` 的不同分区中。所有具有相同 key 的键值对位于同一个分区中，并在相同的 reducer 中结束。
 
-(3) 在写入磁盘之前，使用指定的 `Sort Comparator` 对数据进行排序。分区全部写入同一个临时文件。
+(3) 在写入磁盘之前，使用指定的 `Sort Comparator` 对数据进行排序。同一分区记录全部写入同一个临时文件。
 
-(4) reducer 从所有 mapper 中拉取所有分配给他们的分区。分区可以写入本地临时文件，或者足够小时存储在内存中。这个过程也被称为 `Shuffle`，因为分区正在洗牌。
+(4) `reducer` 从所有 `mapper` 中拉取所有分配给他们的分区。分区可以写入本地临时文件，或者足够小时存储在内存中。这个过程也被称为 `Shuffle`，因为分区正在洗牌。
 
-(5) `Sort Comparator` 在合并所有内存中和磁盘中的分区时再次使用。每个 reducer 现在都有一个所有（key, value）键值对的完全排序的列表，分区器分配给它们的所有键的。
+(5) `Sort Comparator` 在合并所有内存和磁盘中的分区时再次使用。每个 `reducer` 都有一个所有`（key, value）`键值对完全排序的列表，这些键值对是分区器分配给它们的所有键的。
 
-(6) `Group Comparator` 用于将值分组成列表。对于每个 "不同" key，reduce 方法被调用，同时带有参数（`key，list<values>`）。
-
-在前面的部分我们只使用了1个 reducer，所以没有分区。我们没有定义组比较器，所以在Text equal（第一个作业）和FloatWritable相等（第二个作业）上自然进行了分组。 在第二份工作中，我们定义了一个分类比较器来获取浮点值的降序。
+(6) `Group Comparator` 用于将值分组成列表。每个 "不同" key，都将调用带有参数（`key，list<values>`）的 `reduce` 方法。
 
 ### 3. 二次排序
 
@@ -241,12 +239,12 @@ public class CompositeKey implements WritableComparable<CompositeKey> {
 }
 ```
 
-> 我在这个类中实现了 compareTo（），但它只是默认的自然排序，按升序比较所有字段。我们的查询想要对 `total` 字段进行降序排序，为此我们将在下一段中创建一个特定的 `Sort Comparator`。
+> 我在这个类中实现了 compareTo（），但它只是默认的自然排序，所有字段都按升序比较。我们的查询想要对 `total` 字段进行降序排序，为此我们将在下一段中创建一个特定的 `Sort Comparator`。
 
 
 #### 3.2 Sort Comparator
 
-如图所示，如果我们希望我们的结果在 `CompositeKey` 的所有3个属性上进行排序，我们必须使用按照 `[state，city，-total]` 优先级顺序的 `Sort Comparator`。正如我们在前一部分中所做的那样，我们创建了一个继承 `WritableComparator` 并为我们的排序需求实现 `compare（）` 方法的类：
+如图所示，如果我们希望我们的结果在 `CompositeKey` 的所有3个属性上进行按照我们期望的方式进行排序，我们必须使用按照 `[state，city，-total]` 优先级顺序的 `Sort Comparator`。正如我们在前一部分中所做的那样，我们创建了一个继承 `WritableComparator` 并为我们的排序需求实现 `compare（）` 方法的类：
 ```java
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.io.WritableComparator;
@@ -284,15 +282,15 @@ public class FullKeyComparator extends WritableComparator {
 
 #### 3.3 Partitioner
 
-如果我们使用多个 `reducer`，会发生什么？ 默认分区器 `HashPartitioner` 将根据 `CompositeKey` 对象的 `hashCode` 值将其分配给 `reducer`。无论我们是否重写 `hashcode()` 方法（正确使用所有属性的哈希）还是不重写（使用默认 Object 的实现，使用内存中地址），都将 "随机" 对所有 keys 进行分区。
+如果我们使用多个 `reducer`，会发生什么？ 默认分区器 `HashPartitioner` 将根据 `CompositeKey` 对象的 `hashCode` 值将其分配给 `reducer`。无论我们是重写了 `hashcode()` 方法（正确使用所有属性的哈希）还是不重写（使用默认 `Object` 的实现，使用内存中地址），都将 "随机" 对所有 keys 进行分区。
 
-二次排序不会这样的。因为合并来自 mappers 的所有分区后，reducer 的 key 可能会像这样（第一列）：
+二次排序不会这样的。因为合并来自 `mappers` 的所有分区后，`reducer` 的 key 可能会像这样（第一列）：
 
 ![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hadoop/hadoop-basics-secondary-sort-in-mapreduce-2.png?raw=true)
 
-在第一个输出列中，在一个 reducer 内，对于给定 `state` 的数据按城市名称排序，然后按总捐赠量降序排列。但这种排序没有什么意义，因为有些数据丢失了。例如，`Reducer 0` 有2个排序的 `Los Angeles` key，但来自 `Reducer 1` 的 `Los Angeles` 条目应该放在两个 key 之间。
+在第一个输出列中，在一个 `reducer` 内，对于给定 `state` 的数据按城市名称排序，然后按总捐赠量降序排列。但这种排序没有什么意义，因为有些数据丢失了。例如，`Reducer 0` 有2个排序的 `Los Angeles` key，但来自 `Reducer 1` 的 `Los Angeles` 条目应该放在这两个 key 之间。
 
-因此，当使用多个 reducers 时，我们想要的是将具有相同 `state` 的所有 （key，value） 键值对发送给同一个 reducer，就像第二列显示的那样。最简单的方法是创建我们自己的 `NaturalKeyPartitioner`，类似于默认的 `HashPartitioner`，但仅基于 `state`  的 `hashCode`，而不是完整的 `CompositeKey` 的 `hashCode`：
+因此，当使用多个 reducers 时，我们想要的是将具有相同 `state` 的所有 `（key，value）` 键值对发送给同一个 `reducer`，就像第二列显示的那样。最简单的方法是创建我们自己的 `NaturalKeyPartitioner`，类似于默认的 `HashPartitioner`，但仅基于 `state`  的 `hashCode`，而不是完整的 `CompositeKey` 的 `hashCode`：
 ```java
 import org.apache.hadoop.mapreduce.Partitioner;
 import data.writable.DonationWritable;
@@ -312,7 +310,7 @@ public class NaturalKeyPartitioner extends Partitioner<CompositeKey, DonationWri
 
 #### 3.4 Group Comparator
 
-`Group Comparator` 决定每次调用 `reduce` 方法时如何对这些值分组。
+`Group Comparator` 决定每次调用 `reduce` 方法时如何对这些值分组（译者注：一个分组调用一次 `reduce` 方法）。
 
 继续使用上图中的 `Reducer 0` 的例子。如果合并分区后，一个 reducer 中的（key，value）键值对必须如下处理：
 
