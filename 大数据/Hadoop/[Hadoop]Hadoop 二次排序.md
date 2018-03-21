@@ -7,20 +7,19 @@ tags:
   - Hadoop
 
 categories: Hadoop
+permalink: hadoop-secondary-sort
 ---
 
 二次排序的含义为先按某列对数据进行排序，在该次排序的基础之上再按照另一列的值进行排序，例如：
 ```
-a       2
-a       5
-a       11
-b       3
-b       8
-b       10
-b       15
-c       1
-c       4
-c       6
+4       3
+2       4
+4       6
+3       4
+3       2
+1       5
+4       1
+2       5
 ```
 这是原始数据集，经过二次排序后，输出的数据为：
 ```
@@ -72,6 +71,13 @@ public static class SecondarySortReducer extends Reducer<Text, Text, Text, Text>
 ```
 
 ### 3. 第二种方式
+
+#### 3.1 工作原理
+
+
+
+
+
 
 这种方法将 Value 中的值和原先的 Key 组成一个新的复合 Key，这样我们就可以利用 Reduce 来根据这个 Key 进行排序。过程如下：
 
