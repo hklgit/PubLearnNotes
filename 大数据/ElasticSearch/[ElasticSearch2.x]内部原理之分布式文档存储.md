@@ -12,9 +12,9 @@ permalink: elasticsearch-internal-distributed-document-store
 ---
 
 
-之前的文章中，我们已经知道如何存储数据到索引中以及如何检索它。但是我们掩盖了数据存储到集群中以及从集群中获取数据的具体实现的技术细节（But we glossed over many technical details surrounding how the data is distributed and fetched from the cluster）。
+之前的文章中，我们已经知道如何存储数据到索引中以及如何检索它。但是我们掩盖了数据存储到集群中以及从集群中获取数据的具体实现的技术细节。
 
-### 1. 路由文档到分片中（Routing a Document to a Shard）
+### 1. 路由文档到分片中
 
 当你索引一篇文档时，它会存储到一个主分片中。但是ElasticSearch如何知道文档是属于哪个分片呢？当我们创建一个新的文档，它是怎么知道它是应该存储到分片1上还是分片2上？
 
@@ -32,7 +32,7 @@ Routing值是一个任意字符串，默认为文档的id，也可以设置为�
 
 假设我们有一个三个节点的集群。集群里有一个名称为`blog`的索引，有两个主分片（primary shards）。每个主分片都有两个副本。相同节点的副本不会分配到同一节点，最后如下图展示：
 
-![image](http://img.blog.csdn.net/20170511201739159?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvU3VubnlZb29uYQ==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ElasticSearch/elasticsearch-internal-distributed-document-store-1.png?raw=true)
 
 我们可以发送请求到集群中的任何一个节点，每个节点都有能力处理我们的请求。每个节点都知道集群中任意文档的存储位置，所以可以直接将请求转发到所需的节点（Every node knows the location of every document in the cluster,so can forward requests directly to the required node）。
 
@@ -44,7 +44,7 @@ Routing值是一个任意字符串，默认为文档的id，也可以设置为�
 
 交互过程如下图所示：
 
-![image](http://img.blog.csdn.net/20170511202300111?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvU3VubnlZb29uYQ==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ElasticSearch/elasticsearch-internal-distributed-document-store-2.png?raw=true)
 
 
 下面是成功在主分片和副本分片上创建，索引以及删除文档所必须的步骤：
@@ -71,8 +71,6 @@ int( (primary + 3 replicas) / 2 ) + 1 = 3
 ```
 但是，如果仅启动两个节点，则活跃的分片副本不满足规定数量，您将无法对任何文档进行索引或删除。
 
-
-
 ##### 2.1.2 超时
 
 如果没有足够的副本分片会发生什么？ Elasticsearch会等待，希望更多的分片出现。默认情况下，它最多等待1分钟。 如果你需要，你可以使用 timeout 参数 使它更早终止： 100 100毫秒，30s 是30秒。
@@ -86,7 +84,7 @@ int( (primary + 3 replicas) / 2 ) + 1 = 3
 
 我们可以从一个主分片（primary shard）或者它们任一副本中检索文档，流程如下图：
 
-![image](http://img.blog.csdn.net/20170511202323692?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvU3VubnlZb29uYQ==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ElasticSearch/elasticsearch-internal-distributed-document-store-3.png?raw=true)
 
 
 下面是从主分片或者副本分片上检索文档所需要的一系列步骤：
@@ -104,7 +102,7 @@ int( (primary + 3 replicas) / 2 ) + 1 = 3
 
 更新 API （Update API）融合了上面解释的两种读写模式，如下图所示：
 
-![image](http://img.blog.csdn.net/20170511202341051?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvU3VubnlZb29uYQ==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ElasticSearch/elasticsearch-internal-distributed-document-store-4.png?raw=true)
 
 
 下面是部分更新一篇文档所需要的一系列步骤：
@@ -129,7 +127,7 @@ mget 和 bulk API的模式类似于单文档模式。 不同的是，协调节�
 
 如下图所示：
 
-![image](http://img.blog.csdn.net/20170511202424599?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvU3VubnlZb29uYQ==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ElasticSearch/elasticsearch-internal-distributed-document-store-5.png?raw=true)
 
 以下是使用单个 mget 请求取回多个文档所需的步骤顺序：
 
@@ -140,7 +138,7 @@ mget 和 bulk API的模式类似于单文档模式。 不同的是，协调节�
 
 bulk API，允许在单个批量请求中执行多个创建、索引、删除和更新请求，如下图所示：
 
-![image](http://img.blog.csdn.net/20170511202435755?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvU3VubnlZb29uYQ==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ElasticSearch/elasticsearch-internal-distributed-document-store-6.png?raw=true)
 
 bulk API 按如下步骤顺序执行：
 
