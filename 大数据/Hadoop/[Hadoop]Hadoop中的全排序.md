@@ -289,8 +289,95 @@ public class TotalOrderPartitionerExample {
 
 }
 ```
-#### 2.4 Execution and Analysis
-#### 2.5 Limitations and Annoyances
+这是一种非常简单的工作，只需要使用 TotalOrderPartitioner。我们不需要创建特定的 Mapper 和 Reducer 类，因为我们只对输入进行排序，而不改变任何值或格式。默认的 Mapper 和 Reducer 类将会这样做。这里需要注意的是:
+
+我们使用带有以下参数的 RandomSampler：
+- freq = 0.01：采样器将遍历所有记录，每条记录被选为样本的概率为 0.01（= 1％）。
+- numSamples = 1000：最多 1000 个样本。如果达到最大样本数量，则每个新选择的记录将替换已有的样本中记录。
+- maxSplitsSampled = 100：最多采样100个分割。在我们的例子中，只有 2 个分割，所以这个最大值不会被应用。
+
+InputSampler.writePartitionFile() 命令是一个阻塞调用。它将使用以下配置，必须事先指定：
+- 作业的输入路径：作为采样的输入。
+- reduce 任务的数量：写入到包含分区边界的 "分区文件" 序列文件。
+- map 输出键类：惹恼我们！ 好吧，我可能夸大了一点。稍后会说明...
+
+#### 2.4 执行与分析
+
+```
+$ hadoop jar donors.jar mapreduce.donation.totalorderpartitioner.TotalOrderPartitionerExample \
+donors/output_list_state_cities \
+donors/states_partitions.seqfile \
+donors/output_totalorder_example
+
+15/12/30 18:06:30 INFO input.FileInputFormat: Total input paths to process : 2
+15/12/30 18:06:33 INFO partition.InputSampler: Using 1000 samples
+...
+
+$ hdfs dfs -cat donors/states_partitions.seqfile
+SEQ♠↓org.apache.hadoop.io.Text!org.apache.hadoop.io.NullWritable *org.apache.hadoop.io.compress.DefaultCodec    99
+Æ9ö
+êB{2üZ}ö♥¬☻   ♂   ♥☻FLx9c♥      ♂   ♥☻NYx9c♥
+
+$ hdfs dfs -ls -h donors/output_totalorder_example
+Found 4 items
+-rw-r--r--   2 hduser supergroup          0 2015-12-30 18:07 donors/output_totalorder_example/_SUCCESS
+-rw-r--r--   2 hduser supergroup      5.3 M 2015-12-30 18:07 donors/output_totalorder_example/part-r-00000
+-rw-r--r--   2 hduser supergroup      7.0 M 2015-12-30 18:07 donors/output_totalorder_example/part-r-00001
+-rw-r--r--   2 hduser supergroup      6.4 M 2015-12-30 18:07 donors/output_totalorder_example/part-r-00002
+
+$ hdfs dfs -cat donors/output_totalorder_example/part-r-00001 | head
+FL      Jacksonville
+FL      Clermont
+FL      Tampa
+
+$ hdfs dfs -cat donors/output_totalorder_example/part-r-00001 | tail
+NV      Henderson
+NV      pahrump
+NV      Las Vegas
+
+$ hdfs dfs -cat donors/output_totalorder_example/part-r-00002 | head
+NY      New York
+NY      New York
+NY      bronx
+```
+这一次，当我们执行任务时，我们有一个日志告诉我们将会取多少个样本。
+
+我们指定的分区文件 donors/states_partitions.seqfile 在作业完成后不会从 HDFS 中删除，因此我们可以查看里面的内容。实际上它是压缩的，所以它看起来不太好看......但是我们可以看到（或猜测......）从上到下是：
+- SEQ：序列文件 header。
+- <K,V> 类型, 即 <Text,NullWritable>。
+- 压缩编解码器类
+- 两个看起来像美国的 state ! 在一些有趣的字符和unicode点之间，我们可以识别 FL 和 NY。
+
+通过可视化输出，我们可以看到第二个输出以 FL state 开始，第三个输出以 NY 开始。
+
+当然，city 并未排序，因为我们无法控制这些值如何进入 reduce 函数，因为我们没有使用二次排序。但是，我们成功地按照 state 对所有 reducer 进行了排序，并且输出文件的大小相当平衡，与上一节中的手动分区相比。我们还可以将作业配置中的 reduce 任务数量从3更改为4或10，而不必担心分区器。
+
+#### 2.5 限制与烦恼
+
+如前面在示例代码注释中所述，需要指定 map 输出键的类。它必须对应于采样器<K，V>键类。如果你尝试删除 setMapOutputKeyClass（Text.class） 语句，或者在调用 InputSampler.writePartitionFile（） 后使用它，则最终会出现此错误：
+```
+Exception in thread "main" java.io.IOException: wrong key class: org.apache.hadoop.io.Text is not class org.apache.hadoop.io.LongWritable
+        at org.apache.hadoop.io.SequenceFile$RecordCompressWriter.append(SequenceFile.java:1383)
+        at org.apache.hadoop.mapreduce.lib.partition.InputSampler.writePartitionFile(InputSampler.java:340)
+        at mapreduce.donation.totalorderpartitioner.TotalOrderPartitionerExample.main(TotalOrderPartitionerExample.java:39)
+        at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+        at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:57)
+        at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+        at java.lang.reflect.Method.invoke(Method.java:601)
+        at org.apache.hadoop.util.RunJar.run(RunJar.java:221)
+        at org.apache.hadoop.util.RunJar.main(RunJar.java:136)
+```
+这引出了几个问题：
+
+(1) 为什么我们为采样器指定 V 值类？它在我们之前看到的分区文件中存储了 <Text，NullWritable> 键值对，所以显然它不需要从输入中读取值。
+- 可能是因为它更容易实现，因为在 MapReduce 中所有的都是 <K，V> 参数化的。尤其是读取/写入序列文件。
+
+(2) 为什么要指定 map 键类？采样器的泛型类型已经反映了输入类型…
+- 我不是很确定。我相信如果这些类型是独立的就更好了。这与下一个问题有关。
+
+(3) 
+
+
 ### 3. Using a different input for sampling
 #### 3.1 Objective
 #### 3.2 MapReduce Solution

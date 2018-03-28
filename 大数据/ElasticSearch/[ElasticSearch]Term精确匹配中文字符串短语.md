@@ -1,3 +1,15 @@
+---
+layout: post
+author: sjf0115
+title: ElasticSearch Term精准匹配中文字符串短语
+date: 2016-07-06 23:15:17
+tags:
+  - ElasticSearch
+
+categories: ElasticSearch
+permalink: elasticsearch-term-exact-match-string
+---
+
 ### 1. 给定数据
 ```
 curl -XPUT 'localhost:9200/test-index/stu/1' -d'
@@ -99,8 +111,8 @@ SearchResponse searchResponse = searchRequestBuilder.execute().actionGet();
 ```
 ### 4. 解决方案二
 
-设置字段属性，设置为not_analyzed，再插入上面数据：
-```
+设置字段属性，设置为 not_analyzed，再插入上面数据：
+```json
 curl -XPUT 'localhost:9200/test-index' -d'
 {
     "mappings":{
