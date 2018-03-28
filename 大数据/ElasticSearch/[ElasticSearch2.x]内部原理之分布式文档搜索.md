@@ -1,3 +1,16 @@
+---
+layout: post
+author: sjf0115
+title: ElasticSearch2.x 内部原理之分布式文档搜索
+date: 2016-07-06 23:15:17
+tags:
+  - ElasticSearch
+  - ElasticSearch 内部原理
+
+categories: ElasticSearch
+permalink: elasticsearch-internal-distributed-document-search
+---
+
 这个要比基本的创建-读取-更新-删除（CRUD）请求要难一些。CRUD操作是处理的单个文档。这就意味着我们明确的知道集群中的哪个分片存储我们想要的文档。
 
 一个 CRUD 操作只对单个文档进行处理，文档有唯一的组合，由 `_index`, `_type`, 和 路由值 （默认是该文档的 `_id` ）组成。 这表示我们确切的知道此文档在集群中哪个分片中。
@@ -73,14 +86,6 @@ Query阶段包含如下步骤：
 
 分片加载文档体-- `_source`字段--如果有需要，用`metadata`和`search snippet highlighting`丰富结果文档。 一旦协调节点接收到所有的结果文档，它就组合这些结果为单个响应返回给客户端。
 
+> ElasticSearch 版本: 2.x
 
-
-原文：https://www.elastic.co/guide/en/elasticsearch/guide/current/distributed-search.html
-
-https://www.elastic.co/guide/en/elasticsearch/guide/current/_query_phase.html
-
-https://www.elastic.co/guide/en/elasticsearch/guide/current/_fetch_phase.html
-
-
-
-
+原文：https://www.elastic.co/guide/en/elasticsearch/guide/2.x/distributed-search.html

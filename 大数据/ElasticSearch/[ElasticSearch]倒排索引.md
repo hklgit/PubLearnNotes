@@ -17,3 +17,5 @@ Elasticsearch使用一种叫做倒排索引(inverted index)的结构来做快速
 The quick brown fox jumped over the lazy dog
 Quick brown foxes leap over lazy dogs in summer
 ```
+
+为了创建倒排索引，我们首先切分每个文档的content字段为单独的单词（我们把它们叫做词项（terms）或者词条（tokens）），把所有的唯一词项terms放入列表中并排序，并列出每个词项出现在哪些文档中，结果是这个样子的：
