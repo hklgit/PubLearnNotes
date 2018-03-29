@@ -16,40 +16,43 @@ permalink: elasticsearch-internal-distributed-document-store
 
 ### 1. 路由文档到分片中
 
-当你索引一篇文档时，它会存储到一个主分片中。但是ElasticSearch如何知道文档是属于哪个分片呢？当我们创建一个新的文档，它是怎么知道它是应该存储到分片1上还是分片2上？
+当你索引一篇文档时，它会存储到一个主分片中。但是 ElasticSearch 如何知道文档是属于哪个分片呢？当我们创建一个新的文档，它是怎么知道它是应该存储到分片1上还是分片2上？
 
 数据存储到分片的过程是有一定规则的，并不是随机发生的，因为我们日后还需要从分片中检索出文档。数据存储过程取决于下面的公式：
 ```
 shard = hash(routing) % number_of_primary_shards
 ```
-Routing值是一个任意字符串，默认为文档的id，也可以设置为一个用户自定义的值。Routing这个字符串通过一个hash函数处理，并返回一个数值，然后再除以索引中主分片的数目`number_of_primary_shards`，所得的余数作为主分片的编号，取值一般在0到number_of_primary_shards - 1之间的余数范围中。通过这种方法计算出该数据是存储到哪个分片中。
+Routing 值是一个任意字符串，默认为 `文档的id`，也可以设置为一个用户自定义的值。Routing 这个字符串通过一个 hash 函数处理，并返回一个数值，然后再除以索引中主分片的数目 number_of_primary_shards，所得的余数作为主分片的编号，取值一般在 0 到 number_of_primary_shards - 1 之间的余数范围中。通过这种方法计算出该数据是存储到哪个分片中。
 
 这就解释了为什么主分片个数在创建索引之后就不能再更改了：如果主分片个数在创建之后可以修改，那么之前所有通过公式得到的值都会失效，之前存储的文档也可能找不到。
 
-所有的文档API（get , index , delete , bulk , update , 和 mget）都可以接受一个routing参数，来自定义文档与分片之间的映射。一个自定义的路由参数可以用来确保所有相关的文档——例如所有属于同一个用户的文档——都被存储到同一个分片中。
+> 有的人可能认为，拥有固定数量的主分片会使以后很难对索引进行扩展。实际上，有一些技术可以让你在需要的时候很轻松的扩展。可以参阅[
+Designing for Scale](https://www.elastic.co/guide/en/elasticsearch/guide/2.x/scale.html)。
+
+所有的文档API（get , index , delete , bulk , update , 和 mget）都可以接受一个 routing 参数，来自定义文档与分片之间的映射。一个自定义的路由参数可以用来确保所有相关的文档，例如所有属于同一个用户的文档都被存储到同一个分片中。我们会在[
+Designing for Scale](https://www.elastic.co/guide/en/elasticsearch/guide/2.x/scale.html)中详细讨论为什么要这样做。
 
 ### 2. 主分片与副本分片如何交互
 
-假设我们有一个三个节点的集群。集群里有一个名称为`blog`的索引，有两个主分片（primary shards）。每个主分片都有两个副本。相同节点的副本不会分配到同一节点，最后如下图展示：
+假设我们有一个三个节点的集群。集群里有一个名称为 blog 的索引，有两个主分片（primary shards）。每个主分片都有两个副本。相同节点的副本不会分配到同一节点，最后如下图展示：
 
 ![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ElasticSearch/elasticsearch-internal-distributed-document-store-1.png?raw=true)
 
-我们可以发送请求到集群中的任何一个节点，每个节点都有能力处理我们的请求。每个节点都知道集群中任意文档的存储位置，所以可以直接将请求转发到所需的节点（Every node knows the location of every document in the cluster,so can forward requests directly to the required node）。
+我们可以发送请求到集群中的任何一个节点，每个节点都有能力处理我们的请求。每个节点都知道集群中每个文档的存储位置，所以可以直接将请求转发到对应的节点上。
 
-在下面的例子中，我们将请求都发送到节点1上，我们将其称为协调节点(coordinating node)。
+在下面的例子中，我们将请求都发送到节点 1 上，我们将其称为协调节点(coordinating node)。
 
 #### 2.1 创建，索引和删除文档
 
-创建，索引和删除请求都是写操作，所以必须在主分片上写操作完成之后才能被复制到相关的副本分片上（Create, index, and delete requests are write operations, which must be successfully completed on the primary shard before they can be copied to any associated replica shards）。
+创建，索引和删除请求都是写操作，所以必须在主分片上写操作完成之后才能被复制到相关的副本分片上。
 
 交互过程如下图所示：
 
 ![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ElasticSearch/elasticsearch-internal-distributed-document-store-2.png?raw=true)
 
-
 下面是成功在主分片和副本分片上创建，索引以及删除文档所必须的步骤：
 
-- 客户端发送了一个新建，索引 或者 删除文档 请求给节点 1；
+- 客户端发送了一个新建，索引 或者删除文档请求给节点 1；
 - 节点 1 通过请求文档的 id 值判断出该文档应该被存储在分片 0 中，并且知道分片 0  的主分片 P0 位于节点 3 上。因此节点 1 会把这个请求转发给节点 3；
 - 节点 3 在主分片上执行请求。如果请求执行成功，节点 3 并行将该请求转发给节点 1 和节点 2 上的的副本分片（R0）。一旦所有的副本分片都成功地执行了请求，则向节点 3 报告成功，节点 3 向协调节点 （Node 1 ）报告成功，协调节点向客户端报告成功。
 
@@ -59,7 +62,7 @@ Routing值是一个任意字符串，默认为文档的id，也可以设置为�
 
 ##### 2.1.1 一致性
 
-默认情况下，在尝试进行写操作之前，主分片需要规定数量(quorum)或大多数(majority)的分片副本`shard copies`（其中分片副本可以是主分片或副本分片 `a shard copy can be a primary or a replica shard`）。 这是为了防止将数据写入网络分区的“错误的一边`wrong side`”。 规定数量`quorum`定义如下：
+默认情况下，在尝试进行写操作之前，主分片需要规定数量(quorum)或大多数(majority)的分片拷贝 `shard copies` （其中分片副本可以是主分片或副本分片）。这是为了防止将数据写入网络分区的“错误的一边`wrong side`”。 规定数量`quorum`定义如下：
 ```
 int( (primary + number_of_replicas) / 2 ) + 1
 ```
@@ -75,9 +78,7 @@ int( (primary + 3 replicas) / 2 ) + 1 = 3
 
 如果没有足够的副本分片会发生什么？ Elasticsearch会等待，希望更多的分片出现。默认情况下，它最多等待1分钟。 如果你需要，你可以使用 timeout 参数 使它更早终止： 100 100毫秒，30s 是30秒。
 
-==备注==
-
-新索引默认有 1 个副本分片，这意味着为满足 规定数量 应该 需要两个活动的分片副本。 但是，这些默认的设置会阻止我们在单一节点上做任何事情。为了避免这个问题，要求只有当 number_of_replicas 大于1的时候，规定数量才会执行。
+> 新索引默认有 1 个副本分片，这意味着为满足 规定数量 应该 需要两个活动的分片副本。 但是，这些默认的设置会阻止我们在单一节点上做任何事情。为了避免这个问题，要求只有当 number_of_replicas 大于1的时候，规定数量才会执行。
 
 
 #### 2.2 检索文档
