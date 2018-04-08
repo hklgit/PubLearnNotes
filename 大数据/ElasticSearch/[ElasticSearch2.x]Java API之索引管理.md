@@ -1,63 +1,47 @@
-ElasticSearch为了便于处理索引管理（Indices administration）请求，提供了
+---
+layout: post
+author: sjf0115
+title: ElasticSearch2.x Java API之索引管理
+date: 2016-07-0８ 23:15:17
+tags:
+  - ElasticSearch
 
-org.elasticsearch.client.IndicesAdminClient接口。通过如下代码从 Client 对象中获得这个接口的实现：
+categories: ElasticSearch
+permalink: elasticsearch-java-api-index-administration
+---
 
+ElasticSearch　为了便于处理索引管理（Indices administration）请求，提供了　org.elasticsearch.client.IndicesAdminClient　接口。通过如下代码从 Client 对象中获得这个接口的实现：
+```java
 IndicesAdminClient indicesAdminClient = client.admin().indices();
-IndicesAdminClient定义了好几种prepareXXX()方法作为创建请求的入口点。
+```
+IndicesAdminClient 定义了好几种prepareXXX()方法作为创建请求的入口点。
+
 ### 1. 判断索引存在
 
-索引存在API用于检查集群中是否存在由prepareExists调用指定的索引。
-
-    /**
-     * 判断索引是否存在
-     * @param client
-     * @param index
-     * @return
-     */
-    public static boolean isIndexExists(Client client, String index) {
-        if(Objects.equal(client, null)){
-            logger.info("--------- IndexAPI isIndexExists 请求客户端为null");
-            return false;
-        }
-        if(StringUtils.isBlank(index)){
-            logger.info("--------- IndexAPI isIndexExists 索引名称为空");
-            return false;
-        }
-        IndicesAdminClient indicesAdminClient = client.admin().indices();
-        IndicesExistsResponse response = indicesAdminClient.prepareExists(index).get();
-        return response.isExists();
-        /* 另一种方式
-        IndicesExistsRequest indicesExistsRequest = new IndicesExistsRequest(index);
-        IndicesExistsResponse response = client.admin().indices().exists(indicesExistsRequest).actionGet();*/
-    }
-
-
-prepareExists()可以同时指定多个索引：
+索引存在API用于检查集群中是否存在由 prepareExists 调用指定的索引。
+```java
+IndicesAdminClient indicesAdminClient = client.admin().indices();
+IndicesExistsResponse response = indicesAdminClient.prepareExists(index).get();
+response.isExists();
+// 另一种方式
+IndicesExistsRequest indicesExistsRequest = new IndicesExistsRequest(index);
+IndicesExistsResponse response = client.admin().indices().exists(indicesExistsRequest).actionGet();
+response.isExists();
 ```
+
+prepareExists() 可以同时指定多个索引：
+```java
 IndicesExistsResponse response = indicesAdminClient.prepareExists(index1, index2 ....).get();
 ```
 
 ### 2. 判断类型存在
 
 类型存在API和索引存在API类似，只是不是用来检查索引是否存在，而是检查指定索引下的指定类型是否存在。为了确保成功返回结果，请确保索引已经存在，否则不会查找到指定的类型。下面代码演示查找索引下的指定类型：
-
-    /**
-     * 判断类型是否存在
-     * @param client
-     * @param index
-     * @param type
-     * @return
-     */
-    public static boolean isTypeExists(Client client, String index, String type) {
-        if(!isIndexExists(client, index)){
-            logger.info("--------- isTypeExists 索引 [{}] 不存在",index);
-            return false;
-        }
-        IndicesAdminClient indicesAdminClient = client.admin().indices();
-        TypesExistsResponse response = indicesAdminClient.prepareTypesExists(index).setTypes(type).get();
-        return response.isExists();
-    }
-
+```java
+IndicesAdminClient indicesAdminClient = client.admin().indices();
+TypesExistsResponse response = indicesAdminClient.prepareTypesExists(index).setTypes(type).get();
+response.isExists();
+```
 
 ### 3. 创建索引API
 
@@ -66,20 +50,13 @@ IndicesExistsResponse response = indicesAdminClient.prepareExists(index1, index2
 #### 3.1 创建空索引
 
 下面代码创建了一个空索引：
-
-    /**
-     * 创建空索引  默认setting 无mapping
-     * @param client
-     * @param index
-     * @return
-     */
-    public static boolean createSimpleIndex(Client client, String index){
-        IndicesAdminClient indicesAdminClient = client.admin().indices();
-        CreateIndexResponse response = indicesAdminClient.prepareCreate(index).get();
-        return response.isAcknowledged();
-    }
-查看索引状态信息：
+```java
+IndicesAdminClient indicesAdminClient = client.admin().indices();
+CreateIndexResponse response = indicesAdminClient.prepareCreate(index).get();
+response.isAcknowledged();
 ```
+查看索引状态信息：
+```json
 {
     "state": "open",
     "settings": {
@@ -94,55 +71,44 @@ IndicesExistsResponse response = indicesAdminClient.prepareExists(index1, index2
         }
     },
     "mappings": {
-        
+
     },
     "aliases": [
-        
+
     ]
 }
 ```
 
 #### 3.2. 创建复杂索引
 
-下面代码创建复杂索引，给它设置它的映射(mapping)和设置信息(settings)，指定分片个数为3，副本个数为2，同时设置school字段不分词。
-
-    /**
-     * 创建索引 指定setting
-     * @param client
-     * @param index
-     * @return
-     */
-    public static boolean createIndex(Client client, String index){
-        // settings
-        Settings settings = Settings.builder().put("index.number_of_shards", 3).put("index.number_of_replicas", 2).build();
-        // mapping
-        XContentBuilder mappingBuilder;
-        try {
-            mappingBuilder = XContentFactory.jsonBuilder()
-                    .startObject()
-                        .startObject(index)
-                            .startObject("properties")
-                                .startObject("name").field("type", "string").field("store", "yes").endObject()
-                                .startObject("sex").field("type", "string").field("store", "yes").endObject()
-                                .startObject("college").field("type", "string").field("store", "yes").endObject()
-                                .startObject("age").field("type", "integer").field("store", "yes").endObject()
-                                .startObject("school").field("type", "string").field("store", "yes").field("index", "not_analyzed").endObject()
-                            .endObject()
-                        .endObject()
-                    .endObject();
-        } catch (Exception e) {
-            logger.error("--------- createIndex 创建 mapping 失败：",e);
-            return false;
-        }
-        IndicesAdminClient indicesAdminClient = client.admin().indices();
-        CreateIndexResponse response = indicesAdminClient.prepareCreate(index)
-                .setSettings(settings)
-                .addMapping(index, mappingBuilder)
-                .get();
-        return response.isAcknowledged();
-    }
-查看索引状态信息：
+下面代码创建复杂索引，给它设置它的映射(mapping)和设置信息(settings)，指定分片个数为3，副本个数为2，同时设置 school 字段不分词。
+```java
+// settings
+Settings settings = Settings.builder().put("index.number_of_shards", 3).put("index.number_of_replicas", 2).build();
+// mapping
+XContentBuilder mappingBuilder;
+mappingBuilder = XContentFactory.jsonBuilder()
+        .startObject()
+            .startObject(index)
+                .startObject("properties")
+                    .startObject("name").field("type", "string").field("store", "yes").endObject()
+                    .startObject("sex").field("type", "string").field("store", "yes").endObject()
+                    .startObject("college").field("type", "string").field("store", "yes").endObject()
+                    .startObject("age").field("type", "integer").field("store", "yes").endObject()
+                    .startObject("school").field("type", "string").field("store", "yes").field("index", "not_analyzed").endObject()
+                .endObject()
+            .endObject()
+        .endObject();
+IndicesAdminClient indicesAdminClient = client.admin().indices();
+CreateIndexResponse response = indicesAdminClient.prepareCreate(index)
+        .setSettings(settings)
+        .addMapping(index, mappingBuilder)
+        .get();
+response.isAcknowledged();
 ```
+
+查看索引状态信息：
+```json
 {
     "state": "open",
     "settings": {
@@ -184,7 +150,7 @@ IndicesExistsResponse response = indicesAdminClient.prepareExists(index1, index2
         }
     },
     "aliases": [
-        
+
     ]
 }
 ```
@@ -345,7 +311,7 @@ IndicesExistsResponse response = indicesAdminClient.prepareExists(index1, index2
         }
     },
     "aliases": [
-        
+
     ]
 }
 ```
@@ -532,9 +498,7 @@ https://github.com/sjf0115/OpenDiary/blob/master/ElasticSearchDemo/src/main/java
 
 https://github.com/sjf0115/OpenDiary/blob/master/ElasticSearchDemo/src/test/java/com/sjf/open/api/IndexAPITest.java
 
+> ElascticSearch版本：2.x
+> ElacticSearch Java 版本：6.2
 
-
-
-
-
-
+参考: https://www.elastic.co/guide/en/elasticsearch/client/java-api/6.2/java-admin-indices.html#java-admin-indices-create-index

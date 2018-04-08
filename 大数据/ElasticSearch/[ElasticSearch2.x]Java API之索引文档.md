@@ -1,16 +1,22 @@
+---
+layout: post
+author: sjf0115
+title: ElasticSearch2.x Java API之索引文档
+date: 2016-07-07 23:15:17
+tags:
+  - ElasticSearch
+
+categories: ElasticSearch
+permalink: elasticsearch-java-api-index-doc
+---
+
 Index API 允许我们存储一个JSON格式的文档，使数据可以被搜索。文档通过index、type、id唯一确定。我们可以自己提供一个id，或者也使用Index API 为我们自动生成一个。
 
 这里有几种不同的方式来产生JSON格式的文档(document)：
-
-(1) 手动方式，使用原生的byte[]或者String
-
-(2) 使用Map方式，会自动转换成与之等价的JSON
-
-(3) 使用第三方库来序列化beans，如Jackson
-
-(4) 使用内置的帮助类 XContentFactory.jsonBuilder()
-
-
+- 手动方式，使用原生的byte[]或者String
+- 使用Map方式，会自动转换成与之等价的JSON
+- 使用第三方库来序列化beans，如Jackson
+- 使用内置的帮助类 XContentFactory.jsonBuilder()
 
 ### 1. 手动方式
 
@@ -134,4 +140,7 @@ try {
 你还可以通过startArray(string)和endArray()方法添加数组。.field()方法可以接受多种对象类型。你可以给它传递数字、日期、甚至其他XContentBuilder对象。
 ```
 
-参考：https://www.elastic.co/guide/en/elasticsearch/client/java-api/current/java-docs-index.html#java-docs-index-generate
+> ElasticSearch版本:2.x
+
+
+参考：https://www.elastic.co/guide/en/elasticsearch/client/java-api/2.x/java-docs-index.html#java-docs-index-generate
