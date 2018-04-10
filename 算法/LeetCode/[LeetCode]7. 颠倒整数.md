@@ -2,7 +2,7 @@
 layout: post
 author: sjf0115
 title: 7. 颠倒整数
-date: 2017-03-21 19:15:17
+date: 2017-03-21 00:00:07
 tags:
   - LeetCode
 
