@@ -1,7 +1,7 @@
 ---
 layout: post
 author: sjf0115
-title: Spark2.3.0 持久化
+title: Spark Streaming 与 Kafka0.8 整合
 date: 2018-03-16 11:28:01
 tags:
   - Spark
@@ -126,39 +126,70 @@ from pyspark.streaming.kafka import KafkaUtils
  directKafkaStream = KafkaUtils.createDirectStream(ssc, [topic], {"metadata.broker.list": brokers})
 ```
 
+你还可以将 messageHandler 传递给 createDirectStream 来访问 MessageAndMetadata，其包含了当前消息的元数据，并可以将其转换为任意所需的类型。
 
+在 Kafka 参数中，必须指定 metadata.broker.list 或 bootstrap.servers。默认情况下，它将从每个 Kafka 分区的最新偏移量开始消费。如果你将 Kafka 参数中的 `auto.offset.reset` 配置为 `smallest`，那么它将从最小偏移量开始消费。
 
+你也可以使用 KafkaUtils.createDirectStream 的其他变体从任意偏移量开始消费。此外，如果你想访问每个批次中消费的偏移量，你可以执行以下操作：
 
+Scala版本：
+```scala
+// Hold a reference to the current offset ranges, so it can be used downstream
+var offsetRanges = Array.empty[OffsetRange]
 
+directKafkaStream.transform { rdd =>
+  offsetRanges = rdd.asInstanceOf[HasOffsetRanges].offsetRanges
+  rdd
+}.map {
+          ...
+}.foreachRDD { rdd =>
+  for (o <- offsetRanges) {
+    println(s"${o.topic} ${o.partition} ${o.fromOffset} ${o.untilOffset}")
+  }
+  ...
+}
+```
+Java版本:
+```java
+// Hold a reference to the current offset ranges, so it can be used downstream
+AtomicReference<OffsetRange[]> offsetRanges = new AtomicReference<>();
 
+directKafkaStream.transformToPair(rdd -> {    OffsetRange[] offsets = ((HasOffsetRanges) rdd.rdd()).offsetRanges();    offsetRanges.set(offsets);    return rdd;
+}).map(
+  ...
+).foreachRDD(rdd -> {    for (OffsetRange o : offsetRanges.get()) {
+System.out.println(
+  o.topic() + " " + o.partition() + " " + o.fromOffset() + " " + o.untilOffset()
+);    }    ...
+});
+```
+Python版本:
+```python
+offsetRanges = []
 
+def storeOffsetRanges(rdd):
+    global offsetRanges
+    offsetRanges = rdd.offsetRanges()
+    return rdd
 
+def printOffsetRanges(rdd):
+    for o in offsetRanges:
+        print "%s %s %s %s" % (o.topic, o.partition, o.fromOffset, o.untilOffset)
 
+directKafkaStream \
+    .transform(storeOffsetRanges) \
+    .foreachRDD(printOffsetRanges)
+```
 
+如果你希望基于 Zookeeper 的 Kafka 监视工具显示流应用程序的进度，你可以使用上面来更新 Zookeeper。
 
+请注意，HasOffsetRanges 的类型转换只有在 directKafkaStream 的第一个方法调用中使用才会成功，而不是放在后面的方法链中。你可以使用 transform() 替换 foreachRDD() 作为调用的第一个方法来访问偏移量，然后再调用其他的Spark方法。但是，请注意，RDD partition 与 Kafka partition 之间的一对一映射经过任意 shuffle 或重新分区的方法（例如， reduceByKey（）或window（）之后不会保留。
 
+另外需要注意的是，由于此方法不使用 Receivers，因此与 receiver 相关的配置（即 `spark.streaming.receiver.*` 形式的配置）将不再适用于由此方法创建的输入DStream（将应用于其他输入DStreams）。相反，使用 `spark.streaming.kafka.*` 配置。一个重要的配置是 `spark.streaming.kafka.maxRatePerPartition`，每个 Kafka partition 使用 direct API 读取的最大速率（每秒消息数）。
 
+#### 2.3 部署
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+这与第一种方法相同。
 
 > Spark版本： 2.3.0
 > Kafka版本：0.8
