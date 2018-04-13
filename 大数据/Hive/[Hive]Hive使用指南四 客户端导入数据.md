@@ -75,10 +75,8 @@ set hive.exec.dynamic.partition.mode=nonstrict;
 ```
 默认值为`strict`，设置完毕之后，再次导入数据即可。
 
-**备注**
-```
-SELECT语句中要包含分区字段
-```
+> 备注
+在SELECT子句的最后两个字段，必须对应前面partition (bucket_type, file_name)中指定的分区字段，包括顺序。
 
 ### 2. HDFS上导入数据到Hive表
 

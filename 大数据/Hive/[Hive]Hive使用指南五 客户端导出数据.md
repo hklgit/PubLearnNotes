@@ -62,7 +62,7 @@ SELECT * FROM client_behavior WHERE dt = '2017-08-16' LIMIT 2000;
 
 导出到Hive中的另一个表中，也是Hive的数据导入方式：
 ```
-INSERT INTO client_behavior_copy
+INSERT INTO TABLE client_behavior_copy
 SELECT * FROM client_behavior WHERE dt = '2017-08-16' LIMIT 2000;
 ```
 **备注**

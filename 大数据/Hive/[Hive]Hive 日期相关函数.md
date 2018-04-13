@@ -1,3 +1,15 @@
+---
+layout: post
+author: sjf0115
+title: Hive 日期相关函数
+date: 2017-12-08 19:16:01
+tags:
+  - Hive
+
+categories: Hive
+permalink: hive-common-date-function
+---
+
 下面介绍一下常用的Hive日期处理相关函数。
 
 ### 1. to_date 日期时间转日期函数
