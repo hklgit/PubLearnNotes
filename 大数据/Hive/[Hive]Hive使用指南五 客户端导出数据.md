@@ -9,7 +9,7 @@ INSERT OVERWRITE LOCAL DIRECTORY '/home/xiaosi/data/client_behavior'
 SELECT * FROM client_behavior WHERE dt = '2017-08-16' LIMIT 2000;
 ```
 这条HQL的执行需要启用Mapreduce作业，运行完这条语句之后，将会在本地文件系统`/home/xiaosi/data/client_behavior`目录下生成文件名称为`000000_2`的文件，这是由Reduce产生的结果，我们可以看看这个文件的内容：
-```hive
+```hivea
 ll /home/xiaosi/data/client_behavior
 total 536
 -rw-r--r-- 1 wirelessdev wirelessdev 546233 Aug 17 19:46 000000_2
@@ -62,7 +62,7 @@ SELECT * FROM client_behavior WHERE dt = '2017-08-16' LIMIT 2000;
 
 导出到Hive中的另一个表中，也是Hive的数据导入方式：
 ```
-INSERT INTO client_behavior_copy
+INSERT INTO TABLE client_behavior_copy
 SELECT * FROM client_behavior WHERE dt = '2017-08-16' LIMIT 2000;
 ```
 **备注**

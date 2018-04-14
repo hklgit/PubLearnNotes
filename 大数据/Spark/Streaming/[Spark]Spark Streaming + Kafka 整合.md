@@ -1,3 +1,0 @@
-
-这个方法使用了Receivers来接收数据。Receivers 的实现使用到kafka高层次的消费者API。对于所有的Receivers，接收到的数据将会保存在Spark executors中，然后由Spark Streaming启动Job来处理这些数据。
-

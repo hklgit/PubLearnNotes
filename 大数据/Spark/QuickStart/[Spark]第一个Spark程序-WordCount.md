@@ -1,8 +1,8 @@
 ---
 layout: post
 author: sjf0115
-title: Spark 第一个Spark应用程序WordCount
-date: 2018-03-10 12:54:01
+title: Spark 第一个Spark程序WordCount
+date: 2018-03-11 15:03:01
 tags:
   - Spark
   - Spark 基础
@@ -11,8 +11,7 @@ categories: Spark
 permalink: spark-first-application-word-count
 ---
 
-### 1. Maven 依赖
-
+### 1 Maven 依赖
 ```
 <spark.version>2.1.0</spark.version>
 
@@ -31,6 +30,7 @@ permalink: spark-first-application-word-count
 ```
 
 ### 2. JavaWordCount
+
 ```java
 package com.sjf.open.spark;
 

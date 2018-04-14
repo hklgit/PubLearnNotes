@@ -1,3 +1,15 @@
+---
+layout: post
+author: sjf0115
+title: ElasticSearch安装与启动
+date: 2016-06-23 23:15:17
+tags:
+  - ElasticSearch
+
+categories: ElasticSearch
+permalink: elasticsearch-setup-and-run
+---
+
 ### 1. 检查JDK版本
 
 使用如下命令检验JDK版本：
