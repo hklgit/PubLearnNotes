@@ -1,4 +1,18 @@
-### 1 Maven 依赖
+---
+layout: post
+author: sjf0115
+title: Spark 第一个Spark应用程序WordCount
+date: 2018-03-10 12:54:01
+tags:
+  - Spark
+  - Spark 基础
+
+categories: Spark
+permalink: spark-first-application-word-count
+---
+
+### 1. Maven 依赖
+
 ```
 <spark.version>2.1.0</spark.version>
 
@@ -17,7 +31,7 @@
 ```
 
 ### 2. JavaWordCount
-```
+```java
 package com.sjf.open.spark;
 
 import org.apache.spark.api.java.JavaPairRDD;
@@ -93,7 +107,7 @@ mvn package
 ```
 使用上述命令打包后，会在项目根目录下的target目录生成jar包。打完jar包后，我们可以使用spark-submit提交任务：
 ```
-bin/spark-submit --class com.sjf.open.spark.JavaWordCount --master local /home/xiaosi/code/Common-Tool/target/common-tool-jar-with-dependencies.jar /home/xiaosi/a.txt 
+bin/spark-submit --class com.sjf.open.spark.JavaWordCount --master local /home/xiaosi/code/Common-Tool/target/common-tool-jar-with-dependencies.jar /home/xiaosi/a.txt
 
 ee: 1
 aa: 3
@@ -107,16 +121,6 @@ cc: 1
 
 ### 4. Idea本地调试
 
-运行配置 
+运行配置
 
 ![image](http://img.blog.csdn.net/20170223113917294?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvU3VubnlZb29uYQ==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
-
-
-
-
-
-
-
-
-
-
