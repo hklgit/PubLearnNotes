@@ -11,6 +11,8 @@ categories: Spark
 permalink: spark-base-core-rdd
 ---
 
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-base-core-rdd-1.jpg?raw=true)
+
 与许多专有的大数据处理平台不同，Spark建立在统一抽象的RDD之上，使得它可以以基本一致的方式应对不同的大数据处理场景，包括MapReduce，Streaming，SQL，Machine Learning以及Graph等。这即Matei Zaharia所谓的“设计一个通用的编程抽象（Unified Programming Abstraction）。这正是Spark这朵小火花让人着迷的地方。
 
 要理解Spark，就需得理解RDD。
@@ -29,7 +31,7 @@ Spark之所以将依赖分为窄依赖与宽依赖，基于两点原因。
 
 其次，则是从失败恢复的角度考虑。窄依赖的失败恢复更有效，因为它只需要重新计算丢失的、父partition即可，而且可以并行地在不同节点进行重计算。而宽依赖牵涉到RDD各级的多个父Partitions。下图说明了窄依赖与宽依赖之间的区别：
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-base-core-rdd-2.jpg?raw=true)
 
 本图来自Matei Zaharia撰写的论文An Architecture for Fast and General Data Processing on Large Clusters。图中，一个box代表一个RDD，一个带阴影的矩形框代表一个partition。
 
