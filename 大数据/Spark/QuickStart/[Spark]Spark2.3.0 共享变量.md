@@ -54,7 +54,7 @@ Python版本：
 
 作为使用者，你可以创建命名或未命名的累加器。如下图所示，命名累加器（在此为 counter 实例）会在 Web UI 中展示。Spark显示了由 `任务` 表中的任务修改的每个累加器的值。
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-base-shared-variables-1.png?raw=true)
 
 跟踪 UI 中的累加器对于理解运行的 stage　的进度很有用（注意：Python尚未支持）。
 
