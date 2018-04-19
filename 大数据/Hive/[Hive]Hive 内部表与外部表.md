@@ -94,8 +94,8 @@ xiaosi@yoona:~$ hadoop fs -text  /user/hive/warehouse/tb_station_coordinate/stat
 ...
 ```
 
-备注:
 
+>
 `/home/xiaosi/station_coordinate.txt`是本地文件系统路径。从上面的输出我们可以看到数据是从本地的这个路径复制到`HDFS`上的`/user/hive/warehouse/tb_station_coordinate/`目录下。
 为什么会自动复制到`HDFS`这个目录下呢？这个是由`Hive`的配置文件设置的。在`Hive`的`${HIVE_HOME}/conf/hive-site.xml`配置文件中指定，`hive.metastore.warehouse.dir`属性指向的就是`Hive`表数据存放的路径(在这配置的是`/user/hive/warehouse/`)。`Hive`每创建一个表都会在`hive.metastore.warehouse.dir`指向的目录下以表名创建一个文件夹，所有属于这个表的数据都存放在这个文件夹里面`/user/hive/warehouse/tb_station_coordinate`。
 
