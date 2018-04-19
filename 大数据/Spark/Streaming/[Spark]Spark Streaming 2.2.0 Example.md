@@ -1,7 +1,7 @@
 ---
 layout: post
 author: sjf0115
-title: Spark Streaming 2.2.0  Example
+title: Spark Streaming 2.2.0 Example
 date: 2018-04-02 11:28:01
 tags:
   - Spark
