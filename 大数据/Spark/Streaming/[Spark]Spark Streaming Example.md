@@ -1,5 +1,19 @@
+---
+layout: post
+author: sjf0115
+title: Spark Streaming 2.2.0  Example
+date: 2018-04-02 11:28:01
+tags:
+  - Spark
+  - Spark Stream
+
+categories: Spark
+permalink: spark-streaming-first-example
+---
+
 ### 1. 概述
-Spark streaming是Spark核心API的一个扩展，它对实时流式数据的处理具有可扩展性、高吞吐量、可容错性等特点。数据可以从诸如Kafka，Flume，Kinesis或TCP套接字等许多源中提取，并且可以使用由诸如map，reduce，join或者 window等高级函数组成的复杂算法来处理。最后，处理后的数据可以推送到文件系统、数据库、实时仪表盘中。事实上，你可以将处理后的数据应用到Spark的机器学习算法、 图处理算法中去。
+
+Spark Streaming 是 Spark Core API的一个扩展，它对实时流式数据的处理具有可扩展性、高吞吐量、可容错性等特点。数据可以从诸如Kafka，Flume，Kinesis或TCP套接字等许多源中提取，并且可以使用由诸如map，reduce，join或者 window等高级函数组成的复杂算法来处理。最后，处理后的数据可以推送到文件系统、数据库、实时仪表盘中。事实上，你可以将处理后的数据应用到Spark的机器学习算法、 图处理算法中去。
 
 ![image](http://spark.apache.org/docs/latest/img/streaming-arch.png)
 
@@ -34,7 +48,7 @@ import org.apache.spark.streaming.api.java.JavaReceiverInputDStream;
 
 private static String hostName = "localhost";
 private static int port = 7777;
-    
+
 // 以端口7777作为输入源创建DStream
 JavaReceiverInputDStream<String> lines = jsc.socketTextStream(hostName, port);
 ```
@@ -81,14 +95,13 @@ jsc.start();
 // 等待作业完成
 jsc.awaitTermination();
 ```
-**注意**
-
+>注意
 一个Streaming context 只启动一次，所以只有在配置好所有DStream以及所需的操作之后才能启动。
 
 如果你已经下载和构建了Spark环境，你就能够用如下的方法运行这个例子。首先，你需要运行Netcat作为数据服务器：
 ```
 xiaosi@yoona:~$ nc -lk 7777
-hello I am yoona  hello 
+hello I am yoona  hello
 ...
 
 ```
@@ -133,6 +146,6 @@ Kinesis|spark-streaming-kinesis-asl_2.11 [Amazon Software License]
 为了获取最新的列表，请访问[Apache repository](http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.apache.spark%22%20AND%20v%3A%221.2.0%22)
 
 
+> Spark Streaming 版本: 2.2.0
 
-
-
+原文：http://spark.apache.org/docs/2.2.0/streaming-programming-guide.html#a-quick-example
