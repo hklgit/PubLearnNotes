@@ -62,7 +62,7 @@ JavaDStream<String> words = lines.flatMap(new FlatMapFunction<String, String>() 
     }
 });
 ```
-flatMap是一个DStream操作，通过从源DStream中的每个记录生成多个新记录来创建新的DStream。 在我们例子中，每一行将被拆分成多个单词，并且单词数据流用 words 这个DStream来表示。 注意，我们使用FlatMapFunction对象定义了一个转换操作。 正如我们将会发现，在Java API中有许多这样的类帮主我们定义DStream转换操作。
+flatMap是一个DStream操作，通过从源DStream中的每个记录生成多个新记录来创建新的DStream。 在我们例子中，每一行将被拆分成多个单词，并且单词数据流用 words 这个DStream来表示。 注意，我们使用FlatMapFunction对象定义了一个转换操作。 正如我们会发现，在Java API中有许多这样的类帮助我们定义DStream转换操作。
 
 下一步，我们计算单词的个数：
 ```java
