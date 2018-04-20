@@ -21,7 +21,45 @@ permalink: hive-performance-tuning
 
 我们可以通过启用 `Auto Convert Map Joins` 以及 启用 `skew joins` 的优化来提高 Join 的性能。
 
+#### 2.1 Auto Map Joins
 
+当一个大表与一个小表 Join 时，`Auto Map-Join` 是一个非常有用的功能。如果我们启用此功能，则小表将保存在每个节点的本地缓存中，然后在 Map 阶段与大表连接。启用 `Auto Map Join` 提供了两点优势。首先，将一个小表加载到缓存中将节省每个数据节点上的读取时间。 其次，它避免了Hive查询中的 `skew joins `，因为连接操作已经在Map阶段已经完成了。
+
+启用 `Auto Map Join ` 功能，我们需要设置下面的属性：
+```xml
+<property>
+   <name>hive.auto.convert.join</name>
+   <value>true</value>
+   <description>Whether Hive enables the optimization about converting common join into mapjoin based on the input file size</description>
+ </property>
+ <property>
+   <name>hive.auto.convert.join.noconditionaltask</name>
+   <value>true</value>
+   <description>
+     Whether Hive enables the optimization about converting common join into mapjoin based on the input file size.
+     If this parameter is on, and the sum of size for n-1 of the tables/partitions for a n-way join is smaller than the
+     specified size, the join is directly converted to a mapjoin (there is no conditional task).
+   </description>
+ </property>
+ <property>
+   <name>hive.auto.convert.join.noconditionaltask.size</name>
+   <value>10000000</value>
+   <description>
+     If hive.auto.convert.join.noconditionaltask is off, this parameter does not take affect.
+     However, if it is on, and the sum of size for n-1 of the tables/partitions for a n-way join is smaller than this size,
+     the join is directly converted to a mapjoin(there is no conditional task). The default is 10MB
+   </description>
+ </property>
+ <property>
+   <name>hive.auto.convert.join.use.nonstaged</name>
+   <value>false</value>
+   <description>
+     For conditional joins, if input stream from a small alias can be directly applied to join operator without
+     filtering or projection, the alias need not to be pre-staged in distributed cache via mapred local task.
+     Currently, this is not working with vectorization or tez execution engine.
+   </description>
+ </property>
+```
 
 
 
