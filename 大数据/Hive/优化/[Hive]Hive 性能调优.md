@@ -15,7 +15,11 @@ permalink: hive-performance-tuning
 
 ### 1. 在Hive中启用压缩
 
-通过在各个阶段（即最终输出，中间数据）启用压缩，实现 Hive 查询中的性能改进。有关如何启用压缩Hive的更多详细信息，请参阅Hive中的后压缩。
+通过在各个阶段（即最终输出，中间数据）启用压缩，实现 Hive 查询中的性能改进。有关如何启用压缩Hive的更多详细信息，请参阅[Hive 启用压缩](http://smartsi.club/2018/04/12/hive-enable-compression/)。
+
+### 2. 优化Join
+
+我们可以通过启用 `Auto Convert Map Joins` 以及 启用 `skew joins` 的优化来提高 Join 的性能。
 
 
 
