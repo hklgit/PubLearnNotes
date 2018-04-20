@@ -28,21 +28,21 @@ permalink: spark-streaming-ui-streaming-tab
 
 ![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-streaming-ui-streaming-tab-2.png?raw=true)
 
-图2显示了这个应用有两个来源，(SocketReceiver-0和 SocketReceiver-1)，其中的一个导致了整个接收速率的下降，因为它在接收数据的过程中停止了一段时间。
+上图显示了这个应用有两个来源，(SocketReceiver-0和 SocketReceiver-1)，其中的一个导致了整个接收速率的下降，因为它在接收数据的过程中停止了一段时间。
 
 这一页再向下（在图1中标记为 [D] ），处理时间（Processing Time）的时间轴显示，这些批次大约在平均20毫秒内被处理完成，和批处理间隔（在本例中是1s）相比花费的处理时间更少，意味着调度延迟（被定义为：一个批次等待之前批次处理完成的时间，被标记为 [E]）几乎是零，因为这些批次在创建的时候就已经被处理了。调度延迟是你的Streaming引用程序是否稳定的关键所在，UI的新功能使得对它的监控更加容易。
 
 ### 3. 批次细节
 
-再次参照图1，你可能很好奇，为什么向右的一些批次花费更长的时间才能完成（注意图1中的[F]）。你可以通过UI轻松的分析原因。首先，你可以点击时间轴视图中批处理时间比较长的点，这将会在页面下方产生一个关于完成批次的详细信息列表。
+再次参照第一个图，你可能很好奇，为什么向右的一些批次花费更长的时间才能完成（注意第一个图中的[F]）。你可以通过UI轻松的分析原因。首先，你可以点击时间轴视图中批处理时间比较长的点，这将会在页面下方产生一个关于完成批次的详细信息列表。
 
 ![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-streaming-ui-streaming-tab-3.png?raw=true)
 
-它将显示这个批次的所有主要信息（在上图3中以绿色高亮显示）。正如你所看到的，这个批次较之其他批次有更长的处理时间。另一个很明显的问题是：到底是哪个spark job引起了这个批次的处理时间过长。你可以通过点击Batch Time（第一列中的蓝色链接），这将带你看到对应批次的详细信息，向你展示输出操作和它们的spark job，正如图4所示。
+它将显示这个批次的所有主要信息（在上图中以绿色高亮显示）。正如你所看到的，这个批次较之其他批次有更长的处理时间。另一个很明显的问题是：到底是哪个spark job引起了这个批次的处理时间过长。你可以通过点击Batch Time（第一列中的蓝色链接），这将带你看到对应批次的详细信息，向你展示输出操作和它们的spark job，正如图4所示。
 
 ![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-streaming-ui-streaming-tab-4.png?raw=true)
 
-图4显示有一个输出操作，它产生了3个spark job。你可以点击job ID链接继续深入到stages和tasks做更深入的分析。
+上图显示有一个输出操作，它产生了3个spark job。你可以点击job ID链接继续深入到stages和tasks做更深入的分析。
 
 ### 4. Streaming RDDs的有向无环执行图
 
