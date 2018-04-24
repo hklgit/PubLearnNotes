@@ -15,7 +15,8 @@ permalink: hadoop-how-to-use-compression
 
 下面我们列出了一些代码，为 Hadoop 中常用的压缩格式设置输出压缩。
 
-### 1. Gzip
+### 1. 常用压缩格式
+#### 1.1 Gzip
 
 对于最终输出，我们可以使用FileOutputFormat上的静态方便方法来设置属性：
 ```java
@@ -36,7 +37,7 @@ conf.setClass("mapred.map.output.compression.codec", GzipCodec.class, Compressio
 Job job = Job.getInstance(conf);
 ```
 
-### 2. LZO
+#### 1.2 LZO
 
 对于最终输出：
 ```java
@@ -53,7 +54,7 @@ conf.setClass("mapred.map.output.compression.codec", LzoCodec.class, Compression
 Job job = Job.getInstance(conf);
 ```
 
-### 3. Snappy
+#### 1.3 Snappy
 
 对于最终输出：
 ```java
@@ -68,6 +69,12 @@ Configuration conf = new Configuration();
 conf.setBoolean("mapred.compress.map.output", true);
 conf.set("mapred.map.output.compression.codec","org.apache.hadoop.io.compress.SnappyCodec");
 ```
+### 2. 实验与结果
+
+文件系统计数器用于分析实验结果。以下是典型的内置文件系统计数器。
+
+
+
 
 
 原文：http://comphadoop.weebly.com/how-to-use-compression.html
