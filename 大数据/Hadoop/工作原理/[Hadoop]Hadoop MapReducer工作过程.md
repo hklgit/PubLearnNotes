@@ -1,4 +1,17 @@
-## 1. 从输入到输出
+---
+layout: post
+author: sjf0115
+title: Hadoop MapReduce工作过程
+date: 2017-12-30 09:32:17
+tags:
+  - Hadoop
+  - Hadoop 内部原理
+
+categories: Hadoop
+permalink: hadoop-mapreduce-working-process
+---
+
+### 1. 从输入到输出
 
 一个MapReducer作业经过了input，map，combine，reduce，output五个阶段，其中combine阶段并不一定发生，map输出的中间结果被分到reduce的过程成为shuffle（数据清洗）。
 ![image](http://img.blog.csdn.net/20161230102351523?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvU3VubnlZb29uYQ==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
@@ -10,22 +23,22 @@ Map任务的执行过程可以概括为：首先通过用户指定的InputFormat
 
 Reduce任务的执行过程可以概括为：首先需要将已经完成Map任务的中间结果复制到Reduce任务所在的节点，待数据复制完成后，再以key进行排序，通过排序，将所有key相同的数据交给reduce函数处理，处理完成后，结果直接输出到HDFS上。
 
-## 2. input
+### 2. input
 
 如果使用HDFS上的文件作为MapReduce的输入，MapReduce计算框架首先会用org.apache.hadoop.mapreduce.InputFomat类的子类FileInputFormat类将作为输入HDFS上的文件切分形成输入分片(InputSplit)，每个InputSplit将作为一个Map任务的输入，再将InputSplit解析为键值对。InputSplit的大小和数量对于MaoReduce作业的性能有非常大的影响。
 
 InputSplit只是逻辑上对输入数据进行分片，并不会将文件在磁盘上分成分片进行存储。InputSplit只是记录了分片的元数据节点信息，例如起始位置，长度以及所在的节点列表等。数据切分的算法需要确定InputSplit的个数，对于HDFS上的文件，FileInputFormat类使用computeSplitSize方法计算出InputSplit的大小，代码如下：
-```
+```java
 protected long computeSplitSize(long blockSize, long minSize, long maxSize) {
     return Math.max(minSize, Math.min(maxSize, blockSize));
 }
 ```
 其中 minSize 由mapred-site.xml文件中的配置项mapred.min.split.size决定，默认为1；maxSize 由mapred-site.xml文件中的配置项mapred.max.split.size决定，默认为9223 372 036 854 775 807；而blockSize是由hdfs-site.xml文件中的配置项dfs.block.size决定，默认为67 108 864字节（64M）。所以InputSplit的大小确定公式为：
-```
+```java
 max(mapred.min.split.size, min(mapred.max.split.size, dfs.block.size));
 ```
 一般来说，dfs.block.size的大小是确定不变的，所以得到目标InputSplit大小，只需改变mapred.min.split.size 和 mapred.max.split.size 的大小即可。InputSplit的数量为文件大小除以InputSplitSize。InputSplit的原数据信息会通过一下代码取得：
-```
+```java
 splits.add(new FileSplit(path, length - bytesRemaining, splitSize, blkLocations[blkIndex].getHosts()));
 ```
 从上面的代码可以发现，元数据的信息由四部分组成：文件路径，文件开始位置，文件结束位置，数据块所在的host。
@@ -33,8 +46,8 @@ splits.add(new FileSplit(path, length - bytesRemaining, splitSize, blkLocations[
 对于Map任务来说，处理的单位为一个InputSplit。而InputSplit是一个逻辑概念，InputSplit所包含的数据是仍然存储在HDFS的块里面，它们之间的关系如下图所示：
 ![image](http://img.blog.csdn.net/20161230102503415?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvU3VubnlZb29uYQ==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
 当输入文件切分为InputSplit后，由FileInputFormat的子类（如TextInputFormat）的createRecordReader方法将InputSplit解析为键值对，代码如下：
-```
-  public RecordReader<LongWritable, Text> 
+```java
+  public RecordReader<LongWritable, Text>
     createRecordReader(InputSplit split,
                        TaskAttemptContext context) {
     String delimiter = context.getConfiguration().get(
@@ -47,7 +60,7 @@ splits.add(new FileSplit(path, length - bytesRemaining, splitSize, blkLocations[
 ```
 此处默认是将行号作为键。解析出来的键值对将被用来作为map函数的输入。至此input阶段结束。
 
-## 3. map及中间结果的输出
+### 3. map及中间结果的输出
 
 InputSplit将解析好的键值对交给用户编写的map函数处理，处理后的中间结果会写到本地磁盘上，在刷写磁盘的过程中，还做了partition（分区）和 sort（排序）的操作。
 
@@ -65,33 +78,35 @@ map函数产生输出时，并不是简单的刷写磁盘。为了保证I/O效�
 
 指定，如下列出了目前hadoop支持的压缩格式：
 
+![]()
+
 map输出的中间结果存储的格式为IFile，IFile是一种支持航压缩的存储格式，支持上述压缩算法。
 
 Reducer通过Http方式得到输出文件的分区。将map输出的中间结果发送到Reducer的工作线程的数量由mapred-site.xml文件的tasktracker.http.threds配置项决定，此配置针对每个节点，而不是每个Map任务，默认是40，可以根据作业大小，集群规模以及节点的计算能力而增大。
 
-## 4. shuffle
+### 4. shuffle
 
 shuffle，也叫数据清洗。在某些语境下，代表map函数产生输出到reduce的消化输入的整个过程。
 
-### 4.1 copy阶段
+#### 4.1 copy阶段
 
 Map任务输出的结果位于Map任务的TaskTracker所在的节点的本地磁盘上。TaskTracker需要为这些分区文件（map输出）运行Reduce任务。但是，Reduce任务可能需要多个Map任务的输出作为其特殊的分区文件。每个Map任务的完成时间可能不同，当只要有一个任务完成，Reduce任务就开始复制其输出。这就是shuffle的copy阶段。如下图所示，Reduce任务有少量复制线程，可以并行取得Map任务的输出，默认值为5个线程，该值可以通过设置mapred-site.xml的mapred.reduce.parallel.copies的配置项来改变。
 ![image](http://img.blog.csdn.net/20161230102548036?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvU3VubnlZb29uYQ==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
 如果map输出相当小，则会被复制到Reduce所在TaskTracker的内存的缓冲区中，缓冲区的大小由mapred-site.xml文件中的mapred.job.shuffle.input.buffer.percent配置项指定。否则，map输出将会被复制到磁盘。一旦内存缓冲区达到阈值大小（由mapred-site.xml文件mapred.job.shuffle.merge.percent配置项决定）或缓冲区的文件数达到阈值大小（由mapred-site.xml文件mapred.inmem.merge.threshold配置项决定），则合并后溢写到磁盘中。
 
-### 4.2 sort阶段
+#### 4.2 sort阶段
 
 随着溢写到磁盘的文件增多，shuffle进行sort阶段。这个阶段将合并map的输出文件，并维持其顺序排序，其实做的是归并排序。排序的过程是循环进行，如果有50个map的输出文件，而合并因子（由mapred-site.xml文件的io.sort.factor配置项决定，默认为10）为10，合并操作将进行5次，每次将10个文件合并成一个文件，最后有5个文件，这5个文件由于不满足合并条件（文件数小于合并因子），则不会进行合并，将会直接把5个文件交给Reduce函数处理。到此shuffle阶段完成。
 
 从shuffle的过程可以看出，Map任务处理的是一个InputSplit，而Reduce任务处理的是所有Map任务同一个分区的中间结果。
 
-## 5. reduce及最后结果的输出
+### 5. reduce及最后结果的输出
 
 reduce阶段操作的实质就是对经过shuffle处理后的文件调用reduce函数处理。由于经过了shuffle的处理，文件都是按键分区且有序，对相同分区的文件调用一次reduce函数处理。
 
 与map的中间结果不同的是，reduce的输出一般为HDFS。
 
-## 6. sort
+### 6. sort
 
 排序贯穿于Map任务和Reduce任务，排序操作属于MapReduce计算框架的默认行为，不管流程是否需要，都会进行排序。在MapReduce计算框架中，主要用到了两种排序算法：快速排序和归并排序。
 
@@ -106,16 +121,12 @@ reduce阶段操作的实质就是对经过shuffle处理后的文件调用reduce�
 （3）在shuffle阶段，需要将多个Map任务的输出文件合并，由于经过第二次排序，所以合并文件时只需在做一次排序就可以使输出文件整体有序。
 ![image](http://img.blog.csdn.net/20161230102708631?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvU3VubnlZb29uYQ==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
 
-
 在这3次排序中第一次是在内存缓冲区做的内排序，使用的算法是快速排序；第二次排序和第三次排序都是在文件合并阶段发生的，使用的是归并排序。
 
-
-
-## 7. 作业的进度组成
+### 7. 作业的进度组成
 
 一个MapReduce作业在Hadoop上运行时，客户端的屏幕通常会打印作业日志，如下：
 
 ![image](http://img.blog.csdn.net/20161230102726615?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvU3VubnlZb29uYQ==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
 
 对于一个大型的MapReduce作业来说，执行时间可能会比较比较长，通过日志了解作业的运行状态和作业进度是非常重要的。对于Map来说，进度代表实际处理输入所占比例，例如 map 60% reduce 0% 表示Map任务已经处理了作业输入文件的60%，而Reduce任务还没有开始。而对于Reduce的进度来说，情况比较复杂，从前面得知，reduce阶段分为copy，sort 和 reduce，这三个步骤共同组成了reduce的进度，各占1/3。如果reduce已经处理了2/3的输入，那么整个reduce的进度应该为1/3 + 1/3 + 1/3 * (2/3) = 5/9 ，因为reduce开始处理时，copy和sort已经完成。
-
