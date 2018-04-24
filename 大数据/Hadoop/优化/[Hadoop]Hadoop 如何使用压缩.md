@@ -26,14 +26,14 @@ FileOutputFormat.setOutputCompressorClass(job, GzipCodec,class);
 或者
 ```java
 Configuration conf = new Configuration();
-conf.setBoolean("mapred.output.compress", true);
-conf.setClass("mapred.output.compression.codec", GzipCodec.class, CompressionCodec.class);
+conf.setBoolean("mapreduce.output.fileoutputformat.compress", true);
+conf.setClass("mapreduce.output.fileoutputformat.compress.codec", GzipCodec.class, CompressionCodec.class);
 ```
 对于 Map 输出：
 ```java
 Configuration conf = new Configuration();
-conf.setBoolean("mapred.compress.map.output",true);
-conf.setClass("mapred.map.output.compression.codec", GzipCodec.class, CompressionCodec.class);
+conf.setBoolean("mapreduce.map.output.compress",true);
+conf.setClass("mapreduce.map.output.compress.codec", GzipCodec.class, CompressionCodec.class);
 Job job = Job.getInstance(conf);
 ```
 
@@ -49,8 +49,8 @@ FileOutputFormat.setOutputCompressorClass(conf, LzoCodec.class);
 对于 Map 输出：
 ```java
 Configuration conf = new Configuration();
-conf.setBoolean("mapred.compress.map.output",true);
-conf.setClass("mapred.map.output.compression.codec", LzoCodec.class, CompressionCodec.class);
+conf.setBoolean("mapreduce.map.output.compress",true);
+conf.setClass("mapreduce.map.output.compress.codec", LzoCodec.class, CompressionCodec.class);
 Job job = Job.getInstance(conf);
 ```
 
@@ -61,13 +61,13 @@ Job job = Job.getInstance(conf);
 conf.setOutputFormat(SequenceFileOutputFormat.class);
 SequenceFileOutputFormat.setOutputCompressionType(conf, CompressionType.BLOCK);
 SequenceFileOutputFormat.setCompressOutput(conf, true);
-conf.set("mapred.output.compression.codec","org.apache.hadoop.io.compress.SnappyCodec");
+conf.set("mapreduce.output.fileoutputformat.compress.codec","org.apache.hadoop.io.compress.SnappyCodec");
 ```
 对于Map输出：
 ```java
 Configuration conf = new Configuration();
-conf.setBoolean("mapred.compress.map.output", true);
-conf.set("mapred.map.output.compression.codec","org.apache.hadoop.io.compress.SnappyCodec");
+conf.setBoolean("mapreduce.map.output.compress", true);
+conf.set("mapreduce.map.output.compress.codec","org.apache.hadoop.io.compress.SnappyCodec");
 ```
 ### 2. 实验与结果
 
