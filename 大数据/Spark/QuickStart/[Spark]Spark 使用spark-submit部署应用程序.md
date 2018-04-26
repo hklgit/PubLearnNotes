@@ -1,3 +1,16 @@
+---
+layout: post
+author: sjf0115
+title: Spark 使用spark-submit部署应用程序
+date: 2018-04-06 11:28:01
+tags:
+  - Spark
+  - Spark 基础
+
+categories: Spark
+permalink: spark-base-launching-applications-with-spark-submit
+---
+
 ### 1. 简介
 
 Spark的bin目录中的spark-submit脚本用于启动集群上的应用程序。 可以通过统一的接口使用Spark所有支持的集群管理器，因此不必为每个集群管理器专门配置你的应用程序（It can use all of Spark’s supported cluster managers through a uniform interface so you don’t have to configure your application specially for each one）。
@@ -191,7 +204,7 @@ Master URL | 描述
 ---|---
 local | 本地运行模式，使用单核
 local[K] | 本地运行模式，，使用K个核心
-local[*] | 本地运行模式，使用尽可能多的核心
+`local[*]` | 本地运行模式，使用尽可能多的核心
 spark://HOST:PORT| 连接到给定的Spark独立集群主机。 端口必须是主机配置可使用的端口，默认情况下为7077。
 mesos://HOST:PORT | 连接到给定的Mesos集群。 端口必须是主机配置可使用的端口，默认为5050。 或者，对于使用ZooKeeper的Mesos集群，请使用mesos://zk:// .... 要使用--deploy-mode cluster 提交。
 yarn | 以客户端模式还是以集群模式连接到YARN群集具体取决于--deploy-mode的值。 可以根据HADOOP_CONF_DIR或YARN_CONF_DIR变量找到集群位置
@@ -218,4 +231,3 @@ Spark使用如下URL方案以不同策略传播传送jar：
 用户还可以通过用--packages提供逗号分隔的maven坐标列表来包含任何其他依赖项。使用此命令时将处理所有传递依赖性。可以使用配置选项--repositories以逗号分隔的方式添加其他存储库（或SBT中的解析器）。pyspark，spark-shell和spark-submit都可以使用这些命令来包含Spark Packages。
 
 对于Python，等价的--py-files选项可用于将.egg，.zip和.py库分发给执行程序。
-
