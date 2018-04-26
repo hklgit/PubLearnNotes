@@ -13,7 +13,7 @@ permalink: spark-base-launching-applications-with-spark-submit
 
 ### 1. 简介
 
-Spark的bin目录中的spark-submit脚本用于启动集群上的应用程序。 可以通过统一的接口使用Spark所有支持的集群管理器，因此不必为每个集群管理器专门配置你的应用程序（It can use all of Spark’s supported cluster managers through a uniform interface so you don’t have to configure your application specially for each one）。
+Spark的 bin 目录中的 `spark-submit` 脚本用于在集群上启动应用程序。可以通过一个统一的接口使用 Spark 所有支持的[集群管理器](http://spark.apache.org/docs/2.3.0/cluster-overview.html#cluster-manager-types)，因此不必为每个集群管理器专门配置你的应用程序。
 
 ### 2. 语法
 
@@ -101,16 +101,16 @@ Options:
                               delegation tokens periodically.
 ```
 
-### 3. 捆绑应用程序的依赖关系
-如果你的代码依赖于其他项目，则需要将它们与应用程序一起打包，以便将代码分发到Spark集群上。为此，请创建一个包含代码及其依赖关系的程序集jar（或 Uber jar）。sbt和Maven都有装配插件。创建jar时，将Spark和Hadoop列出作为需要提供的依赖关系; 这些不需要捆绑，因为它们在运行时由集群管理器提供。一旦你有一个jar，你可以调用bin/ spark-submit脚本，如下所示，同时传递你的jar作为参数。
+### 3. 打包应用依赖
 
-对于Python，您可以使用spark-submit的--py-files参数来添加.py，.zip或.egg文件以与应用程序一起分发。如果你依赖于多个Python文件，我们建议将它们打包成一个.zip或.egg文件。
+如果你的代码依赖于其他项目，则需要将它们与应用程序一起打包，以便将代码分发到 Spark 集群上。为此，需要创建一个包含代码及其依赖关系的 `assembly jar`（或 `Uber jar`）。sbt 和 Maven 都有 `assembly` 插件。创建 `assembly jar` 时，将 Spark 和 Hadoop 的依赖设置为 `provided`。他们不需要打包，因为它们在运行时由集群管理器提供。一旦你有一个 `assembly jar`，你可以调用 `bin/spark-submit` 脚本，如下所示，同时传递你的 jar。
+
+对于Python，你可以使用 spark-submit 的 `--py-files` 参数来添加 `.py`， `.zip` 或 `.egg` 文件来与应用程序一起分发。如果你依赖于多个 Python 文件，我们建议将它们打包成一个 `.zip` 或 `.egg` 文件。
 
 ### 4. 使用spark-submit启动应用程序
 
-一旦用户应用程序打包成功后，可以使用bin/spark-submit脚本启动应用程序。此脚本负责设置Spark的 classpath 及其依赖关系，并且可以支持不同集群管理器和部署模式（Spark所支持的）：
-
-```
+用户应用程序打包成功后，就可以使用 `bin/spark-submit` 脚本启动应用程序。脚本负责设置 Spark 及其依赖关系的 classpath，并且可以支持不同集群管理器和部署模式（Spark所支持的）：
+```shell
 ./bin/spark-submit \
   --class <main-class> \
   --master <master-url> \
@@ -122,23 +122,24 @@ Options:
 ```
 
 一些常用的选项：
-- --class 应用程序入口 (例如：com.sjf.open.spark.Java.JavaWordCount 包含包名的全路径名称)
-- --master 集群的主URL (例如：spark://23.195.26.187:7077)
-- --deploy-mode 部署driver运行的地方，client或者cluster
-- application-jar 包含应用程序和所有依赖关系的jar路径。 URL必须在集群内部全局可见，例如，所有节点上存在的hdfs：//路径或file：//路径。
-- application-arguments 传递给主类main方法的参数（如果有的话）
+- `--class`: 应用程序入口 (例如：`com.sjf.open.spark.Java.JavaWordCount` 包含包名的全路径名称)
+- `--master`: 集群的 master URL (例如：`spark://23.195.26.187:7077`)
+- `--deploy-mode`: 是在工作节点(cluster)上还是在本地作为一个外部的客户端(client)部署你的 driver (默认: client)
+- `--conf`: 按照 `key=value` 格式任意的 Spark 配置属性。对于包含空格的 value（值）使用引号包 `“key=value”` 起来。
+- `application-jar`: 包含应用程序和所有依赖关系的 jar 路径。URL必须在集群内部全局可见，例如，对所有节点上可见的 `hdfs：//` 路径或 `file：//` 路径。
+- `application-arguments`: 传递给主类 main 方法的参数（如果有的话）
 
 Example:
-```
+```shell
 bin/spark-submit --class com.sjf.open.spark.Java.JavaWordCount --master local common-tool-jar-with-dependencies.jar /home/xiaosi/click_uv.txt
 ```
+常见的部署策略是将你的应用程序从与工作节点机器物理位置相同的网关机器（例如，独立EC2集群中的主节点）提交。在这种设置中， `client` 模式比较合适。在 client 模式中，驱动程序作为集群的客户端直接在 spark-submit 进程内启动。应用程序的输入和输出直接连到控制台。因此，这个模式特别适合那些涉及 REPL（例如，Spark shell）的应用程序。
 
-如果你提交应用程序的机器远离工作节点机器（例如在笔记本电脑本地提交），则通常使用集群模式来最小化drivers和executors之间的网络延迟。 目前，对于Python应用程序而言，在独立模式上不支持集群模式。
+如果你提交应用程序的机器远离工作节点机器（例如在笔记本电脑本地提交），则通常使用 `cluster` 模式来最小化 drivers 和 executors 之间的网络延迟。目前，对于 Python 应用程序而言，在独立模式上不支持集群模式。
 
-对于Python应用程序，只需在<application-jar>位置传递一个.py文件来代替JAR，然后使用--py-files参数ca将Python .zip，.egg或.py文件添加到搜索路径。
+对于Python应用程序，只需在 `<application-jar>` 位置传递一个 `.py` 文件来代替 JAR，然后使用 `--py-files` 参数将 Python 的 `.zip`，`.egg` 或 `.py` 文件添加到搜索路径。
 
-有几个可用选项是特定用于集群管理器。例如，对于具有集群部署模式的Spark独立集群，可以指定--supervise参数以确保如果driver以非零退出而失败，则自动重新启动。如果要列举spark-submit所有可用选项，可以使用spark-submit --help命令来查看。以下是常见选项的几个示例：
-
+有几个可用选项是特定用于集群管理器。例如，对于具有集群部署模式的Spark独立集群，可以指定 `--supervise` 参数以确保如果驱动程序以非零退出码失败时，可以自动重新启动。如果要列举 spark-submit 所有可用选项，可以使用 `spark-submit --help` 命令来查看。以下是常见选项的几个示例：
 
 ```
 # 在本地运行 8 核
@@ -198,36 +199,41 @@ export HADOOP_CONF_DIR=XXX
 ```
 
 ### 5. Master Urls
+
 传递给Spark的master url 可以采用如下格式：
 
 Master URL | 描述
 ---|---
-local | 本地运行模式，使用单核
-local[K] | 本地运行模式，，使用K个核心
-`local[*]` | 本地运行模式，使用尽可能多的核心
-spark://HOST:PORT| 连接到给定的Spark独立集群主机。 端口必须是主机配置可使用的端口，默认情况下为7077。
-mesos://HOST:PORT | 连接到给定的Mesos集群。 端口必须是主机配置可使用的端口，默认为5050。 或者，对于使用ZooKeeper的Mesos集群，请使用mesos://zk:// .... 要使用--deploy-mode cluster 提交。
-yarn | 以客户端模式还是以集群模式连接到YARN群集具体取决于--deploy-mode的值。 可以根据HADOOP_CONF_DIR或YARN_CONF_DIR变量找到集群位置
+`local` | 使用一个线程本地运行 Spark
+`local[K]` | 使用 K 个 worker 线程本地运行 Spark（理想情况下，设置这个值的数量为您机器的 core 数量）
+`local[*]` | 使用更多的 worker 线程作为逻辑的 core 在你的机器上来本地的运行 Spark。
+`spark://HOST:PORT` | 连接到给定的Spark独立集群主机。端口必须是主机配置可使用的端口，默认情况下为7077。
+`mesos://HOST:PORT` | 连接到给定的Mesos集群。端口必须是主机配置可使用的端口，默认为5050。或者，对于使用ZooKeeper的Mesos集群，借助 `--deploy-mode cluster` 参数使用 `mesos://zk:// ....` 提交。
+`yarn` | 以客户端模式还是以集群模式连接到YARN群集具体取决于 `--deploy-mode` 的值。可以根据HADOOP_CONF_DIR或YARN_CONF_DIR变量找到集群位置
 
 ### 6. 从文件加载配置
 
-spark-submit脚本可以从properties文件加载默认Spark配置选项，并将它们传递到应用程序。默认情况下，spark 从spark目录下的conf/spark-defaults.conf配置文件中读取配置选项。有关更多详细信息，请阅读[加载默认配置](http://spark.apache.org/docs/latest/configuration.html#loading-default-configurations)。
+spark-submit 脚本可以从 properties 文件加载默认 Spark 配置选项，并将它们传递到应用程序。默认情况下，spark 从 spark 目录下的 conf/spark-defaults.conf 配置文件中读取配置选项。有关更多详细信息，请参考[加载默认配置](http://spark.apache.org/docs/2.3.0/configuration.html#loading-default-configurations)。
 
-以这种方式加载默认Spark配置可以避免在spark-submit上添加配置选项。例如，如果默认配置文件中设置了spark.master属性，则可以安全地从spark-submit中省略--master参数。一般来说，在SparkConf上显式设置的配置选项拥有最高优先级，然后是传递到spark-submit的配置选项，然后是默认配置文件中的配置选项。
+以这种方式加载 Spark 默认配置可以避免在 spark-submit 上添加配置选项。例如，如果默认配置文件中设置了 `spark.master` 属性，那么可以安全地从 spark-submit 中省略 `--master` 参数。一般来说，在 SparkConf 上显式设置的配置选项拥有最高优先级，然后是传递到 spark-submit 的配置选项，最后是默认配置文件中的配置选项。
 
-如果不清楚配置选项来自哪里，可以通过使用--verbose选项运行spark-submit打印出细粒度的调试信息。
+如果不清楚配置选项来自哪里，可以通过使用 `--verbose` 选项运行 spark-submit 打印出细粒度的调试信息。
 
 ### 7. 高级依赖管理
 
-使用spark-submit时，应用程序jar以及包含在-jars选项中的jar将自动传输到集群。在--jars之后提供的URL列表必须用逗号分隔。 该列表会包含在driver和 executor 的classpath中。 目录扩展不能与--jars一起使用。
+使用 spark-submit 时，包含在 `--jars` 选项中的应用程序 jar 以及其他 jar 将自动分发到集群。在 `--jars` 之后提供的 URL 列表必须用逗号分隔。该列表会包含在 driver 和 executor 的 classpath 中。`--jars` 不支持目录的形式。
 
-Spark使用如下URL方案以不同策略传播传送jar：
-- file ： 绝对路径和file:/ URI 由driver 的HTTP文件服务器提供，每个executor从driver HTTP服务器拉取文件。
-- hdfs :, http :, https :, ftp： 正如你希望的一样，这些从URI拉取文件和JAR
-- local： 以local:/开头的URI应该作为每个工作节点上的本地文件存在。 这意味着不会产生网络IO，适用于推送大文件/ JAR到每个工作线程或通过NFS，GlusterFS等方式共享这些大文件/jar。
+Spark使用如下URL来允许以不同策略分发 jar：
+- `file` : 绝对路径和 `file:/URI` 通过 driver 的HTTP文件服务器提供，每个 executor 从 driver HTTP服务器上拉取文件。
+- `hdfs` : `http :`, `https :`, `ftp：` 正如你希望的一样，从这些URI拉取文件和 JAR。
+- `local` : 以 `local:/` 开头的URI应该作为每个工作节点上的本地文件存在。这意味着不会产生网络IO，适用于推送大文件或者JAR到每个工作线程或通过 NFS，GlusterFS 等方式共享这些大文件或者jar。
 
-请注意，JAR和文件被复制到执行器节点上每个SparkContext的工作目录（Note that JARs and files are copied to the working directory for each SparkContext on the executor nodes）。随着时间的推移，这可能会占用大量的空间，需要定时清理。使用YARN，清理会自动执行；使用Spark独立集群，可以使用spark.worker.cleanup.appDataTtl属性配置自动清理。
+请注意，JAR和文件被复制到 executor 节点上每个 SparkContext 的工作目录下。随着时间的推移，这可能会占用大量的空间，需要定时清理。使用 YARN，清理会自动执行；使用 Spark 独立集群，可以使用 `spark.worker.cleanup.appDataTtl` 属性配置自动清理。
 
-用户还可以通过用--packages提供逗号分隔的maven坐标列表来包含任何其他依赖项。使用此命令时将处理所有传递依赖性。可以使用配置选项--repositories以逗号分隔的方式添加其他存储库（或SBT中的解析器）。pyspark，spark-shell和spark-submit都可以使用这些命令来包含Spark Packages。
+用户还可以通过用 `--packages` 提供以逗号分隔的 maven 坐标列表来包含任何其他依赖项。使用此命令时将处理所有传递依赖性。可以使用配置选项 `--repositories` 以逗号分隔的方式添加其他存储库（或SBT中的解析器）。pyspark，spark-shell和 spark-submit 都可以使用这些命令来包含 Spark 的 Packages。
 
-对于Python，等价的--py-files选项可用于将.egg，.zip和.py库分发给执行程序。
+对于Python，等价的 `--py-files` 选项可用于将 `.egg`，`.zip` 和 `.py` 库分发给执行程序。
+
+> Spark版本:2.3.0
+
+原文:http://spark.apache.org/docs/2.3.0/submitting-applications.html
