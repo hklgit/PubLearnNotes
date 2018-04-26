@@ -204,10 +204,13 @@ export HADOOP_CONF_DIR=XXX
 
 Master URL | 描述
 ---|---
-`local` | 使用一个线程本地运行 Spark
-`local[K]` | 使用 K 个 worker 线程本地运行 Spark（理想情况下，设置这个值的数量为您机器的 core 数量）
-`local[*]` | 使用更多的 worker 线程作为逻辑的 core 在你的机器上来本地的运行 Spark。
+`local` | 使用一个线程本地运行 Spark。
+`local[K]` | 使用K个工作线程本地运行 Spark（理想情况下，设置这个值的数量为你机器内核数量）。
+`local[K,F]`|使用K工作线程和F个 maxFailures 在本地运行 Spark（有关此变量的解释，请参阅[spark.task.maxFailures](http://spark.apache.org/docs/2.3.0/configuration.html#scheduling)）
+`local[*]` | 使用与你机器上的逻辑内核一样多的工作线程在本地运行 Spark。
+`local[*,F]`| 使用与你机器上的逻辑内核一样多的工作线程以及F个 maxFailures 在本地运行 Spark。
 `spark://HOST:PORT` | 连接到给定的Spark独立集群主机。端口必须是主机配置可使用的端口，默认情况下为7077。
+`spark://HOST1:PORT1,HOST2:PORT2`|使用 Zookeeper 连接到具有备用 masters 的给定 Spark 独立集群。该列表必须包含使用 Zookeeper 搭建的高可用集群中的所有 master 主机。端口必须是每个 master 可以配置使用的端口，默认情况下为7077。
 `mesos://HOST:PORT` | 连接到给定的Mesos集群。端口必须是主机配置可使用的端口，默认为5050。或者，对于使用ZooKeeper的Mesos集群，借助 `--deploy-mode cluster` 参数使用 `mesos://zk:// ....` 提交。
 `yarn` | 以客户端模式还是以集群模式连接到YARN群集具体取决于 `--deploy-mode` 的值。可以根据HADOOP_CONF_DIR或YARN_CONF_DIR变量找到集群位置
 
