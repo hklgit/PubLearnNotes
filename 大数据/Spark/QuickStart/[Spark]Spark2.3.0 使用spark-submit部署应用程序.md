@@ -1,8 +1,8 @@
 ---
 layout: post
 author: sjf0115
-title: Spark 使用spark-submit部署应用程序
-date: 2018-04-06 11:28:01
+title: Spark2.3.0 使用spark-submit部署应用程序
+date: 2018-04-07 11:28:01
 tags:
   - Spark
   - Spark 基础
