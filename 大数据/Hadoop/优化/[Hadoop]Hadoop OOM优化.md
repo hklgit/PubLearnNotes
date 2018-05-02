@@ -8,3 +8,26 @@ Dump of the process-tree for container_1504162679223_22379281_01_000455 :
 
 Container killed on request. Exit code is 143
 ```
+
+
+
+```
+2018-04-26 16:39:39,269 FATAL [main] org.apache.hadoop.mapred.YarnChild: Error running child : java.lang.OutOfMemoryError: GC overhead limit exceeded
+	at org.apache.hadoop.mapred.IFile$Reader.nextRawValue(IFile.java:441)
+	at org.apache.hadoop.mapred.Merger$Segment.nextRawValue(Merger.java:327)
+	at org.apache.hadoop.mapred.Merger$Segment.getValue(Merger.java:309)
+	at org.apache.hadoop.mapred.Merger$MergeQueue.next(Merger.java:533)
+	at org.apache.hadoop.mapred.ReduceTask$4.next(ReduceTask.java:619)
+	at org.apache.hadoop.mapreduce.task.ReduceContextImpl.nextKeyValue(ReduceContextImpl.java:154)
+	at org.apache.hadoop.mapreduce.task.ReduceContextImpl$ValueIterator.next(ReduceContextImpl.java:237)
+	at com.qunar.search.promote.AdvPushPromoteOrderFeature$AdvPushPromoteOverallReducer.reduce(AdvPushPromoteOrderFeature.java:126)
+	at com.qunar.search.promote.AdvPushPromoteOrderFeature$AdvPushPromoteOverallReducer.reduce(AdvPushPromoteOrderFeature.java:98)
+	at org.apache.hadoop.mapreduce.Reducer.run(Reducer.java:171)
+	at org.apache.hadoop.mapred.ReduceTask.runNewReducer(ReduceTask.java:645)
+	at org.apache.hadoop.mapred.ReduceTask.run(ReduceTask.java:405)
+	at org.apache.hadoop.mapred.YarnChild$2.run(YarnChild.java:162)
+	at java.security.AccessController.doPrivileged(Native Method)
+	at javax.security.auth.Subject.doAs(Subject.java:422)
+	at org.apache.hadoop.security.UserGroupInformation.doAs(UserGroupInformation.java:1491)
+	at org.apache.hadoop.mapred.YarnChild.main(YarnChild.java:157)
+```
