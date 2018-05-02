@@ -1,7 +1,7 @@
 ---
 layout: post
 author: 加米谷大数据
-title: Spark内部原理之运行模式
+title: Spark 内部原理之运行模式
 date: 2018-03-15 19:33:01
 tags:
   - Spark
