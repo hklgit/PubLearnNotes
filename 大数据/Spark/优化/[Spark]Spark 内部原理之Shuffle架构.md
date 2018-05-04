@@ -24,12 +24,28 @@ Spark 中有许多 shuffle 实现。使用哪个具体实现取决于 `spark.shu
 
 在 Spark 1.2.0 之前，Shuffle 的默认选项为 `Hash` (`spark.shuffle.manager = hash`)。但它有许多缺点，主要是由它[创建的文件数量](https://people.eecs.berkeley.edu/~kubitron/courses/cs262a-F13/projects/reports/project16_report.pdf)引起的 - 每个 mapper 任务为每个 reducer 创建一个文件，从而在集群上会产生 `M * R` 个总文件，其中 M 是 mapper 的数量，R 是 reducer 的数量。使用大量的 mapper 和 reducer 会产生比较大的问题，包括输出缓冲区大小，文件系统上打开文件的数量，创建和删除所有这些文件的速度。这有一个雅虎如何面对这些问题时一个很好的[例子](http://spark-summit.org/2013/wp-content/uploads/2013/10/Li-AEX-Spark-yahoo.pdf)，46k个 mapper 和 46k个 reducer 在集群上会生成20亿个文件。
 
-这个 shuffler 实现的逻辑非常愚蠢：它将 reducers 的数量计算为 reduce 一侧的分区数量，为每个分区创建一个单独的文件，并循环遍历需要输出的记录，然后计算它 目标分区，并将记录输出到相应的文件。
+这个 shuffler 实现的逻辑非常愚蠢：它将 reducers 的个数计为 reduce 一侧的分区数量，为每个分区创建一个单独的文件，并循环遍历需要输出的记录，然后计算它目标分区，并将记录输出到对应的文件中。
 
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-internal-shuffle-architecture-1.png?raw=true)
 
+shuffler　有一个优化过的实现，由参数 `spark.shuffle.consolidateFiles` 控制（默认值为 `false`）。当它被设置为 `true` 时，mapper 的输出文件将被合并。如果你的集群有 E 个 Executor（在 YARN 中由`-num-executors`设置），每一个都有 C 个 core（在 YARN 中由 `spark.executor.cores` 或 `-executor-cores` 设置），并且每个任务都要求 T 个 CPU（由 `spark.task.cpus` 设置），那么集群上的执行 slots 的个数为 `E * C / T`，在 shuffle 期间创建的文件个数为 `E * C / T * R`。100个 Executor，每个有10个 core，每个任务分配1个core，46000个 reducer 可以让你从20亿个文件下降到4600万个文件，这在性能方面提升好多。这个功能可以以一种相当直接的方式实现：不是为每个 Reducer 创建新文件，而是创建一个输出文件池。当 map 任务开始输出数据时，从输出文件池申请一组 R 个文件。完成后，将这 R 个文件组返回到输出文件池中。由于每个 Executor 只能并行执行 `C / T` 个任务，因此只会创建　`C / T` 组输出文件，每个组都是 R 个文件。在第一批 `C / T` 个并行 mapper 任务完成后，下一批 mapper 任务重新使用该池中的现有组。
 
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-internal-shuffle-architecture-2.png?raw=true)
 
+优点：
+- 快速 - 不需要排序，不维护哈希表;
+- 没有内存开销来对数据进行排序;
+- 没有IO开销 - 数据只写入硬盘一次并读取一次。
 
+缺点：
+- 当分区数量很大时，由于大量的输出文件，性能开始下降;
+- 大量文件写入文件系统会导致IO变为随机IO，这通常比顺序IO慢100倍;
+
+当然，当数据写入文件时，会被序列化以及被压缩。读取时，过程相反 - 解压缩和反序列化。拉取端的一个重要参数是 `spark.reducer.maxSizeInFlight`（默认为48MB），决定了每个 Reducer 从远程 Executor 请求的数据量。这个值被来自不同 Executor 的 5 个并行请求平均分配，以加速该过程。如果你想增加这个值，reducer 会以更大块的形式请求来自 map 任务输出的数据，这会提高性能，但也会增加 reducer 进程的内存使用量。
+
+如果 reduce 端的没有要求记录排序，那么 reducer 将只返回一个依赖于 map 输出的迭代器，但是如果需要排序，在 reduce 端使用 ExternalSorter 对获取的所有数据进行排序。
+
+### 3.
 
 
 
