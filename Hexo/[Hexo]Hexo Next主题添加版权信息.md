@@ -7,12 +7,21 @@ tags:
   - Hexo
 
 categories: Hexo
+permalink: hexo-next-add-copyright-information
+---
+
+### 1. 开启版权声明
+
+主题配置文件下,搜索关键字 post_copyright , 将 `enable` 改为 `true`：
+```
+# Declare license on posts
 post_copyright:
   enable: true
   license: CC BY-NC-SA 4.0
   license_url: https://creativecommons.org/licenses/by-nc-sa/4.0/
-permalink: hexo-next-add-copyright-information
----
+```
+
+### 2. 自定义文章底部版权声明
 
 在目录 `next/layout/_macro/` 下添加 `my-copyright.swig`：
 ```
