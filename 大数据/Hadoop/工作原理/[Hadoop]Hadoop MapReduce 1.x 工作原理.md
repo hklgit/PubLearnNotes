@@ -1,12 +1,14 @@
 ---
 layout: post
 author: sjf0115
-title: Hadoop MapReduce 1 工作原理
+title: Hadoop MapReduce 1.x 工作原理
 date: 2017-12-14 13:03:01
 tags:
   - Hadoop
+  - Hadoop 内部原理
 
 categories: Hadoop
+permalink: hadoop-mapReduce1.x-working-principle
 ---
 
 下面解释一下作业在经典的`MapReduce 1.0`中运行的工作原理。最顶层包含4个独立的实体:

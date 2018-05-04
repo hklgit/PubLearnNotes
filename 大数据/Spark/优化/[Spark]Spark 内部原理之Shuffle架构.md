@@ -43,9 +43,10 @@ shuffler　有一个优化过的实现，由参数 `spark.shuffle.consolidateFil
 
 当然，当数据写入文件时，会被序列化以及被压缩。读取时，过程相反 - 解压缩和反序列化。拉取端的一个重要参数是 `spark.reducer.maxSizeInFlight`（默认为48MB），决定了每个 Reducer 从远程 Executor 请求的数据量。这个值被来自不同 Executor 的 5 个并行请求平均分配，以加速该过程。如果你想增加这个值，reducer 会以更大块的形式请求来自 map 任务输出的数据，这会提高性能，但也会增加 reducer 进程的内存使用量。
 
-如果 reduce 端的没有要求记录排序，那么 reducer 将只返回一个依赖于 map 输出的迭代器，但是如果需要排序，在 reduce 端使用 ExternalSorter 对获取的所有数据进行排序。
+如果 reduce 端的没有要求记录排序，那么 reducer 将只返回一个依赖于 map 输出的迭代器，但是如果需要排序，在 reduce 端使用 [ExternalSorter](https://github.com/apache/spark/blob/master/core/src/main/scala/org/apache/spark/util/collection/ExternalSorter.scala) 对获取的所有数据进行排序。
 
-### 3.
+### 3. Sort Shuffle
+
 
 
 

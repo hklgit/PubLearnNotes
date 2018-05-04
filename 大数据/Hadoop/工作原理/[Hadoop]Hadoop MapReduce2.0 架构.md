@@ -5,8 +5,10 @@ title: Hadoop MapReduce2.0 架构详解
 date: 2017-12-08 19:16:01
 tags:
   - Hadoop
+  - Hadoop 内部原理
 
 categories: Hadoop
+permalink: hadoop-mapReduce2.0-architecture-detail
 ---
 
 ### 1. MapReduce 2.0 概述

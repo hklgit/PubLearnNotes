@@ -1,3 +1,15 @@
+---
+layout: post
+author: sjf0115
+title: Hadoop Reducer总是能复用为Combiner？
+date: 2017-12-06 09:39:01
+tags:
+  - Hadoop
+  - Hadoop 基础
+
+categories: Hadoop
+permalink: hadoop-can-reducer-always-be-reused-for-combiner
+---
 
 `Combiner`函数是一个可选的中间函数，发生在`Map`阶段，`Mapper`执行完成后立即执行。使用`Combiner`有如下两个优势：
 

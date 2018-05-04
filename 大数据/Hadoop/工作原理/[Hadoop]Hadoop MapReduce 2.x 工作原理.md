@@ -1,12 +1,14 @@
 ---
 layout: post
 author: sjf0115
-title: Hadoop MapReduce 2 工作原理
+title: Hadoop MapReduce 2.x 工作原理
 date: 2017-12-14 19:58:01
 tags:
   - Hadoop
+  - Hadoop 内部原理
 
 categories: Hadoop
+permalink: hadoop-mapReduce2.x-working-principle
 ---
 
 ### 1. 概述

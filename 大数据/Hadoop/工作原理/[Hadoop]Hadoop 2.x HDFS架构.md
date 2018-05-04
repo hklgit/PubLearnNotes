@@ -1,12 +1,14 @@
 ---
 layout: post
 author: sjf0115
-title: Hadoop2.x HDFS架构
+title: Hadoop 2.x HDFS架构
 date: 2017-12-20 20:29:01
 tags:
   - Hadoop
+  - Hadoop 内部原理
 
 categories: Hadoop
+permalink: hadoop-2.x-hdfs-architecture
 ---
 
 ### 1. 概述
