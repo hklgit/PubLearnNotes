@@ -27,7 +27,7 @@ Spark 中有许多 shuffle 实现。使用哪个具体实现取决于 `spark.shu
 这个 shuffler 实现的逻辑非常愚蠢：它将 reducers 的个数计为 reduce 一侧的分区数量，为每个分区创建一个单独的文件，并循环遍历需要输出的记录，然后计算它目标分区，并将记录输出到对应的文件中。
 
 ![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-internal-shuffle-architecture-1.png?raw=true)
-
+市场营销部 - 增长技术部 - 算法数据组
 shuffler　有一个优化过的实现，由参数 `spark.shuffle.consolidateFiles` 控制（默认值为 `false`）。当它被设置为 `true` 时，mapper 的输出文件将被合并。如果你的集群有 E 个 Executor（在 YARN 中由`-num-executors`设置），每一个都有 C 个 core（在 YARN 中由 `spark.executor.cores` 或 `-executor-cores` 设置），并且每个任务都要求 T 个 CPU（由 `spark.task.cpus` 设置），那么集群上的执行 slots 的个数为 `E * C / T`，在 shuffle 期间创建的文件个数为 `E * C / T * R`。100个 Executor，每个有10个 core，每个任务分配1个core，46000个 reducer 可以让你从20亿个文件下降到4600万个文件，这在性能方面提升好多。这个功能可以以一种相当直接的方式实现：不是为每个 Reducer 创建新文件，而是创建一个输出文件池。当 map 任务开始输出数据时，从输出文件池申请一组 R 个文件。完成后，将这 R 个文件组返回到输出文件池中。由于每个 Executor 只能并行执行 `C / T` 个任务，因此只会创建　`C / T` 组输出文件，每个组都是 R 个文件。在第一批 `C / T` 个并行 mapper 任务完成后，下一批 mapper 任务重新使用该池中的现有组。
 
 ![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-internal-shuffle-architecture-2.png?raw=true)
@@ -47,9 +47,9 @@ shuffler　有一个优化过的实现，由参数 `spark.shuffle.consolidateFil
 
 ### 3. Sort Shuffle
 
+从Spark 1.2.0开始，这就是 Spark 使用的默认 shuffle 算法（`spark.shuffle.manager = sort`）。通常来说，这是试图实现类似于 Hadoop MapReduce 所使用的 shuffle 逻辑。使用 `hash shuffle`，你可以为每个 reducer 输出一个单独的文件，而使用 `sort shuffle` 时：输出一个按  reducer id 排序的文件并进行索引，通过获取文件中相关数据块的位置信息并在 fread 之前执行 fseek，你就可以轻松地获取与 reducer x 相关的数据块。但是，当然对于少量的 reducers 来说，显然使用哈希来分离文件会比排序更快，所以 `sort shuffle` 有一个'后备'计划：当 reducers 的数量小于 `spark.shuffle.sort.bypassMergeThreshold` 时（默认情况下为200），我们使用'后备'计划通过哈希将数据分到不同的文件中，然后将这些文件合并为一个文件。实现逻辑在类[BypassMergeSortShuffleWriter](https://github.com/apache/spark/blob/master/core/src/main/java/org/apache/spark/shuffle/sort/BypassMergeSortShuffleWriter.java)中实现的。
 
-
-
+关于这个实现的有趣之处在于它在 map 端对数据进行排序，但不会在 reduce 端对排序的结果进行合并 - 如果需要排序数据，你需要对数据进行重新排序。 关于 Cloudera 的这个想法可以参阅[博文](http://blog.cloudera.com/blog/2015/01/improving-sort-performance-in-apache-spark-its-a-double/)。他们开始了一个实现逻辑的过程，该过程利用“映射器”的预先排序输出将它们合并到“减少”一侧而不是采取措施。正如你可能知道的那样，使用TimSort完成Spark中的排序，这是一个很棒的排序算法，它实际上是利用预先排序的输入（通过计算minun并将它们合并在一起）。这里有一点数学，你可以跳过，如果你想。使用Min Heap，当我们使用最有效的方式来完成时，合并M个N个元素的排序数组的复杂度为O（MNlogM）。使用TimSort，我们通过数据查找MinRuns，然后将它们逐个合并在一起。很明显，它将识别M MinRun。首先M / 2合并会导致M / 2排序组，接下来的M / 4合并会给M / 4排序组等等，所以它非常简单，所有这些合并的复杂性将是O（MNlogM）结束。与直接合并一样复杂！这里的区别仅在常量中，常量取决于实现。因此，Cloudera工程师提供的修补程序一直等待其批准已经有一年了，并且不可能在没有Cloudera管理层的推动下获得批准，因为这件事的性能影响非常小，甚至没有，因此您可以在JIRA票证中看到这一点讨论。也许他们会通过引入单独的shuffle实现而不是“改进”主要实现来解决这个问题，我们很快就会看到这一点。
 
 
 
