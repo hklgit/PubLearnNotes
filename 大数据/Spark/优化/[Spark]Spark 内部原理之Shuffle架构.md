@@ -61,59 +61,46 @@ Spark内部使用 [AppendOnlyMap](https://github.com/apache/spark/blob/branch-1.
 
 当发生溢写时，对存储在 AppendOnlyMap 中的数据调用 sorter，在数据上执行 TimSort 排序算法，然后将数据写入磁盘。
 
-当发生溢写时或者没有更多的 mapper 输出时，排序的输出被写入磁盘，即数据被保证命中磁盘。它是否会真正击中磁盘取决于操作系统设置，如文件缓冲区缓存，但由操作系统来决定，Spark只是发送“写入”指令。
+当发生溢写时或者没有更多的 mapper 输出时，排序好的输出被写入到磁盘，即数据被保证命中磁盘。它是否会真正命中磁盘取决于操作系统的设置，如文件缓冲区缓存，但由操作系统来决定，Spark 只是发送 `写入` 指令。
 
-每个溢出文件分别写入磁盘，只有当数据被“reducer”请求并且合并是实时的时候才会执行它们的合并，也就是说，它不像Hadoop MapReduce中发生的那样调用某种“磁盘上的合并” ，它只是动态地从大量单独的溢出文件中收集数据，并使用由Java PriorityQueue类实现的Min Heap将它们合并在一起。
+每个溢写文件分别写入磁盘，只有当数据被 reducer 请求并且合并是实时的时候，即它不像 Hadoop MapReduce 中发生的那样调用某种 `磁盘上的合并`时，才会执行它们的合并，它只是动态地从大量单独的溢写文件中收集数据，并使用由 Java PriorityQueue 类实现的 Min Heap 将它们合并在一起。
 
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-internal-shuffle-architecture-3.png?raw=true)
 
+优点：
+- 在 map 端创建的文件数量较少
+- 较少的随机IO操作，主要是顺序写入和读取
 
+缺点：
+- 排序比哈希慢。需要调整集群的 `bypassMergeThreshold` 参数以找到最佳点，通常对于大多数集群来说，默认值过高
+- 如果你使用SSD驱动器作存储 Spark shuffles 的临时数据，那么 `hash shuffle` 可能更好一些
 
+### 4. Tungsten Sort Shuffle
 
+在 Spark 1.4.0+ 中可以通过设置 `spark.shuffle.manager = tungsten-sort` 来启用。此代码是 `Tungsten` 项目的一部分。在这个 shuffle 中实现的优化是：
+- 直接对序列化的二进制数据进行操作，不需要进行反序列化。使用 `unsafe` （`sun.misc.Unsafe`）内存复制函数直接复制数据，这对于序列化数据来说性能比较好，实际上它只是一个字节数组
+- 使用特殊的缓存高效分类器 `ShuffleExternalSorter`，对压缩记录指针和分区ID的数组进行排序。在排序数组中每个记录仅占用8个字节的空间，CPU缓存可以更有效地工作，由于记录不需要反序列化，因此直接溢写序列化数据（没有反序列化-比较-序列化-溢写逻辑）
+- 当 shuffle 压缩编解码器支持序列化流的连接（即合并每个溢写输出时，只是连接它们）时，会自动应用额外的溢写合并优化。目前，Spark 的 LZF 序列化器支持此功能，并且只有通过参数 `shuffle.unsafe.fastMergeEnabled` 启用快速合并时。
 
+作为优化的下一步，该算法还将引入 off-heap 存储缓冲区。
 
+只有满足以下所有条件时，才会使用此 shuffle 实现：
+- shuffle 依赖中不包含聚合。使用聚合意味着需要存储反序列化的值，以便能够当新值传入时可以聚合。这种方式，你将会失去对序列化数据操作的优势
+- shuffle 序列化器支持重新定位序列化值（目前，KryoSerializer 和 Spark SQL 的自定义序列化器支持此功能）
+- shuffle 产生少于 16777216 个输出分区
+- 序列化形式的单个记录不能大于 128 MB
 
+此外，你还必须明白，此时仅通过分区ID执行排序，这意味着优化时在 reducer 端合并已排序的数据，并利用 TimSort 对先排序的数据进行排序已不再可能。此操作中的排序是基于8字节的值执行的，每个值都能链接到序列化数据项和分区编号，这里有一个1.6b输出分区的限制(here is how we get a limitation of 1.6b output partitions)。
 
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-internal-shuffle-architecture-4.png?raw=true)
 
+首先对于每个溢出数据，将所描述的指针数组排序并输出索引分区文件，然后将这些分区文件合并到一个索引输出文件中。
 
-
-
-
-
-
-
-原文:https://0x0fff.com/spark-architecture-shuffle/
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+优点：
+- 有许多性能优化
+缺点：
+- 尚未处理 mapper 端的数据排序
+- 尚未提供 off-heap 排序缓冲区
+- 还不稳定
 
 原文:https://0x0fff.com/spark-architecture-shuffle/
