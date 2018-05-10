@@ -98,6 +98,7 @@ Spark内部使用 [AppendOnlyMap](https://github.com/apache/spark/blob/branch-1.
 
 优点：
 - 有许多性能优化
+
 缺点：
 - 尚未处理 mapper 端的数据排序
 - 尚未提供 off-heap 排序缓冲区
