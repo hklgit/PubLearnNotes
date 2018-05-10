@@ -49,7 +49,21 @@ shuffler　有一个优化过的实现，由参数 `spark.shuffle.consolidateFil
 
 从Spark 1.2.0开始，这就是 Spark 使用的默认 shuffle 算法（`spark.shuffle.manager = sort`）。通常来说，这是试图实现类似于 Hadoop MapReduce 所使用的 shuffle 逻辑。使用 `hash shuffle`，你可以为每个 reducer 输出一个单独的文件，而使用 `sort shuffle` 时：输出一个按  reducer id 排序的文件并进行索引，通过获取文件中相关数据块的位置信息并在 fread 之前执行 fseek，你就可以轻松地获取与 reducer x 相关的数据块。但是，当然对于少量的 reducers 来说，显然使用哈希来分离文件会比排序更快，所以 `sort shuffle` 有一个'后备'计划：当 reducers 的数量小于 `spark.shuffle.sort.bypassMergeThreshold` 时（默认情况下为200），我们使用'后备'计划通过哈希将数据分到不同的文件中，然后将这些文件合并为一个文件。实现逻辑在类[BypassMergeSortShuffleWriter](https://github.com/apache/spark/blob/master/core/src/main/java/org/apache/spark/shuffle/sort/BypassMergeSortShuffleWriter.java)中实现的。
 
-关于这个实现的有趣之处在于它在 map 端对数据进行排序，但不会在 reduce 端对排序的结果进行合并 - 如果需要排序数据，你需要对数据进行重新排序。 关于 Cloudera 的这个想法可以参阅[博文](http://blog.cloudera.com/blog/2015/01/improving-sort-performance-in-apache-spark-its-a-double/)。实现逻辑充分利用 mapper 的输出已经排序的特点，在 reducer 端对文件进行合并而不是采取其他手段。我们都知道，Spark 在 reducer 端使用 TimSort 完成排序，这是一个很棒的排序算法，实际上是利用了输入已经排序的特点（通过计算 minun 并将它们合并在一起）。这里有一点数学知识，你可以选择跳过。当我们使用最有效的方式 Min Heap(小顶堆) 来完成时，合并M个包含N个元素的排序数组的复杂度为O（MNlogM）。使用 TimSort，我们通过数据查找MinRuns，然后将它们逐个合并在一起。很明显，它将识别M MinRun。首先M / 2合并会导致M / 2排序组，接下来的M / 4合并会给M / 4排序组等等，所以它非常简单，所有这些合并的复杂性将是O（MNlogM）结束。与直接合并一样复杂！这里的区别仅在常量中，常量取决于实现。因此，Cloudera工程师提供的修补程序一直等待其批准已经有一年了，并且不可能在没有Cloudera管理层的推动下获得批准，因为这件事的性能影响非常小，甚至没有，因此您可以在JIRA票证中看到这一点讨论。也许他们会通过引入单独的shuffle实现而不是“改进”主要实现来解决这个问题，我们很快就会看到这一点。
+关于这个实现的有趣之处在于它在 map 端对数据进行排序，但不会在 reduce 端对排序的结果进行合并 - 如果需要排序数据，你需要对数据进行重新排序。 关于 Cloudera 的这个想法可以参阅[博文](http://blog.cloudera.com/blog/2015/01/improving-sort-performance-in-apache-spark-its-a-double/)。实现逻辑充分利用 mapper 的输出已经排序的特点，在 reducer 端对文件进行合并而不是采取其他手段。我们都知道，Spark 在 reducer 端使用 TimSort 完成排序，这是一个很棒的排序算法，实际上是利用了输入已经排序的特点（通过计算 minun 并将它们合并在一起）。
+
+如果你没有足够的内存来存储整个 map 输出会怎么样？ 你可能需要将中间数据溢写到磁盘上。参数 `spark.shuffle.spill` 负责启用/禁用溢写，默认情况下会启用溢写。如果你将其禁用并且没有足够的内存来存储 map 输出，那么你会遇到 OOM 错误，因此请注意这一点。
+
+在溢写到磁盘之前，可以用于存储 map 输出的内存量为 `JVM堆大小 * spark.shuffle.memoryFraction * spark.shuffle.safetyFraction`，默认值为 `JVM堆大小 * 0.2 * 0.8` = `JVM堆大小 * 0.16`，具体细节请参考[Spark内部原理之内存管理](http://smartsi.club/2018/04/25/spark-internal-memory-management/)。请注意，如果在同一个 Executor 中运行多个线程（将 `spark.executor.cores / spark.task.cpus` 的比值设置为大于1），那么可用于存储每个任务的 map 输出的平均内存为 `JVM 堆大小 * spark.shuffle.memoryFraction * spark.shuffle.safetyFraction / spark.executor.cores * spark.task.cpus`，对于2核与其他为默认值时，平均内存 `0.08 * JVM堆大小`。
+
+Spark内部使用 [AppendOnlyMap](https://github.com/apache/spark/blob/branch-1.5/core/src/main/scala/org/apache/spark/util/collection/AppendOnlyMap.scala) 数据结构将 map 输出数据存储在内存中。Spark 使用他们自己的用Scala实现的哈希表，该哈希表使用开源哈希算法，并使用[二次探测算法](https://en.wikipedia.org/wiki/Quadratic_probing)将键和值存储在相同的数组中。哈希函数使用Google Guava库的 [MurmurHash3](https://en.wikipedia.org/wiki/MurmurHash) 的 murmur3_32。
+
+该哈希表允许 Spark 在此表上应用 combiner 逻辑 - key 的每个新值都要与已有值通过 combiner 逻辑，而 combiner 的输出将作为新值存储。
+
+当发生溢写时，对存储在 AppendOnlyMap 中的数据调用 sorter，在数据上执行 TimSort 排序算法，然后将数据写入磁盘。
+
+当发生溢写时或者没有更多的 mapper 输出时，排序的输出被写入磁盘，即数据被保证命中磁盘。它是否会真正击中磁盘取决于操作系统设置，如文件缓冲区缓存，但由操作系统来决定，Spark只是发送“写入”指令。
+
+每个溢出文件分别写入磁盘，只有当数据被“reducer”请求并且合并是实时的时候才会执行它们的合并，也就是说，它不像Hadoop MapReduce中发生的那样调用某种“磁盘上的合并” ，它只是动态地从大量单独的溢出文件中收集数据，并使用由Java PriorityQueue类实现的Min Heap将它们合并在一起。
 
 
 
