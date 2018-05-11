@@ -1,8 +1,17 @@
+---
+layout: post
+author: sjf0115
+title: Lagstash 安装与启动
+date: 2017-10-13 13:15:00
+tags:
+  - Logstash
 
-备注:
-```
-Logstash需要Java 8。不支持Java 9。
-```
+categories: Logstash
+permalink: logstash-setup-and-start
+---
+
+> Logstash需要Java 8。不支持Java 9。
+
 使用如下命令检查Java版本:
 ```
 java -version
