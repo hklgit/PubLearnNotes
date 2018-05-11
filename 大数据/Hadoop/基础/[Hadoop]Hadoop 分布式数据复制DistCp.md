@@ -1,31 +1,42 @@
+---
+layout: post
+author: sjf0115
+title: Hadoop 分布式数据复制DistCp
+date: 2017-01-22 11:01:01
+tags:
+  - Hadoop
+  - Hadoop 基础
+
+categories: Hadoop
+permalink: hadoop-distributed-copy-distcp
+---
+
 ## 1.需求
 
-我们项目中需要复制一个大文件，最开始使用的是hadoop cp命令，但是随着文件越来越大，拷贝的时间也水涨船高。下面进行hadoop cp与hadoop distcp拷贝时间上的一个对比。我们将11.9G的文件从data_group/adv/day=20170116下所有文件复制到tmp/data_group/adv/day=20170116/文件下
-#### 1.1 查看文件大小
-```
-hadoop fs -du -s -h data_group/adv/day=20170116
-11.9 G  data_group/adv/day=20170116
-```
-#### 1.2 复制 
-```
-hadoop distcp data_group/adv/day=20170116 \
-tmp/data_group/adv/day=20170116 
+我们项目中需要复制一个大文件，最开始使用的是 `hadoop cp` 命令，但是随着文件越来越大，拷贝的时间也水涨船高。此时发现了 Hadoop 一个比较实用的工具 `DistCp` 可以用来实现分布式拷贝，加速拷贝的速度。下面就进行 `hadoop cp` 与 `hadoop distcp` 拷贝时间上的一个对比。我们将 `data_group/adv/day=20180509` 目录下 11.9G 的文件复制到 `tmp/data_group/adv/` 目录下
 
-hadoop fs -cp data_group/adv/day=20170116 \
-tmp/data_group/adv/day=2010116
+### 1.1 查看文件大小
+```
+hadoop fs -du -s -h data_group/adv/day=20180509
+11.9 G  data_group/adv/day=20180509
+```
+### 1.2 复制
+```
+hadoop distcp data_group/adv/day=20180509 tmp/data_group/adv/
+
+hadoop fs -cp data_group/adv/day=20180509 tmp/data_group/adv/
 ```
 
-#### 1.3 对比
+### 1.3 时间对比
 
-使用distcp命令 仅耗时1分钟；而hadoop cp命令耗时14分钟
-
+使用 hadoop distcp 命令 仅耗时1分钟；而 hadoop cp 命令耗时14分钟
 
 ## 2. 概述
-DistCp（分布式拷贝）是用于大规模集群内部和集群之间拷贝的工具。 它使用Map/Reduce实现文件分发，错误处理和恢复，以及报告生成。 它把文件和目录的列表作为map任务的输入，每个任务会完成源列表中部分文件的拷贝。 由于使用了Map/Reduce方法，这个工具在语义和执行上都会有特殊的地方。
 
-#### 2.1 distcp命令 输出
+DistCp（分布式拷贝）是用于大规模集群内部和集群之间拷贝的工具。 它使用 Map/Reduce 实现文件分发，错误处理和恢复，以及报告生成。它把文件和目录的列表作为 map 任务的输入，每个任务都会复制源列表中指定文件的一个分区。由于使用了Map/Reduce方法，这个工具在语义和执行上都会有特殊的地方。
+
 ```
-17/01/19 14:30:07 INFO tools.DistCp: Input Options: DistCpOptions{atomicCommit=false, syncFolder=false, deleteMissing=false, ignoreFailures=false, maxMaps=20, sslConfigurationFile='null', copyStrategy='uniformsize', sourceFileListing=null, sourcePaths=[data_group/adv/day=20170116], targetPath=tmp/data_group/adv/day=20170116}
+17/01/19 14:30:07 INFO tools.DistCp: Input Options: DistCpOptions{atomicCommit=false, syncFolder=false, deleteMissing=false, ignoreFailures=false, maxMaps=20, sslConfigurationFile='null', copyStrategy='uniformsize', sourceFileListing=null, sourcePaths=[data_group/adv/day=20180509], targetPath=tmp/data_group/adv/day=20180509}
 ...
 17/01/19 14:30:17 INFO mapreduce.Job:  map 0% reduce 0%
 17/01/19 14:30:29 INFO mapreduce.Job:  map 6% reduce 0%
@@ -45,7 +56,7 @@ DistCp（分布式拷贝）是用于大规模集群内部和集群之间拷贝�
                 HDFS: Number of read operations=321
                 HDFS: Number of large read operations=0
                 HDFS: Number of write operations=69
-        Job Counters 
+        Job Counters
                 Launched map tasks=17
                 Other local map tasks=17
                 Total time spent by all maps in occupied slots (ms)=485825
@@ -62,31 +73,39 @@ DistCp（分布式拷贝）是用于大规模集群内部和集群之间拷贝�
                 Physical memory (bytes) snapshot=5716221952
                 Virtual memory (bytes) snapshot=32341671936
                 Total committed heap usage (bytes)=12159811584
-        File Input Format Counters 
+        File Input Format Counters
                 Bytes Read=9293
-        File Output Format Counters 
+        File Output Format Counters
                 Bytes Written=0
         org.apache.hadoop.tools.mapred.CopyMapper$Counter
                 BYTESCOPIED=12753339159
                 BYTESEXPECTED=12753339159
                 COPY=17
 ```
-是不是很熟悉，这就是我们经常看见到的MapReduce任务的输出信息，这从侧面说明了Distcp使用Map/Reduce实现。
+是不是很熟悉，这就是我们经常看见到的 MapReduce 任务的输出信息，这从侧面说明了 Distcp 使用 Map/Reduce 实现。
+
 ## 3. 使用方法
 
-#### 3.1 集群间拷贝
-DistCp最常用在集群之间的拷贝：
+### 3.1 集群间拷贝
 
+DistCp最常用在集群之间的拷贝：
 ```
-hadoop distcp hdfs://nn1:8020/foo/bar \
-    hdfs://nn2:8020/bar/foo
+hadoop distcp hdfs://xxx1:8020/user/xiaosi/data_group/test/example hdfs://xxx2:8020/user/xiaosi/data_group
 ```
-这条命令会把nn1集群的/foo/bar目录下的所有文件以及bar本身目录（默认情况下）存储到一个临时文件中，这些文件内容的拷贝工作被分配给多个map任务， 然后每个TaskTracker分别执行从nn1到nn2的拷贝操作。注意DistCp使用绝对路径进行操作。
+上述命令会将 xx1 集群 `data_group/test/example` 目录下的所有文件以及 example 目录本身拷贝到 xx2 集群 `data_group` 目录下。在集群 xx2 上查看一下文件:
+```
+sudo -uxiaosi hadoop fs -ls data_group/example
+Found 1 items
+-rw-r--r--   3 xiaosi xiaosi         32 2018-05-10 18:03 data_group/example/secondary_sort
+```
+存储到一个临时文件中，这些文件内容的拷贝工作被分配给多个map任务， 然后每个TaskTracker分别执行从nn1到nn2的拷贝操作。
+
+> DistCp在集群间的拷贝时需要使用绝对路径进行操作。
 
 #### 3.2 集群内部拷贝
 DistCp也可以集群内部之间的拷贝：
 ```
-hadoop distcp tmp/data_group/test/a 
+hadoop distcp tmp/data_group/test/a
     tmp/data_group/test/target
 ```
 这条命令会把本集群tmp/data_group/test/a目录本身以及a目录下的所有文件拷贝到target目录下，原理同集群之间的拷贝一样。
@@ -94,7 +113,7 @@ hadoop distcp tmp/data_group/test/a
 *备注*
 
 ```
-hadoop distcp tmp/data_group/test/a 
+hadoop distcp tmp/data_group/test/a
     tmp/data_group/test/target
 ```
 上述命令默认情况下是复制a目录以及a目录下所有文件到target目录下：
@@ -118,8 +137,8 @@ tmp/data_group/test/target/aa/ab.txt
 #### 3.3 多源目录
 命令行中可以指定多个源目录：
 ```
-hadoop distcp hdfs://nn1:8020/foo/a 
-    hdfs://nn1:8020/foo/b 
+hadoop distcp hdfs://nn1:8020/foo/a
+    hdfs://nn1:8020/foo/b
     hdfs://nn2:8020/bar/foo
 ```
 
@@ -127,11 +146,11 @@ hadoop distcp hdfs://nn1:8020/foo/a
 
 ```
 hadoop distcp -f hdfs://nn1:8020/srclist \
-    hdfs://nn2:8020/bar/foo 
+    hdfs://nn2:8020/bar/foo
 ```
 其中srclist 的内容是
 ```
-hdfs://nn1:8020/foo/a 
+hdfs://nn1:8020/foo/a
 hdfs://nn1:8020/foo/b
 ```
 
@@ -147,7 +166,7 @@ t/source_new/aa.txt tmp/data_group/test/source_old/aa.txt tmp/data_group/test/ta
 ```
 我们分别复制source_new和source_old目录下的aa.txt文件到target文件夹下，报错如下：
 ```
-17/01/21 15:15:05 ERROR tools.DistCp: Duplicate files in input path: 
+17/01/21 15:15:05 ERROR tools.DistCp: Duplicate files in input path:
 org.apache.hadoop.tools.CopyListing$DuplicateFileException: File hdfs://XXX/user/XXX/tmp/data_group/test/source_new/aa.txt and \
 hdfs://XXX/user/XXX/tmp/data_group/test/source_old/aa.txt would cause duplicates. Aborting
         at org.apache.hadoop.tools.CopyListing.checkForDuplicates(CopyListing.java:151)
@@ -185,11 +204,11 @@ DistCp为每个文件的每次尝试拷贝操作都记录日志，并把日志�
 ## 5. 更新与覆盖
 这里给出一些 -update和 -overwrite的例子。 考虑一个从/foo/a 和 /foo/b 到 /bar/foo的拷贝，源路径包括：
 ```
-hdfs://nn1:8020/foo/a 
-hdfs://nn1:8020/foo/a/aa 
-hdfs://nn1:8020/foo/a/ab 
-hdfs://nn1:8020/foo/b 
-hdfs://nn1:8020/foo/b/ba 
+hdfs://nn1:8020/foo/a
+hdfs://nn1:8020/foo/a/aa
+hdfs://nn1:8020/foo/a/ab
+hdfs://nn1:8020/foo/b
+hdfs://nn1:8020/foo/b/ba
 hdfs://nn1:8020/foo/b/ab
 ```
 如果没设置-update或 -overwrite选项， 那么两个源都会映射到目标端的 /bar/foo/ab。 如果设置了这两个选项，每个源目录的内容都会和目标目录的 内容 做比较。DistCp碰到这类冲突的情况会终止操作并退出。
@@ -198,7 +217,7 @@ hdfs://nn1:8020/foo/b/ab
 
 现在考虑一个使用-update合法的操作:
 ```
-hadoop distcp -update tmp/data_group/test/source/ \ 
+hadoop distcp -update tmp/data_group/test/source/ \
                tmp/data_group/test/target/
 ```
 其中源路径/大小:
@@ -244,4 +263,3 @@ DistCp会尝试着均分需要拷贝的内容，这样每个map拷贝差不多�
 - 除非使用了-overwrite，文件被之前的map成功拷贝后当又一次执行拷贝时会被标记为 "被忽略"。
 - 如果map失败了mapred.map.max.attempts次，剩下的map任务会被终止（除非使用了-i)。
 - 如果mapred.speculative.execution被设置为 final和true，则拷贝的结果是未定义的。
-
