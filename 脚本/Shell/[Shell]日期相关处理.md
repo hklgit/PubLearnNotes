@@ -70,7 +70,27 @@ then
 else
     end_date=`date +'%Y%m%d' -d "1 days ago"`
 fi
-beg_s=`date -d "${begin_date}" +%s`
+beg_s=`date -d "${begin_date}" +%s`在当前日期上添加10天：
+
+date -d "10 day" +"%Y %m %d"
+在当前日期上减去10天
+
+date -d "-10 day" +"%Y %m %d"
+在当前日期上添加两个月：
+
+date -d "2 month" +"%Y %m %d"
+在当前日期上减去两个月
+
+date -d "-2 month" +"%Y %m %d"
+在当前日期上加上1年：
+
+date -d "1 year" +"%Y %m %d"
+在当前日期上减去1年：
+
+date -d "-1 year" +"%Y %m %d"
+在当前日期上添加1年零一个月零一天：
+
+date -d "1 year 1 month 1 day" +"%Y %m %d"
 end_s=`date -d "${end_date}" +%s`
 while [ "$beg_s" -le "$end_s" ] ;do
         format_date=`date -d "@$beg_s" +"%Y%m%d"`
@@ -156,4 +176,31 @@ for day in `seq ${first_day} ${last_day}`;do
     input=${input},data_group/push/origin/${day}
 done
 input=${input#,}
+```
+
+### 8.
+
+echo `date --date "1 month ago $month" +"%Y-%m-01"`
+```
+在当前日期上添加10天：
+
+date -d "10 day" +"%Y %m %d"
+在当前日期上减去10天
+
+date -d "-10 day" +"%Y %m %d"
+在当前日期上添加两个月：
+
+date -d "2 month" +"%Y %m %d"
+在当前日期上减去两个月
+
+date -d "-2 month" +"%Y %m %d"
+在当前日期上加上1年：
+
+date -d "1 year" +"%Y %m %d"
+在当前日期上减去1年：
+
+date -d "-1 year" +"%Y %m %d"
+在当前日期上添加1年零一个月零一天：
+
+date -d "1 year 1 month 1 day" +"%Y %m %d"
 ```

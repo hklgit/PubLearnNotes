@@ -1,5 +1,5 @@
 Hive支持MAPJOIN，适合场景:至少足够小以放入内存中。 在版本0.11之前，可以通过MapJoin提示调用MAPJOIN：
-```
+```sql
 set hive.ignore.mapjoin.hint = false;
 select /*+ MAPJOIN(time_dim) */ count(*)
 from store_sales
@@ -7,14 +7,13 @@ join time_dim
 on (ss_sold_time_sk = t_time_sk)
 ```
 或者
-```
+```sql
 set hive.auto.convert.join=true;
 select count(*)
 from store_sales
 join time_dim
 on (ss_sold_time_sk = t_time_sk)
 ```
-
 在Hive 0.10.0版本中　Hive.auto.convert.join　的默认值为false。 Hive 0.11.0以后版本将默认值更改为true（HIVE-3297）。
 请注意，在Hive 0.11.0至0.13.1版本中hive-default.xml.template错误地将默认值设置为false。
 
