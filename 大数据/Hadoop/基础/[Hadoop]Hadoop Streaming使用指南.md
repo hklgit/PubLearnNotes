@@ -63,13 +63,64 @@ Parameter|Optional/Required|Description
 -mapdebug	Optional	Script to call when map task fails
 -reducedebug	Optional	Script to call when reduce task fails
 
+#### 3.1 指定Java类作为Mapper/Reducer
 
+你可以提供一个 Java 类作为 mapper 或 reducer：
+```
+mapred streaming \
+  -input myInputDirs \
+  -output myOutputDir \
+  -inputformat org.apache.hadoop.mapred.KeyValueTextInputFormat \
+  -mapper org.apache.hadoop.mapred.lib.IdentityMapper \
+  -reducer /usr/bin/wc
+```
+你可以将 `stream.non.zero.exit.is.failure` 指定为 true 或 false，以使 streaming 任务的非零状态分别表示为失败或成功。默认情况下，以非零状态退出的流式处理任务被视为失败任务。
 
+#### 3.2 用作业提交打包文件
 
+你可以指定任何可执行文件作为 mapper 或 reducer。可执行文件不需要预先存在集群机器上。但是，如果不存在于集群机器上，则需要使用 `-file` 选项来告诉框架将可执行文件打包为作业提交的一部分。例如：
+```
+mapred streaming \
+  -input myInputDirs \
+  -output myOutputDir \
+  -mapper myPythonScript.py \
+  -reducer /usr/bin/wc \
+  -file myPythonScript.py
+```
+上面的例子将用户定义的 Python 可执行文件指定为 mapper。`-file myPythonScript.py` 选项会将 Python 可执行文件作为作业提交的一部分发送到集群机器上。
 
+除了可执行文件之外，你还可以打包 mapper 或 reducer 使用到的其他辅助文件（例如字典，配置文件等）。例如：
+```
+mapred streaming \
+  -input myInputDirs \
+  -output myOutputDir \
+  -mapper myPythonScript.py \
+  -reducer /usr/bin/wc \
+  -file myPythonScript.py \
+  -file myDictionary.txt
+```
 
+#### 3.3 指定作业的其他插件
 
+就像正常的 Map/Reduce 作业一样，你可以为一个流式作业指定其他插件：
+```
+-inputformat JavaClassName
+-outputformat JavaClassName
+-partitioner JavaClassName
+-combiner streamingCommand or JavaClassName
+```
+你为输入格式提供的类返回 Text 类的键/值对。如果你不指定输入格式类，则将 `TextInputFormat` 作为默认值。由于　`TextInputFormat` 返回 `LongWritable` 类的键，它们实际上不是输入数据的一部分，所以键将被丢弃，只有值将被传送到 mapper。
 
+你为输出格式提供的类期望采用 Text 类的键/值对。如果你不指定输出格式类，则将 `TextOutputFormat` 作为默认值。
+
+#### 3.4 设置环境变量
+
+要在流式命令中设置环境变量，请使用：
+```
+ -cmdenv EXAMPLE_DIR=/home/example/dictionaries/
+```
+
+### 4. Generic Command Options
 
 
 
