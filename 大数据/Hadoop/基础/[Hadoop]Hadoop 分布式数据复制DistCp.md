@@ -33,7 +33,7 @@ hadoop fs -cp data_group/adv/day=20180509 tmp/data_group/adv/
 
 ## 2. 概述
 
-DistCp（分布式拷贝）是用于大规模集群内部和集群之间拷贝的工具。 它使用 Map/Reduce 实现文件分发，错误处理和恢复，以及报告生成。它把文件和目录的列表作为 map 任务的输入，每个任务都会复制源列表中指定文件的一个分区。由于使用了Map/Reduce方法，这个工具在语义和执行上都会有特殊的地方。
+DistCp（分布式拷贝）是用于大规模集群内部和集群之间拷贝的工具。 它使用 Map/Reduce 实现文件分发，错误处理和恢复，以及报告生成。它把文件和目录的列表作为 map 任务的输入，每个任务都会复制源列表中指定文件的一个分区。
 
 ```
 17/01/19 14:30:07 INFO tools.DistCp: Input Options: DistCpOptions{atomicCommit=false, syncFolder=false, deleteMissing=false, ignoreFailures=false, maxMaps=20, sslConfigurationFile='null', copyStrategy='uniformsize', sourceFileListing=null, sourcePaths=[data_group/adv/day=20180509], targetPath=tmp/data_group/adv/day=20180509}
@@ -90,119 +90,103 @@ DistCp（分布式拷贝）是用于大规模集群内部和集群之间拷贝�
 
 DistCp最常用在集群之间的拷贝：
 ```
-hadoop distcp hdfs://xxx1:8020/user/xiaosi/data_group/test/example hdfs://xxx2:8020/user/xiaosi/data_group
+hadoop distcp hdfs://xxx1:8020/user/xiaosi/tmp/data_group/example hdfs://xxx2:8020/user/xiaosi/data_group
 ```
-上述命令会将 xx1 集群 `data_group/test/example` 目录下的所有文件以及 example 目录本身拷贝到 xx2 集群 `data_group` 目录下。在集群 xx2 上查看一下文件:
+上述命令会将 xx1 集群 `tmp/data_group/example` 目录下的所有文件以及 `example` 目录本身拷贝到 xx2 集群 `data_group` 目录下。在集群 xx2 上查看一下文件:
 ```
 sudo -uxiaosi hadoop fs -ls data_group/example
 Found 1 items
--rw-r--r--   3 xiaosi xiaosi         32 2018-05-10 18:03 data_group/example/secondary_sort
+-rw-r--r--   3 xiaosi xiaosi  32 2018-05-10 18:03 data_group/example/secondary.gz
 ```
-存储到一个临时文件中，这些文件内容的拷贝工作被分配给多个map任务， 然后每个TaskTracker分别执行从nn1到nn2的拷贝操作。
+这些文件内容的拷贝工作被分配给多个 map 任务。
 
 > DistCp在集群间的拷贝时需要使用绝对路径进行操作。
 
 #### 3.2 集群内部拷贝
+
 DistCp也可以集群内部之间的拷贝：
 ```
-hadoop distcp tmp/data_group/test/a
-    tmp/data_group/test/target
+hadoop distcp tmp/data_group/example/weather data_group
 ```
-这条命令会把本集群tmp/data_group/test/a目录本身以及a目录下的所有文件拷贝到target目录下，原理同集群之间的拷贝一样。
+上述命令会把本集群 `tmp/data_group/example/weather` 目录下的所有文件以及 `weather` 目录本身拷贝到 `data_group` 目录下，原理同集群之间的拷贝一样。
 
-*备注*
 
+> 备注
 ```
-hadoop distcp tmp/data_group/test/a
-    tmp/data_group/test/target
+hadoop distcp tmp/data_group/test/weather tmp/data_group/example
 ```
-上述命令默认情况下是复制a目录以及a目录下所有文件到target目录下：
+上述命令默认情况下是复制 weather 目录下所有文件以及 weather 目录本身到 tmp/data_group/example 目录下。
 ```
-hadoop fs -ls -R tmp/data_group/test/target/
-
-tmp/data_group/test/target/aa
-tmp/data_group/test/target/aa/aa.txt
-tmp/data_group/test/target/aa/ab.txt
+hadoop fs -ls tmp/data_group/example/weather
+Found 4 items
+drwxr-xr-x   - xiaosi xiaosi    0 2018-05-14 19:52 tmp/data_group/example/weather/year=1945
+drwxr-xr-x   - xiaosi xiaosi    0 2018-05-14 19:52 tmp/data_group/example/weather/year=2014
+drwxr-xr-x   - xiaosi xiaosi    0 2018-05-14 19:52 tmp/data_group/example/weather/year=2015
+drwxr-xr-x   - xiaosi xiaosi    0 2018-05-14 19:52 tmp/data_group/example/weather/year=2016
 ```
-而有时我们的需求是复制a目录下的所有文件而不包含a目录，这时可以后面介绍的-update参数：
+而有时我们的需求只是复制 weather 目录下的所有文件而不包含 weather 目录本身，这时可以使用后面介绍的 `-update` 参数：
 ```
-hadoop distcp -update tmp/data_group/test/aa tmp/data_group/test/target
-...
-hadoop fs -ls -R tmp/data_group/test/target/
-
-tmp/data_group/test/target/aa/aa.txt
-tmp/data_group/test/target/aa/ab.txt
+hadoop distcp -update tmp/data_group/test/weather tmp/data_group/example
 ```
 
-#### 3.3 多源目录
-命令行中可以指定多个源目录：
+#### 3.3 多数据源目录拷贝
+
+命令行中可以指定多个源数据目录：
 ```
-hadoop distcp hdfs://nn1:8020/foo/a
-    hdfs://nn1:8020/foo/b
-    hdfs://nn2:8020/bar/foo
+hadoop distcp tmp/data_group/test/weather/year=2015 tmp/data_group/test/weather/year=2016 tmp/data_group/example/weather
+```
+上述命令会把本集群中的 `tmp/data_group/example/weather/year=2015` 以及 `tmp/data_group/test/weather/year=2016` 目录下的所有文件以及目录本身拷贝到 `data_group/example/weather` 目录下。
+```
+hadoop fs -ls tmp/data_group/example/weather/
+Found 2 items
+drwxr-xr-x   - xiaosi xiaosi  0 2018-05-14 20:12 tmp/data_group/example/weather/year=2015
+drwxr-xr-x   - xiaosi xiaosi  0 2018-05-14 20:13 tmp/data_group/example/weather/year=2016
+```
+如果源数据文件较多，你也可以使用 `-f` 选项，从文件里获得多个源数据文件：
+```
+hadoop distcp -f tmp/data_group/test/src_list/src_list.txt tmp/data_group/example/weather
+```
+其中 `src_list.txt` 的内容是
+```
+hadoop fs -cat tmp/data_group/test/src_list/* | less
+tmp/data_group/test/weather/year=2015
+tmp/data_group/test/weather/year=2016
 ```
 
-或者使用-f选项，从文件里获得多个源：
-
-```
-hadoop distcp -f hdfs://nn1:8020/srclist \
-    hdfs://nn2:8020/bar/foo
-```
-其中srclist 的内容是
-```
-hdfs://nn1:8020/foo/a
-hdfs://nn1:8020/foo/b
-```
-
-*备注*
-
-当从多个源拷贝时，如果两个源冲突，DistCp会停止拷贝并提示出错信息
-
+> 当从多个源数据文件拷贝时，如果两个源数据文件产生冲突，DistCp会停止拷贝并提示出错信息
 Example：
-
 ```
-hadoop distcp tmp/data_group/tes
-t/source_new/aa.txt tmp/data_group/test/source_old/aa.txt tmp/data_group/test/target
+hadoop distcp tmp/data_group/example/source_new/aa.txt tmp/data_group/example/source_old/aa.txt tmp/data_group/example/source
 ```
-我们分别复制source_new和source_old目录下的aa.txt文件到target文件夹下，报错如下：
+我们分别复制 source_new 和 source_old 目录下的 aa.txt 文件到 source 文件夹下，报错如下：
 ```
 17/01/21 15:15:05 ERROR tools.DistCp: Duplicate files in input path:
-org.apache.hadoop.tools.CopyListing$DuplicateFileException: File hdfs://XXX/user/XXX/tmp/data_group/test/source_new/aa.txt and \
-hdfs://XXX/user/XXX/tmp/data_group/test/source_old/aa.txt would cause duplicates. Aborting
+org.apache.hadoop.tools.CopyListing$DuplicateFileException: File hdfs://XXX/user/XXX/tmp/data_group/example/source_new/aa.txt and \
+hdfs://XXX/user/XXX/tmp/data_group/example/source_old/aa.txt would cause duplicates. Aborting
         at org.apache.hadoop.tools.CopyListing.checkForDuplicates(CopyListing.java:151)
         at org.apache.hadoop.tools.CopyListing.buildListing(CopyListing.java:87)
         at org.apache.hadoop.tools.GlobbedCopyListing.doBuildListing(GlobbedCopyListing.java:90)
         at org.apache.hadoop.tools.CopyListing.buildListing(CopyListing.java:80)
         at org.apache.hadoop.tools.DistCp.createInputFileListing(DistCp.java:327)
-        at org.apache.hadoop.tools.DistCp.execute(DistCp.java:151)
+        at org.apache.hadoop.tools.wenjianDistCp.execute(DistCp.java:151)
 ```
 
-如果在目的位置发生冲突，会根据选项设置解决。 默认情况会跳过已经存在的目标文件（比如不用源文件做替换操作）。每次操作结束时 都会报告跳过的文件数目，但是如果某些拷贝操作失败了，但在之后的尝试成功了， 那么报告的信息可能不够精确（请参考附录）。
+每个 NodeManager 必须可以访问并与源文件系统和目标文件系统进行通信。对于 HDFS 来说，源文件系统和目标文件系统都必须运行相同版本协议或使用向后兼容的协议。
 
-每个TaskTracker必须都能够与源端和目的端文件系统进行访问和交互。 对于HDFS来说，源和目的端要运行相同版本的协议或者使用向下兼容的协议。 （请参考不同版本间的拷贝 ）。
+> 在两个不同版本的Hadoop之间（例如1.X和2.X之间）进行拷贝，通常会使用 `WebHdfsFileSystem`。与之前的 `HftpFileSystem` 不同，因为 `webhdfs` 可用于读取和写入操作，DistCp 可以在源和目标群集上运行。
 
-拷贝完成后，建议生成源端和目的端文件的列表，并交叉检查，来确认拷贝真正成功。 因为DistCp使用Map/Reduce和文件系统API进行操作，所以这三者或它们之间有任何问题 都会影响拷贝操作。一些Distcp命令的成功执行可以通过再次执行带-update参数的该命令来完成， 但用户在如此操作之前应该对该命令的语法很熟悉。
+> 远程集群指定为 `webhdfs://<namenode_hostname>:<http_port>`。当 webhdfs 使用 SSL 进行安全保护时，请使用 `swebhdfs：//`。在 Hadoop 集群的相同主要版本（例如2.X和2.X之间）之间进行拷贝时，使用 hdfs 协议来获得更好的性能。
 
-值得注意的是，当另一个客户端同时在向源文件写入时，拷贝很有可能会失败。 尝试覆盖HDFS上正在被写入的文件的操作也会失败。 如果一个源文件在拷贝之前被移动或删除了，拷贝失败同时输出异常 FileNotFoundException。
+拷贝完成后，建议生成源端和目的端文的列表，并交叉检查，来确认拷贝是否真正成功。因为 DistCp 使用 Map/Reduce 和文件系统API进行操作，如果它们之间有任何问题都会影响拷贝操作。
 
-## 4. 选项
+值得注意的是，当另一个客户端同时在向源文件写入时，拷贝很有可能会失败。尝试覆盖HDFS上正在被写入的文件的操作也会失败。如果一个源文件在拷贝之前被移动或删除了，拷贝失败同时输出异常 `FileNotFoundException`。
 
+## 4. 更新与覆盖
 
-#### 4.1 -i 忽略失败
-这个选项会比默认情况提供关于拷贝的更精确的统计， 同时它还将保留失败拷贝操作的日志，这些日志信息可以用于调试。最后，如果一个map失败了，但并没完成所有分块任务的尝试，这不会导致整个作业的失败。
+`-update` 用于拷贝目标目录中不存在源目录或与目标目录中文件版本不同的文件。
+`-overwrite` 覆盖目标目录上存在的目标文件。
 
-
-#### 4.2 -log <logdir> 记录日志
-DistCp为每个文件的每次尝试拷贝操作都记录日志，并把日志作为map的输出。 如果一个map失败了，当重新执行时这个日志不会被保留。
-
-#### 4.3 -overwrite 覆盖目标
-如果一个map失败并且没有使用-i选项，不仅仅那些拷贝失败的文件，这个分块任务中的所有文件都会被重新拷贝。 就像下面提到的，它会改变生成目标路径的语义，所以 用户要小心使用这个选项。
-
-#### 4.4 -update 源和目标的大小不一样则进行覆盖
-这不是"同步"操作。 执行覆盖的唯一标准是源文件和目标文件大小是否相同；如果不同，则源文件替换目标文件。 像 下面提到的，它也改变生成目标路径的语义， 用户使用要小心。
-
-## 5. 更新与覆盖
-这里给出一些 -update和 -overwrite的例子。 考虑一个从/foo/a 和 /foo/b 到 /bar/foo的拷贝，源路径包括：
+更新和覆盖选项值得特别关注，因为它们的处理源路径与默认值的差异非常微妙。考虑来自　`/source/first/` 和 `/source/second/to/target/` 的副本，其中源路径具有以下内容：
 ```
 hdfs://nn1:8020/foo/a
 hdfs://nn1:8020/foo/a/aa
@@ -245,16 +229,28 @@ hadoop distcp -update tmp/data_group/test/source/ \
 
 如果指定了 -overwrite选项，所有文件都会被覆盖。
 
+## 4. 选项
+
+#### 4.1 -i 忽略失败
+这个选项会比默认情况提供关于拷贝的更精确的统计， 同时它还将保留失败拷贝操作的日志，这些日志信息可以用于调试。最后，如果一个map失败了，但并没完成所有分块任务的尝试，这不会导致整个作业的失败。
+
+#### 4.2 -log <logdir> 记录日志
+DistCp为每个文件的每次尝试拷贝操作都记录日志，并把日志作为map的输出。 如果一个map失败了，当重新执行时这个日志不会被保留。
+
+#### 4.3 -overwrite 覆盖目标
+如果一个map失败并且没有使用-i选项，不仅仅那些拷贝失败的文件，这个分块任务中的所有文件都会被重新拷贝。 就像下面提到的，它会改变生成目标路径的语义，所以 用户要小心使用这个选项。
+
+#### 4.4 -update 源和目标的大小不一样则进行覆盖
+这不是"同步"操作。 执行覆盖的唯一标准是源文件和目标文件大小是否相同；如果不同，则源文件替换目标文件。 像 下面提到的，它也改变生成目标路径的语义， 用户使用要小心。
+
+
+
 ## 6. Map数目
 DistCp会尝试着均分需要拷贝的内容，这样每个map拷贝差不多相等大小的内容。 但因为文件是最小的拷贝粒度，所以配置增加同时拷贝（如map）的数目不一定会增加实际同时拷贝的数目以及总吞吐量。
 
 如果没使用-m选项，DistCp会尝试在调度工作时指定map的数目 为 min (total_bytes / bytes.per.map, 20 * num_task_trackers)， 其中bytes.per.map默认是256MB。
 
 建议对于长时间运行或定期运行的作业，根据源和目标集群大小、拷贝数量大小以及带宽调整map的数目。
-
-
-## 7.不同HDFS版本间的拷贝
-对于不同Hadoop版本间的拷贝，用户应该使用HftpFileSystem。 这是一个只读文件系统，所以DistCp必须运行在目标端集群上（更确切的说是在能够写入目标集群的TaskTracker上）。 源的格式是 hftp://<dfs.http.address>/<path> （默认情况dfs.http.address是 <namenode>:50070）。
 
 ## 8. Map/Reduce和副效应
 像前面提到的，map拷贝输入文件失败时，会带来一些副效应。

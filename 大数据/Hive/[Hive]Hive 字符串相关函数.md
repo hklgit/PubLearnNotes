@@ -147,6 +147,20 @@ hello
 select lcase("HELLO") from adv_push_promote_order_user limit 1;
 hello
 ```
+### 8. instr
+语法:
+```
+instr(string str, string substr)
+```
+返回值:
+```
+int
+```
+说明:
+```
+返回 substr 在 str 中第一次出现的位置。若任何参数为null返回null，若substr不在str中返回0。str中第一个字符的位置为1。
+```
+
 ### 8. trim 去掉左右两边空格
 
 
