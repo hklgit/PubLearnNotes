@@ -246,3 +246,10 @@ Exception in thread "main" java.lang.UnsupportedOperationException: loadTable is
 
 #### 5.2 解决方案
 
+### 6. kafka.common.MessageSizeTooLargeException
+
+#### 6.1 问题描述
+```
+Reported error Error handling message; exiting - kafka.common.MessageSizeTooLargeException: Found a message larger than the maximum fetch size of this consumer on topic logs.logger.piao.mp_piao partition 4 at fetch offset 18397184. Increase the fetch size, or decrease the maximum message size the broker will allow.
+```
+#### 6.2 问题解决

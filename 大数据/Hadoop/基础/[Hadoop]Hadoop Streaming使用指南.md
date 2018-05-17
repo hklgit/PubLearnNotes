@@ -50,18 +50,18 @@ Parameter|Optional/Required|Description
 -output directoryname|Required|Output location for reducer
 -mapper executable or JavaClassName|Optional|Mapper executable. If not specified, IdentityMapper is used as the default
 -reducer executable or JavaClassName|Optional|Reducer executable. If not specified, IdentityReducer is used as the default
--file filename	Optional	Make the mapper, reducer, or combiner executable available locally on the compute nodes
--inputformat JavaClassName	Optional	Class you supply should return key/value pairs of Text class. If not specified, TextInputFormat is used as the default
--outputformat JavaClassName	Optional	Class you supply should take key/value pairs of Text class. If not specified, TextOutputformat is used as the default
--partitioner JavaClassName	Optional	Class that determines which reduce a key is sent to
--combiner streamingCommand or JavaClassName	Optional	Combiner executable for map output
--cmdenv name=value	Optional	Pass environment variable to streaming commands
--inputreader	Optional	For backwards-compatibility: specifies a record reader class (instead of an input format class)
--verbose	Optional	Verbose output
--lazyOutput	Optional	Create output lazily. For example, if the output format is based on FileOutputFormat, the output file is created only on the first call to Context.write
--numReduceTasks	Optional	Specify the number of reducers
--mapdebug	Optional	Script to call when map task fails
--reducedebug	Optional	Script to call when reduce task fails
+-file filename|Optional|Make the mapper, reducer, or combiner executable available locally on the compute nodes
+-inputformat JavaClassName|Optional|Class you supply should return key/value pairs of Text class. If not specified, TextInputFormat is used as the default
+-outputformat JavaClassName|Optional|Class you supply should take key/value pairs of Text class. If not specified, TextOutputformat is used as the default
+-partitioner JavaClassName|Optional|Class that determines which reduce a key is sent to
+-combiner streamingCommand or JavaClassName	|Optional|Combiner executable for map output
+-cmdenv name=value|Optional|Pass environment variable to streaming commands
+-inputreader|Optional|For backwards-compatibility: specifies a record reader class (instead of an input format class)
+-verbose|Optional|Verbose output
+-lazyOutput|Optional|Create output lazily. For example, if the output format is based on FileOutputFormat, the output file is created only on the first call to Context.write
+-numReduceTasks|Optional|Specify the number of reducers
+-mapdebug|Optional|Script to call when map task fails
+-reducedebug|Optional|Script to call when reduce task fails
 
 #### 3.1 指定Java类作为Mapper/Reducer
 
@@ -103,8 +103,7 @@ mapred streaming \
 #### 3.3 指定作业的其他插件
 
 就像正常的 Map/Reduce 作业一样，你可以为一个流式作业指定其他插件：
-```
--inputformat JavaClassName
+```aClassName
 -outputformat JavaClassName
 -partitioner JavaClassName
 -combiner streamingCommand or JavaClassName
@@ -121,6 +120,27 @@ mapred streaming \
 ```
 
 ### 4. Generic Command Options
+
+通用命令行语法如下所示。
+
+> 确保通用命令选项在流式命令选项之前放置，否则命令将失效。有关示例，请参阅使[Making Archives Available to Tasks](http://hadoop.apache.org/docs/r3.1.0/hadoop-streaming/HadoopStreaming.html#Making_Archives_Available_to_Tasks)。
+
+```
+hadoop command [genericOptions] [streamingOptions]
+```
+这里列出了你可以用于流式处理的Hadoop通用命令选项：
+
+参数|可选/必需|描述
+---|---|---
+-conf configuration_file|可选|指定应用程序配置文件
+-D property=value|可选|使用给定属性的值
+-fs host:port or local|可选|指定一个namenode
+-files|可选|指定拷贝到 Map/Reduce集群的文件，以逗号分隔
+-libjars|可选|指定jar文件以包含在classpath中，以逗号分隔
+-archives|可选|指定逗号分隔的 archives 在计算机器上解除存档
+
+#### 4.1 使用-D选项指定配置变量
+
 
 
 
