@@ -141,8 +141,57 @@ hadoop command [genericOptions] [streamingOptions]
 
 #### 4.1 使用-D选项指定配置变量
 
+你可以使用 `-D <property> = <value>` 来指定其他配置变量。
 
+##### 4.1.1 指定目录
 
+要更改本地临时目录，请使用：
+```
+ -D dfs.data.dir=/tmp
+```
+要指定其他本地临时目录，请使用：
+```
+-D mapred.local.dir=/tmp/local
+-D mapred.system.dir=/tmp/system
+-D mapred.temp.dir=/tmp/temp
+```
+
+> 有关作业配置参数的更多详细信息，请参阅：[mapred-default.xml](http://hadoop.apache.org/docs/r3.1.0/hadoop-mapreduce-client/hadoop-mapreduce-client-core/mapred-default.xml)
+
+##### 4.1.2 指定仅有Map的作业
+
+有时你可能只想使用 map 函数处理输入数据。只需将 `mapreduce.job.reduces` 设置为零即可实现。Map/Reduce 框架不会创建任何 Reducer 任务。相反，Mapper 任务的输出就是该作业的最终输出。
+```
+ -D mapreduce.job.reduces=0
+```
+为了向后兼容，Hadoop Streaming还支持 `-reducer NONE` 选项来设置仅有 Map 的作业，等价于上述命令。
+
+##### 4.1.3 指定Reducer的个数
+
+指定Reducer的个数，例如指定两个Reducer，使用如下命令：
+```
+mapred streaming \
+  -D mapreduce.job.reduces=2 \
+  -input myInputDirs \
+  -output myOutputDir \
+  -mapper /bin/cat \
+  -reducer /usr/bin/wc
+```
+
+##### 4.1.4 自定义行记录拆分为键/值对
+
+如前所述，当 Map/Reduce 框架从 mapper 的stdout中读取一行数据时，将该行拆分成键/值对。默认情况下，第一个制表符的之前的前缀（包括制表符）是键，其余部分（不包括制表符）是值。
+
+默认值为制表符，但是你也可以自定义。你可以指定除制表符以外的字段作为分隔符，并且可以指定第n个（n> = 1）字符而不是第一个字符作为键和值之间的分隔符。 例如：
+```
+mapred streaming \
+  -D stream.map.output.field.separator=. \
+  -D stream.num.map.output.key.fields=4 \
+  -input myInputDirs \
+  -output myOutputDir \
+  -mapper /bin/cat \
+  -reducer /bin/cat
+```
 
 
 
