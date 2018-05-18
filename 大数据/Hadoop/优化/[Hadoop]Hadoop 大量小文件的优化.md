@@ -19,41 +19,41 @@ permalink: hadoop-small-files-problem
 
 其次，处理小文件并非 Hadoop 的设计目标，HDFS 的设计目标是流式访问大数据集（TB级别）。因而，在 HDFS 中存储大量小文件是很低效的。访问大量小文件经常会导致大量的 seek，以及不断的在 DatanNde 间跳跃去检索小文件。这不是一个很有效的访问模式，严重影响性能。
 
-最后，处理大量小文件速度远远小于处理同等大小的大文件的速度。每一个小文件要占用一个　slot，而　task　启动将耗费大量时间甚至大部分时间都耗费在启动task和释放task上。
+最后，处理大量小文件速度远远小于处理同等大小的大文件的速度。每一个小文件要占用一个　slot，而任务启动将耗费大量时间甚至大部分时间都耗费在启动任务和释放任务上。
 
 ### 2. MapReduce上的小文件问题
 
-Map任务（task）一般一次处理一个块大小的输入（input）（默认使用FileInputFormat）。如果文件非常小，并且拥有大量的这种小文件，那么每一个map task都仅仅处理非常小的input数据，因此会产生大量的map tasks，每一个map task都会额外增加bookkeeping开销（each of which imposes extra bookkeeping overhead）。一个1GB的文件，拆分成16个块大小文件（默认block size为64M），相对于拆分成10000个100KB的小文件，后者每一个小文件启动一个map task，那么job的时间将会十倍甚至百倍慢于前者。
+Map任务一般一次只处理一个块的输入（input）（默认使用FileInputFormat）。如果文件非常小，并且有很多，那么每一个 Map 任务都仅仅处理非常小的输入数据，并会产生大量的 Map 任务，每一个 Map 任务都会额外增加　bookkeeping 开销。一个1GB大小的文件拆分成16个64M大小的块，相对于拆分成10000个100KB的块，后者每一个小文件启动一个 Map 任务，作业的运行时间将会十倍甚至百倍慢于前者。
 
-Hadoop中有一些特性可以用来减轻bookkeeping开销：可以在一个JVM中允许task JVM重用，以支持在一个JVM中运行多个map task，以此来减少JVM的启动开销(通过设置mapred.job.reuse.jvm.num.tasks属。
+Hadoop 中有一些特性可以用来减轻 bookkeeping 开销：可以在一个 JVM 中允许 task JVM 重用，以支持在一个 JVM 中运行多个 Map 任务，以此来减少 JVM 的启动开销(译者注：MR1中通过设置 `mapred.job.reuse.jvm.num.tasks` 属性)。
 
 ### 3. 为什么会产生大量的小文件
 
-至少有两种场景下会产生大量的小文件：
-
-（1）这些小文件都是一个大逻辑文件的一部分。由于HDFS在2.x版本开始支持对文件的append，所以在此之前保存无边界文件（例如，log文件）（译者注：持续产生的文件，例如日志每天都会生成）一种常用的方式就是将这些数据以块的形式写入HDFS中（a very common pattern for saving unbounded files (e.g. log files) is to write them in chunks into HDFS）。
-
-（2）文件本身就是很小。设想一下，我们有一个很大的图片语料库，每一个图片都是一个独一的文件，并且没有一种很好的方法来将这些文件合并为一个大的文件。
+至少在两种场景下会产生大量的小文件：
+- 这些小文件都是一个大逻辑文件的一部分。由于 HDFS 在2.x版本开始支持对文件进行追加，所以在此之前保存无边界文件（例如，日志文件）一种常用的方式就是将这些数据以块的形式写入HDFS中（译者注：持续产生的文件，例如日志每天都会生成）。
+- 文件本身就是很小。设想一下，我们有一个很大的图片语料库，每一个图片都是一个单独的文件，并且没有一种很好的方法来将这些文件合并为一个大的文件。
 
 ### 4. 解决方案
 
-这两种情况需要有不同的解决方 式。
+这两种情况需要有不同的解决方式。
 
 #### 4.1 第一种情况
 
-对于第一种情况，文件是许多记录（Records）组成的，那么可以通过调用HDFS的sync()方法(和append方法结合使用)，每隔一定时间生成一个大文件。或者，可以通过写一个程序来来合并这些小文件（可以看一下Nathan Marz关于Consolidator一种小工具的文章）。
+对于第一种情况，文件是许多记录组成的，那么可以通过调用 HDFS 的 `sync()` 方法(和 `append` 方法结合使用)，每隔一定时间生成一个大文件。或者，可以通过写一个 MapReduce 程序来来合并这些小文件。
 
 #### 4.2 第二种情况
 
-对于第二种情况，就需要某种形式的容器通过某种方式来对这些文件进行分组。Hadoop提供了一些选择：
+对于第二种情况，就需要容器通过某种方式来对这些文件进行分组。Hadoop提供了一些选择：
 
 ##### 4.2.1 HAR File
 
-Hadoop Archives （HAR files）是在0.18.0版本中引入到HDFS中的，它的出现就是为了缓解大量小文件消耗NameNode内存的问题。HAR文件是通过在HDFS上构建一个分层文件系统来工作。HAR文件通过hadoop archive命令来创建，而这个命令实 际上是运行了一个MapReduce作业来将小文件打包成少量的HDFS文件（译者注：将小文件进行合并几个大文件）。对于client端来说，使用HAR文件没有任何的改变：所有的原始文件都可见以及可访问（只是使用har://URL，而不是hdfs://URL），但是在HDFS中中文件数却减少了。
+Hadoop Archives （HAR files）是在 0.18.0 版本中引入到 HDFS 中的，它的出现就是为了缓解大量小文件消耗 NameNode 内存的问题。HAR 文件是通过在 HDFS 上构建一个分层文件系统来工作。HAR 文件通过 `hadoop archive` 命令来创建，而这个命令实际上是运行 MapReduce 作业来将小文件打包成少量的 HDFS 文件（译者注：将小文件进行合并成几个大文件）。对于客户端来说，使用 HAR 文件系统没有任何的变化：所有原始文件都可见以及可以访问（只是使用 `har://URL`，而不是 `hdfs://URL`），但是在 HDFS 中中文件个数却减少了。
 
-读取HAR中的文件不如读取HDFS中的文件更有效，并且实际上可能较慢，因为每个HAR文件访问需要读取两个索引文件以及还要读取数据文件本身（如下图）。尽管HAR文件可以用作MapReduce的输入，但是没有特殊的魔法允许MapReduce直接操作HAR在HDFS块上的所有文件（although HAR files can be used as input to MapReduce, there is no special magic that allows maps to operate over all the files in the HAR co-resident on a HDFS block）。 可以考虑通过创建一种input format，充分利用HAR文件的局部性优势，但是目前还没有这种input format。需要注意的是：MultiFileInputSplit，即使在HADOOP-4565（https://issues.apache.org/jira/browse/HADOOP-4565）的改进，但始终还是需要每个小文件的寻找。我们非常有兴趣看到这个与SequenceFile进行对比。 在目前看来，HARs可能最好仅用于存储文档（At the current time HARs are probably best used purely for archival purposes.）。
+读取 HAR 文件不如读取 HDFS 文件更有效，并且实际上可能更慢，因为每个 HAR 文件访问需要读取两个索引文件以及还要读取数据文件本。
 
 ![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hadoop/hadoop-small-files-problem-1.png?raw=true)
+
+尽管 HAR 文件可以用作 MapReduce 的输入，但是 Map 没有办法直接对共同驻留在 HDFS 块上的 HAR 所有文件操作。可以考虑通过创建一种 input format，充分利用 HAR 文件的局部性优势，但是目前还没有这种input format。需要注意的是：MultiFileInputSplit，即使在 [HADOOP-4565](https://issues.apache.org/jira/browse/HADOOP-4565) 进行了改进，选择节点本地分割中的文件，但始终还是需要每个小文件的搜索。在目前看来，HAR 可能最好仅用于存储文档。
 
 ##### 4.2.2 SequenceFile
 
