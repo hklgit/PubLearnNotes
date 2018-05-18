@@ -53,18 +53,19 @@ Hadoop Archives （HAR files）是在0.18.0版本中引入到HDFS中的，它的
 
 读取HAR中的文件不如读取HDFS中的文件更有效，并且实际上可能较慢，因为每个HAR文件访问需要读取两个索引文件以及还要读取数据文件本身（如下图）。尽管HAR文件可以用作MapReduce的输入，但是没有特殊的魔法允许MapReduce直接操作HAR在HDFS块上的所有文件（although HAR files can be used as input to MapReduce, there is no special magic that allows maps to operate over all the files in the HAR co-resident on a HDFS block）。 可以考虑通过创建一种input format，充分利用HAR文件的局部性优势，但是目前还没有这种input format。需要注意的是：MultiFileInputSplit，即使在HADOOP-4565（https://issues.apache.org/jira/browse/HADOOP-4565）的改进，但始终还是需要每个小文件的寻找。我们非常有兴趣看到这个与SequenceFile进行对比。 在目前看来，HARs可能最好仅用于存储文档（At the current time HARs are probably best used purely for archival purposes.）。
 
-![image](http://img.blog.csdn.net/20161225153157287?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvU3VubnlZb29uYQ==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hadoop/hadoop-small-files-problem-1.png?raw=true)
+
 ##### 4.2.2 SequenceFile
 
 通常对于"小文件问题"的回应会是：使用序列文件（SequenceFile）。这种方法的思路是，使用文件名（filename）作为key，并且文件内容（file contents）作为value，如下图。在实践中这种方式非常有效。我们回到10,000个100KB小文件问题上，你可以编写一个程序将它们放入一个单一的SequenceFile，然后你可以流式处理它们（直接处理或使用MapReduce）操作SequenceFile。这样同时会带来两个优势：（1）SequenceFiles是可拆分的，因此MapReduce可以将它们分成块并独立地对每个块进行操作；（2）它们同时支持压缩，不像HAR。 在大多数情况下，块压缩是最好的选择，因为它将压缩几个记录为一个块，而不是一个记录压缩一个块。（Block compression is the best option in most cases, since it compresses blocks of several records (rather than per record)）。
 
-![image](http://img.blog.csdn.net/20161225153219119?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvU3VubnlZb29uYQ==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hadoop/hadoop-small-files-problem-2.png?raw=true)
 
 将现有数据转换为SequenceFile可能很慢。 但是，完全可以并行创建SequenceFile的集合。（It can be slow to convert existing data into Sequence Files. However, it is perfectly possible to create a collection of Sequence Files in parallel.）Stuart Sierra写了一篇关于将tar文件转换为SequenceFile的文章（https://stuartsierra.com/2008/04/24/a-million-little-files ），像这样的工具是非常有用的，我们应该多看看。展望未来，最好设计数据管道，将源数据直接写入SequenceFile（如果可能），而不是作为中间步骤写入小文件。
 
 与HAR文件不同，没有办法列出SequenceFile中的所有键，所以不能读取整个文件。Map File，就像对键进行排序的SequenceFile，只维护了部分索引，所以他们也不能列出所有的键，如下图。
 
-![image](http://img.blog.csdn.net/20161225153231728?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvU3VubnlZb29uYQ==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast//note.youdao.com/favicon.ico)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hadoop/hadoop-small-files-problem-3.png?raw=true)
 
 SequenceFile是以Java为中心的。 TFile（https://issues.apache.org/jira/browse/HADOOP-4565 ）设计为跨平台，并且可以替代SequenceFile，不过现在还不可用。
 
