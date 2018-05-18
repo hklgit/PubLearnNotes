@@ -1,7 +1,19 @@
+---
+layout: post
+author: sjf0115
+title: Hadoop 大量小文件问题的优化
+date: 2018-04-23 19:32:17
+tags:
+  - Hadoop
+  - Hadoop 优化
+
+categories: Hadoop
+permalink: hadoop-small-files-problem
+---
 
 ### 1. HDFS上的小文件问题
 
-小文件是指文件大小明显小于HDFS上块（block）大小（默认64MB，在Hadoop2.x中默认为128MB）的文件。如果存储小文件，必定会有大量这样的小文件，否则你也不会使用Hadoop（If you’re storing small files, then you probably have lots of them (otherwise you wouldn’t turn to Hadoop)），这样的文件给hadoop的扩展性和性能带来严重问题。当一个文件的大小小于HDFS的块大小（默认64MB），就将认定为小文件否则就是大文件。为了检测输入文件的大小，可以浏览Hadoop DFS 主页 http://machinename:50070/dfshealth.jsp ，并点击Browse filesystem（浏览文件系统）。
+小文件是指文件大小明显小于HDFS上块（block）大小（默认64MB，在Hadoop2.x中默认为128MB）的文件。如果存储小文件，必定会有大量这样的小文件，否则你也不会使用Hadoop（If you’re storing small files, then you probably have lots of them (otherwise you wouldn’t turn to Hadoop)），这样的文件给hadoop的扩展性和性能带来严重问题。当一个文件的大小小于HDFS的块大小（默认64MB），就将认定为小文件否则就是大文件。为了检测输入文件的大小，可以浏览[Hadoop DFS 主页](http://machinename:50070/dfshealth.jsp) ，并点击 `Browse filesystem`（浏览文件系统）。
 
 首先，在HDFS中，任何一个文件，目录或者block在NameNode节点的内存中均以一个对象表示（元数据）（Every file, directory and block in HDFS is represented as an object in the namenode’s memory），而这受到NameNode物理内存容量的限制。每个元数据对象约占150byte，所以如果有1千万个小文件，每个文件占用一个block，则NameNode大约需要2G空间。如果存储1亿个文件，则NameNode需要20G空间，这毫无疑问1亿个小文件是不可取的。
 
@@ -13,7 +25,7 @@
 
 Map任务（task）一般一次处理一个块大小的输入（input）（默认使用FileInputFormat）。如果文件非常小，并且拥有大量的这种小文件，那么每一个map task都仅仅处理非常小的input数据，因此会产生大量的map tasks，每一个map task都会额外增加bookkeeping开销（each of which imposes extra bookkeeping overhead）。一个1GB的文件，拆分成16个块大小文件（默认block size为64M），相对于拆分成10000个100KB的小文件，后者每一个小文件启动一个map task，那么job的时间将会十倍甚至百倍慢于前者。
 
-Hadoop中有一些特性可以用来减轻bookkeeping开销：可以在一个JVM中允许task JVM重用，以支持在一个JVM中运行多个map task，以此来减少JVM的启动开销(通过设置mapred.job.reuse.jvm.num.tasks属性，默认为1，－1表示无限制)。（译者注：如果有大量小文件，每个小文件都要启动一个map task，则必相应的启动JVM，这提供的一个解决方案就是重用task 的JVM，以此减少JVM启动开销）；另 一种方法是使用MultiFileInputSplit，它可以使得一个map中能够处理多个split。
+Hadoop中有一些特性可以用来减轻bookkeeping开销：可以在一个JVM中允许task JVM重用，以支持在一个JVM中运行多个map task，以此来减少JVM的启动开销(通过设置mapred.job.reuse.jvm.num.tasks属。
 
 ### 3. 为什么会产生大量的小文件
 
@@ -54,9 +66,7 @@ Hadoop Archives （HAR files）是在0.18.0版本中引入到HDFS中的，它的
 
 ![image](http://img.blog.csdn.net/20161225153231728?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvU3VubnlZb29uYQ==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast//note.youdao.com/favicon.ico)
 
-
 SequenceFile是以Java为中心的。 TFile（https://issues.apache.org/jira/browse/HADOOP-4565 ）设计为跨平台，并且可以替代SequenceFile，不过现在还不可用。
-
 
 ##### 4.2.3 HBase
 
