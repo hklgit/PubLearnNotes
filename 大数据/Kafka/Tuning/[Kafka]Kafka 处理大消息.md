@@ -16,9 +16,15 @@ permalink: kafka-handling-large-messages
 ```
 kafka.common.MessageSizeTooLargeException: Found a message larger than the maximum fetch size of this consumer on topic XXX partition 4 at fetch offset 18397184. Increase the fetch size, or decrease the maximum message size the broker will allow.
 ```
-从上面我们可以明显的看到在主题 XXX 分区4上有一条数据超出了消费者最大拉取大小。从上面提示中我们知道解决这个问题，可以通过增大 consumer 消费(fetch)数据的大小或者减小 broker 允许进入的消息数据的大小。
-
-
+从上面我们可以明显的看到在主题 XXX 分区4上有一条数据超出了消费者最大拉取大小。从上面提示中我们知道解决这个问题，可以通过增大消费者消费(fetch)消息的大小或者减小 broker 允许进入的消息的大小。可以通过如下几个参数来调节：
+- `message.max.bytes`，broker 可以接收生产者消息的最大字节数。
+- `replica.fetch.max.bytes`，broker 可以允许复制消息的最大字节数。
+- `fetch.message.max.bytes`，消费者可以读取消息的最大字节数。
+在我这解决上述问题，我们采取增大消费者消费消息的大小的解决方案，例如：
+```
+fetch.message.max.bytes=10485760
+```
+下面介绍一下kafka针对大数据处理的思考。
 
 ### 2. 如何处理大消息
 
@@ -42,7 +48,7 @@ kafka.common.MessageSizeTooLargeException: Found a message larger than the maxim
 
 (1) `message.max.bytes`
 
-broker 可以接受消息的最大字节数。确保这个值必须小于消费者的 `fetch.message.max.bytes`，否则消费者不能消费该消息。默认值为 `1000000 (1 MB)`。
+broker 可以接收生产者消息的最大字节数。确保这个值必须小于消费者的 `fetch.message.max.bytes`，否则消费者不能消费该消息。默认值为 `1000000 (1 MB)`。
 
 (2) `log.segment.bytes`
 
@@ -50,7 +56,7 @@ Kafka数据文件的大小。确保这个值必须大于任意单个消息。默
 
 (3) `replica.fetch.max.bytes`
 
-broker 可以复制消息的最大字节数。确保这个值必须大于 `message.max.bytes`，否则 broker 可以接收它但无法复制它，可能会导致数据丢失。默认值为 `1048576 (1 MiB)`。
+broker 可以允许复制消息的最大字节数。确保这个值必须大于 `message.max.bytes`，否则 broker 可以接收它但无法复制它，可能会导致数据丢失。默认值为 `1048576 (1 MiB)`。
 
 ##### 2.2.2 Consumer配置
 
