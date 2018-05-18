@@ -182,7 +182,7 @@ mapred streaming \
 
 如前所述，当 Map/Reduce 框架从 mapper 的stdout中读取一行数据时，将该行拆分成键/值对。默认情况下，第一个制表符的之前的前缀（包括制表符）是键，其余部分（不包括制表符）是值。
 
-默认值为制表符，但是你也可以自定义。你可以指定除制表符以外的字段作为分隔符，并且可以指定第n个（n> = 1）字符而不是第一个字符作为键和值之间的分隔符。 例如：
+默认值为制表符，但是你也可以自定义。你可以指定除制表符以外的字段作为分隔符，并且可以指定第n个（n> = 1）字符而不是第一个字符作为键和值之间的分隔符（例如，你可以指定第２个逗号为键和值的分隔符）。 例如：
 ```
 mapred streaming \
   -D stream.map.output.field.separator=. \
@@ -192,8 +192,17 @@ mapred streaming \
   -mapper /bin/cat \
   -reducer /bin/cat
 ```
+在上面的例子中，`-D stream.map.output.field.separator =.` 指定 `.` 作为 map 输出的字段分隔符，第四个 `.` 之前的前缀将成为键，剩余的（不包括第四个 `.`）为值。如果一行中不够四个 `.`，那么整行将是键，值为一个空的Text对象（像由`new Text("")`创建的一样）。
 
+同样，你可以使用 `-D stream.reduce.output.field.separator` 和 `-D stream.num.reduce.output.fields` 为 reduce 输出指定键和值之间的分隔符。
 
+同样，你可以指定 `stream.map.input.field.separator` 和 `stream.reduce.input.field.separator` 为 Map/Reduce 输入指定键和值之间的分隔符。默认情况下，分隔符是制表符。
+
+##### 4.1.5 使用大型文件和档案
+
+`-files` 和 `-archives` 选项可以使你的文件和档案对于任务可见。参数是你已上传到HDFS的文件或存档的URI。这些文件和档案将跨作业缓存。你可以从 fs.default.name 配置变量中检索 host 和 fs_port 值。
+
+> `-files` 和 `-archives` 选项是通用选项。请务必在命令选项之前放置通用选项，否则命令将失败。
 
 
 > Hadoop版本:3.1.0
