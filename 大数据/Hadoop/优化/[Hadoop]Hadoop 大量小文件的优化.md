@@ -13,13 +13,13 @@ permalink: hadoop-small-files-problem
 
 ### 1. HDFS上的小文件问题
 
-小文件是指文件大小明显小于HDFS上块（block）大小（默认64MB，在Hadoop2.x中默认为128MB）的文件。如果存储小文件，必定会有大量这样的小文件，否则你也不会使用Hadoop（If you’re storing small files, then you probably have lots of them (otherwise you wouldn’t turn to Hadoop)），这样的文件给hadoop的扩展性和性能带来严重问题。当一个文件的大小小于HDFS的块大小（默认64MB），就将认定为小文件否则就是大文件。为了检测输入文件的大小，可以浏览[Hadoop DFS 主页](http://machinename:50070/dfshealth.jsp) ，并点击 `Browse filesystem`（浏览文件系统）。
+小文件是指文件大小明显小于 HDFS 上块（block）大小（默认64MB，在Hadoop2.x中默认为128MB）的文件。如果存储小文件，必定会有大量这样的小文件，否则你也不会使用 Hadoop，这样的文件给 Hadoop 的扩展性和性能带来严重问题。当一个文件的大小小于 HDFS 的块大小（默认64MB）就认定为小文件，否则就是大文件。为了检测输入文件的大小，可以浏览[Hadoop DFS 主页](http://machinename:50070/dfshealth.jsp) ，并点击 `Browse filesystem`（浏览文件系统）。
 
-首先，在HDFS中，任何一个文件，目录或者block在NameNode节点的内存中均以一个对象表示（元数据）（Every file, directory and block in HDFS is represented as an object in the namenode’s memory），而这受到NameNode物理内存容量的限制。每个元数据对象约占150byte，所以如果有1千万个小文件，每个文件占用一个block，则NameNode大约需要2G空间。如果存储1亿个文件，则NameNode需要20G空间，这毫无疑问1亿个小文件是不可取的。
+首先，HDFS 中任何一个文件，目录或者数据块在 NameNode 节点内存中均以一个对象形式表示（元数据），而这受到 NameNode 物理内存容量的限制。每个元数据对象约占 150 byte，所以如果有1千万个小文件，每个文件占用一个block，则 NameNode 大约需要2G空间。如果存储1亿个文件，则 NameNode 需要20G空间，这毫无疑问1亿个小文件是不可取的。
 
-其次，处理小文件并非Hadoop的设计目标，HDFS的设计目标是流式访问大数据集（TB级别）。因而，在HDFS中存储大量小文件是很低效的。访问大量小文件经常会导致大量的寻找，以及不断的从一个DatanNde跳到另一个DataNode去检索小文件（Reading through small files normally causes lots of seeks and lots of hopping from datanode to datanode to retrieve each small file），这都不是一个很有效的访问模式，严重影响性能。
+其次，处理小文件并非 Hadoop 的设计目标，HDFS 的设计目标是流式访问大数据集（TB级别）。因而，在 HDFS 中存储大量小文件是很低效的。访问大量小文件经常会导致大量的 seek，以及不断的在 DatanNde 间跳跃去检索小文件。这不是一个很有效的访问模式，严重影响性能。
 
-最后，处理大量小文件速度远远小于处理同等大小的大文件的速度。每一个小文件要占用一个slot，而task启动将耗费大量时间甚至大部分时间都耗费在启动task和释放task上。
+最后，处理大量小文件速度远远小于处理同等大小的大文件的速度。每一个小文件要占用一个　slot，而　task　启动将耗费大量时间甚至大部分时间都耗费在启动task和释放task上。
 
 ### 2. MapReduce上的小文件问题
 
