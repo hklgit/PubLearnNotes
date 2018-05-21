@@ -57,20 +57,22 @@ Hadoop Archives （HAR files）是在 0.18.0 版本中引入到 HDFS 中的，�
 
 ##### 4.2.2 SequenceFile
 
-通常对于"小文件问题"的回应会是：使用序列文件（SequenceFile）。这种方法的思路是，使用文件名（filename）作为key，并且文件内容（file contents）作为value，如下图。在实践中这种方式非常有效。我们回到10,000个100KB小文件问题上，你可以编写一个程序将它们放入一个单一的SequenceFile，然后你可以流式处理它们（直接处理或使用MapReduce）操作SequenceFile。这样同时会带来两个优势：（1）SequenceFiles是可拆分的，因此MapReduce可以将它们分成块并独立地对每个块进行操作；（2）它们同时支持压缩，不像HAR。 在大多数情况下，块压缩是最好的选择，因为它将压缩几个记录为一个块，而不是一个记录压缩一个块。（Block compression is the best option in most cases, since it compresses blocks of several records (rather than per record)）。
+通常解决"小文件问题"的回应是：使用 SequenceFile。这种方法的思路是，使用文件名作为 key，文件内容作为 value，如下图。
 
 ![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hadoop/hadoop-small-files-problem-2.png?raw=true)
 
-将现有数据转换为SequenceFile可能很慢。 但是，完全可以并行创建SequenceFile的集合。（It can be slow to convert existing data into Sequence Files. However, it is perfectly possible to create a collection of Sequence Files in parallel.）Stuart Sierra写了一篇关于将tar文件转换为SequenceFile的文章（https://stuartsierra.com/2008/04/24/a-million-little-files ），像这样的工具是非常有用的，我们应该多看看。展望未来，最好设计数据管道，将源数据直接写入SequenceFile（如果可能），而不是作为中间步骤写入小文件。
+在实践中这种方式非常有效。我们回到10,000个100KB大小的小文件问题上，你可以编写一个程序将合并为一个 SequenceFile，然后你可以以流式方式处理（直接处理或使用 MapReduce） SequenceFile。这样会带来两个优势：
+- SequenceFiles 是可拆分的，因此 MapReduce 可以将它们分成块，分别对每个块进行操作；
+- 与 HAR 不同，它们支持压缩。在大多数情况下，块压缩是最好的选择，因为它直接对几个记录组成的块进行压缩，而不是对每一个记录进行压缩。
 
-与HAR文件不同，没有办法列出SequenceFile中的所有键，所以不能读取整个文件。Map File，就像对键进行排序的SequenceFile，只维护了部分索引，所以他们也不能列出所有的键，如下图。
+将现有数据转换为 SequenceFile 可能会很慢。但是，完全可以并行创建一个一个的 SequenceFile 文件。Stuart Sierra 写了一篇关于将 tar 文件转换为 SequenceFile 的[文章](https://stuartsierra.com/2008/04/24/a-million-little-files)，像这样的工具是非常有用的，我们应该多看看。向前看，最好设计好数据管道，如果可能的话，将源数据直接写入 SequenceFile，而不是作为中间步骤写入小文件。
+
+与 HAR 文件不同，没有办法列出 SequenceFile 中的所有键，所以不能读取整个文件。Map File，类似于对键进行排序的 SequenceFile，维护部分索引，所以他们也不能列出所有的键，如下图。
 
 ![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hadoop/hadoop-small-files-problem-3.png?raw=true)
 
-SequenceFile是以Java为中心的。 TFile（https://issues.apache.org/jira/browse/HADOOP-4565 ）设计为跨平台，并且可以替代SequenceFile，不过现在还不可用。
-
 ##### 4.2.3 HBase
 
-如果你生产很多小文件，那么根据访问模式，不同类型的存储可能更合适（If you are producing lots of small files, then, depending on the access pattern, a different type of storage might be more appropriate）。HBase以Map Files（带索引的SequenceFile）方式存储数据，如果您需要随机访问来执行MapReduce式流式分析，这是一个不错的选择（ HBase stores data in MapFiles (indexed SequenceFiles), and is a good choice if you need to do MapReduce style streaming analyses with the occasional random look up）。如果延迟是一个问题，那么还有很多其他选择 - 参见Richard Jones对键值存储的调查（http://www.metabrew.com/article/anti-rdbms-a-list-of-distributed-key-value-stores/ ）。
+如果你产生很多小文件，根据访问模式的不同，应该进行不同类型的存储。HBase 将数据存储在 Map Files（带索引的 SequenceFile）中，如果你需要随机访问来执行 MapReduce 流式分析，这是一个不错的选择。如果延迟是一个问题，那么还有很多其他选择 - 参见Richard Jones对键值存储的[调查](https://www.metabrew.com/article/anti-rdbms-a-list-of-distributed-key-value-stores)。
 
 原文：http://blog.cloudera.com/blog/2009/02/the-small-files-problem/
