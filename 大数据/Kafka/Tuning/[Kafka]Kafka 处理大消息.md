@@ -78,3 +78,9 @@ broker 可以允许复制消息的最大字节数。确保这个值必须大于 
 参考:https://www.cloudera.com/documentation/kafka/latest/topics/kafka_performance.html#concept_gqw_rcz_yq
 
 https://www.mail-archive.com/users@kafka.apache.org/msg25471.html
+
+https://www.mail-archive.com/users@kafka.apache.org/msg25477.html
+
+http://blog.51cto.com/10120275/1844461
+
+https://www.e-learn.cn/content/wangluowenzhang/60020
