@@ -38,7 +38,7 @@ permalink: hadoop-base-block-and-inputsplit
 
 答案是这行记录会被切割成两部分，一部分存放在 block 0 里面；剩下的部分存放在 block 1 里面。具体的，偏移量为134217710，长度为18的数据存放到 block 0 里面；偏移量134217729，长度为82的数据存放到 block 1 里面。 可以将这部分的逻辑以下面的图概括：
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hadoop/hadoop-base-block-and-inputsplit-1.png?raw=true)
 
 说明：
 
@@ -70,7 +70,7 @@ hdfs://iteblogcluster/tmp/iteblog.txt:402653184+52016779
 
 使用图形表示可以概括如下：
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hadoop/hadoop-base-block-and-inputsplit-2.png?raw=true)
 
 说明：
 - 图中的红色虚线代表 HDFS 块边界(block boundary)；
