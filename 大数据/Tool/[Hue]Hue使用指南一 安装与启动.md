@@ -1,4 +1,50 @@
+---
+layout: post
+author: sjf0115
+title: Hue 安装与配置
+date: 2018-05-12 19:16:01
+tags:
+  - Hue
+
+categories: Hue
+permalink: hue-how-to-install-and-configure
+---
+
 ### 1. 下载
+
+### 2. 安装
+
+#### 2.1 安装依赖
+
+本机为 CentOS 系统，所以采用如下方式安装依赖:
+```
+sudo yum install ant asciidoc cyrus-sasl-devel cyrus-sasl-gssapi cyrus-sasl-plain gcc gcc-c++ krb5-devel libffi-devel libxml2-devel libxslt-devel make  mysql mysql-devel openldap-devel python-devel sqlite-devel gmp-devel
+```
+其他方式可以参考：[Hue Installation](http://cloudera.github.io/hue/latest/admin-manual/manual.html#installation)
+
+### 3. 配置
+
+根据我们的需求来配置自己需要的内容。我们修改配置文件的情况，如下表所示：
+
+Hue配置段|Hue配置项|Hue配置值|说明
+---|---|---
+desktop|default_hdfs_superuser| hadoop| HDFS管理用户
+desktop|http_host| 10.10.4.125| Hue Web Server所在主机/IP
+desktop|http_port| 8000| Hue Web Server服务端口
+desktop|server_user| hadoop| 运行Hue Web Server的进程用户
+desktop|server_group| hadoop| 运行Hue Web Server的进程用户组
+desktop|default_user| yanjun| Hue管理员
+hadoop/hdfs_clusters|	fs_defaultfs|	hdfs://hadoop6:8020|	对应core-site.xml配置项fs.defaultFS
+hadoop/hdfs_clusters| hadoop_conf_dir|	/usr/local/hadoop/etc/hadoop|	Hadoop配置文件目录
+hadoop/yarn_clusters|	resourcemanager_host|	hadoop6|	对应yarn-site.xml配置项yarn.resourcemanager.hostname
+hadoop/yarn_clusters|	resourcemanager_port|	8032|	ResourceManager服务端口号
+hadoop/yarn_clusters|	resourcemanager_api_url|	http://hadoop6:8088|	对应于yarn-site.xml配置项yarn.resourcemanager.webapp.address|
+hadoop/yarn_clusters|	proxy_api_url|	http://hadoop6:8888|	对应yarn-site.xml配置项yarn.web-proxy.address|
+hadoop/yarn_clusters|	history_server_api_url|	http://hadoo6:19888|	对应mapred-site.xml配置项mapreduce.jobhistory.webapp.address
+beeswax|	hive_server_host|	10.10.4.125|	Hive所在节点主机名/IP
+beeswax|	hive_server_port|	10000|	HiveServer2服务端口号
+beeswax|	hive_conf_dir|	/usr/local/hive/conf|	Hive配置文件目录
+
 
 
 /home/xiaosi/opt/hue-4.0.0/desktop/conf目录下修改`hue.ini`配置文件:
