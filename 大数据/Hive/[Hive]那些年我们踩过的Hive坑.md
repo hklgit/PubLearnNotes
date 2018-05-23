@@ -98,7 +98,7 @@ xiaosi@yoona:~/opt/hive-2.1.0$ jps
 ```
 可以看见，我们确实没有启动Hadoop。开启Hadoop的NameNode和DataNode守护进程
 ```
-xiaosi@yoona:~/opt/hadoop-2.7.3$ ./sbin/start-dfs.sh 
+xiaosi@yoona:~/opt/hadoop-2.7.3$ ./sbin/start-dfs.sh
 Starting namenodes on [localhost]
 localhost: starting namenode, logging to /home/xiaosi/opt/hadoop-2.7.3/logs/hadoop-xiaosi-namenode-yoona.out
 localhost: starting datanode, logging to /home/xiaosi/opt/hadoop-2.7.3/logs/hadoop-xiaosi-datanode-yoona.out
@@ -121,8 +121,8 @@ FAILED: Execution Error, return code 1 from org.apache.hadoop.hive.ql.exec.DDLTa
 查看Hive日志，看到这样的错误日志：
 ```
 NestedThrowablesStackTrace:
-Could not create "increment"/"table" value-generation container `SEQUENCE_TABLE` since autoCreate flags do not allow it. 
-org.datanucleus.exceptions.NucleusUserException: Could not create "increment"/"table" value-generation container `SEQUENCE_TABLE` since autoCreate flags do not allow it. 
+Could not create "increment"/"table" value-generation container `SEQUENCE_TABLE` since autoCreate flags do not allow it.
+org.datanucleus.exceptions.NucleusUserException: Could not create "increment"/"table" value-generation container `SEQUENCE_TABLE` since autoCreate flags do not allow it.
 ```
 出现上述问题主要因为mysql的bin-log format默认为statement ，在mysql中通过 show variables like 'binlog_format'; 语句查看bin-log format的配置值
 ```
@@ -154,7 +154,7 @@ hive> create table  if not exists employees(
     >    address struct<city:string,province:string> comment '家庭住址'
     > )
     > comment '员工信息表'
-    > ROW FORMAT DELIMITED 
+    > ROW FORMAT DELIMITED
     > FIELDS TERMINATED BY '\t'
     > LINES TERMINATED BY  '\n'
     > STORED AS TEXTFILE;
@@ -326,14 +326,14 @@ Failed to open new session: java.lang.RuntimeException: org.apache.hadoop.ipc.Re
 
 hadoop.proxyuser.XXX.hosts  与 hadoop.proxyuser.XXX.groups 中XXX为异常信息中User:* 中的用户名部分
 ```
-<property> 
-    <name>hadoop.proxyuser.xiaosi.hosts</name> 
-    <value>*</value> 
+<property>
+    <name>hadoop.proxyuser.xiaosi.hosts</name>
+    <value>*</value>
     <description>The superuser can connect only from host1 and host2 to impersonate a user</description>
-</property> 
-<property> 
-    <name>hadoop.proxyuser.xiaosi.groups</name> 
-    <value>*</value> 
+</property>
+<property>
+    <name>hadoop.proxyuser.xiaosi.groups</name>
+    <value>*</value>
     <description>Allow the superuser oozie to impersonate any members of the group group1 and group2</description>
 </property>
 ```
@@ -489,5 +489,10 @@ JDK 1.1 = 45 (0x2D hex)
 
 根据上面的分析把JDK版本提升到JDK 1.7即可．
 
+#### 14. MetaException
 
-
+#### 14.1 问题描述
+```
+Caused by: MetaException(message:Hive Schema version 2.1.0 does not match metastore's schema version 1.2.0 Metastore is not upgraded or corrupt)
+...
+```
