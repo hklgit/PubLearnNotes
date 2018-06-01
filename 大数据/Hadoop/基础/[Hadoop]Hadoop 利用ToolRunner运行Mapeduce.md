@@ -121,7 +121,7 @@ public class WordCountNoTool{
     }
 }
 ```
-如下方式执行 MapReduce 作业。你期望在这里只有2个参数 inputPath 和 outputPath，分别位于main方法String数组上的索引[0]和[1]处：
+如下方式执行 MapReduce 作业。你期望在这里只有2个参数 inputPath 和 outputPath，可以通过 main方法String数组上的索引[0]和[1]获取：
 ```
 hadoop jar common-tool-jar-with-dependencies.jar com.sjf.open.example.WordCountNoTool ${inputPath} ${outputPath}
 ```
@@ -226,9 +226,15 @@ public class WordCountWithTool extends Configured implements Tool {
 ```
 ToolsRunner 通过其静态 run 方法执行 MapReduce 作业。在这个例子中，我们不需要对 reducer的个数进行硬编码，因为它可以直接可以在命令行中指定（使用`-D`选项）：
 ```
-hadoop jar common-tool-jar-with-dependencies.jar com.sjf.open.example.WordCountNoTool -D mapred.reduce.tasks=1 ${inputPath} ${outputPath}
+hadoop jar common-tool-jar-with-dependencies.jar com.sjf.open.example.WordCountWithTool -D mapred.reduce.tasks=1 ${inputPath} ${outputPath}
 ```
 请注意，你仍然需要提供 inputPath 和 outputPath 两个参数。GenericOptionParser 可以把通用 Tools 选项与实际作业的参数分开。无论你提供多少个通用选项，inputPath 和 outputPath 变量仍位于索引[0]和[1]处，但位于 run 方法String数组中（不是在 main 方法String数组中）。
+
+> 如果不实现 Tool 接口运行 MapReduce 作业:
+```
+hadoop jar common-tool-jar-with-dependencies.jar com.sjf.open.example.WordCountNoTool -D mapred.reduce.tasks=1 ${inputPath} ${outputPath}
+```
+`-D mapred.reduce.tasks=1` 也会被 main 方法认为是一个参数，位于索引[0]处，inputPath 和 outputPath 则分别位于索引[1]和[2]处。
 
 ### 2. 支持通用选项
 
