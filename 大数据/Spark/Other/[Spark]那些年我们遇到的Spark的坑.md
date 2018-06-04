@@ -255,9 +255,76 @@ Reported error Error handling message; exiting - kafka.common.MessageSizeTooLarg
 #### 6.2 问题解决
 
 
+### 7. Accumulator must be registered before send to executor
 
+#### 7.1 问题描述
+```
+Caused by: java.lang.UnsupportedOperationException: Accumulator must be registered before send to executor
+	at org.apache.spark.util.AccumulatorV2.writeReplace(AccumulatorV2.scala:159)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:483)
+	at java.io.ObjectStreamClass.invokeWriteReplace(ObjectStreamClass.java:1075)
+	at java.io.ObjectOutputStream.writeObject0(ObjectOutputStream.java:1136)
+	at java.io.ObjectOutputStream.defaultWriteFields(ObjectOutputStream.java:1548)
+	at java.io.ObjectOutputStream.writeSerialData(ObjectOutputStream.java:1509)
+	at java.io.ObjectOutputStream.writeOrdinaryObject(ObjectOutputStream.java:1432)
+	at java.io.ObjectOutputStream.writeObject0(ObjectOutputStream.java:1178)
+	at java.io.ObjectOutputStream.defaultWriteFields(ObjectOutputStream.java:1548)
+	at java.io.ObjectOutputStream.writeSerialData(ObjectOutputStream.java:1509)
+	at java.io.ObjectOutputStream.writeOrdinaryObject(ObjectOutputStream.java:1432)
+	at java.io.ObjectOutputStream.writeObject0(ObjectOutputStream.java:1178)
+	at java.io.ObjectOutputStream.writeObject(ObjectOutputStream.java:348)
+	at org.apache.spark.serializer.JavaSerializationStream.writeObject(JavaSerializer.scala:43)
+	at org.apache.spark.serializer.JavaSerializerInstance.serialize(JavaSerializer.scala:100)
+	at org.apache.spark.util.ClosureCleaner$.ensureSerializable(ClosureCleaner.scala:295)
+	... 17 more
+```
+#### 7.2 问题解决
+```java
+JavaSparkContext sparkContext = new JavaSparkContext(conf);
 
+LongAccumulator evenAccumulator = new LongAccumulator();
+LongAccumulator oddAccumulator = new LongAccumulator();
 
+List<Integer> numList = Lists.newArrayList();
+for(int i = 0;i < 10;i++){
+    numList.add(i);
+}
+JavaRDD<Integer> numRDD = sparkContext.parallelize(numList);
+
+// transform
+JavaRDD<Integer> resultRDD = numRDD.map(new Function<Integer, Integer>() {
+    @Override
+    public Integer call(Integer num) throws Exception {
+        if (num % 2 == 0) {
+            evenAccumulator.add(1L);
+            return 0;
+        } else {
+            oddAccumulator.add(1L);
+            return 1;
+        }
+    }
+});
+
+// the first action
+resultRDD.count();
+System.out.println("Odd Num Count : " + oddAccumulator.value());
+System.out.println("Even Num Count : " + evenAccumulator.value());
+```
+在Spark 2.0.0 之前的版本中，可以通过如下方式实现一个累加器:
+```java
+Accumulator<Integer> evenAccumulator = sparkContext.accumulator(0, "Even Num Accumulator");
+```
+而 Spark 2.0.0 之后的版本需要通过如下方式来实现一个累加器:
+```java
+LongAccumulator evenAccumulator = new LongAccumulator();
+```
+第一种方式不需要注册，而第二种方式需要在Driver端进行注册：
+```java
+sparkContext.sc().register(evenAccumulator, "Even Num Accumulator");
+```
 
 
 
