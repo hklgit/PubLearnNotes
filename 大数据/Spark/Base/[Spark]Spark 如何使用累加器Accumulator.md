@@ -230,9 +230,9 @@ public class CustomAccumulatorExample implements Serializable{
 
 ### 3. 累加器注意事项
 
-累加器只能在 action 中进行更新，Spark 会保证每个任务对累加器只更新一次，即使重新启动的任务也不会重新更新该值。在 transformations 操作中，我们需要知道，如果任务或作业 stage 被重新执行，每个任务的更新操作可能会执行多次。
+累加器不会改变 Spark 的懒加载（Lazy）的执行模型。如果在 RDD 上的某个操作中更新累加器，那么其值只会在 RDD 执行 action 计算时被更新一次。因此，在 transformation （例如， `map()`）中更新累加器时，其值并不能保证一定被更新。
 
-累加器不会改变 Spark 的懒加载（Lazy）执行模型。如果它们在 RDD 上的某个操作中进行更新，那么只有在 RDD 作为 action 操作的一部分进行计算时才会对它们进行更新。因此，在一个像 map() 这样的 transformation 操作时，累加器的更新并没有执行。
+Spark 中的一系列 transformation 操作会构成一个任务链，需要通过 action 操作来触发。累加器也是一样的，也只能通过 action 触发更新，所以在 action 操作之前调用 value 方法查看其数值是没有任何变化的。对于在 action 中更新的累加器，Spark 会保证每个任务对累加器只更新一次，即使重新启动的任务也不会重新更新该值。而如果在 transformation 中更新的累加器，如果任务或作业 stage 被重新执行，那么其对累加器的更新可能会执行多次。
 
 ```java
 package com.sjf.open.spark;
@@ -310,24 +310,27 @@ public class AccumulatorTrap implements Serializable{
 }
 ```
 
+在第一个 action 算子 count 执行之后，累加器输出符合我们预期的结果：
+```
+Odd Num Count : 5
+Even Num Count : 5
+```
+在第二个 action 算子 foreach 执行之后，累加器输出结果如下：
+```
+Odd Num Count : 10
+Even Num Count : 10
+```
+其实这个时候又执行了一次 map 操作，所以累加器各自又增加了5，最终获得的结果变成了10。
 
+看了上面的分析以及输出结果，我们知道，那就是使用累加器的过程中只能使用一次 action 操作才能保证结果的准确性。事实上，这种情况是可以解决的，只要将任务之间的依赖关系切断就可以。我们可以调用 cache，persist 等方法将之前的依赖切断，后续的累加器就不会受之前的 transfrom 操作影响了：
+```
+Odd Num Count : 5
+Even Num Count : 5
+Odd Num Count : 5
+Even Num Count : 5
+```
+所以在使用累加器时，为了保证准确性，最好只使用一次 action 操作。如果需要使用多次，可以使用 cache 或 persist 操作切断依赖。
 
+参考：　http://smartsi.club/2018/04/10/spark-base-shared-variables/
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-....
+https://blog.csdn.net/lsshlsw/article/details/50979579
