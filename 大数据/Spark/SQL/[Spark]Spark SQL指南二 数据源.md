@@ -329,7 +329,7 @@ anotherPeople.show();
 root
  |-- age: long (nullable = true)
  |-- name: string (nullable = true)
- 
+
 +------+
 |  name|
 +------+
@@ -478,7 +478,7 @@ only showing top 20 rows
 
 ### 5. JDBC To Other Databases
 
-Spark SQL还包括可以使用JDBC从其他数据库读取数据的数据源。相比于使用JdbcRDD，应该将JDBC数据源的方式作为首选，因为JDBC数据源能够将结果作为DataFrame对象返回，直接用Spark SQL处理或与其他数据源连接。JDBC数据源也更容易在Java或Python中使用，因为它不需要用户提供ClassTag。 
+Spark SQL还包括可以使用JDBC从其他数据库读取数据的数据源。相比于使用JdbcRDD，应该将JDBC数据源的方式作为首选，因为JDBC数据源能够将结果作为DataFrame对象返回，直接用Spark SQL处理或与其他数据源连接。JDBC数据源也更容易在Java或Python中使用，因为它不需要用户提供ClassTag。
 
 ==注意==
 
@@ -609,5 +609,3 @@ jdbcDF2.write \
 2.1.1
 
 原文：http://spark.apache.org/docs/latest/sql-programming-guide.html#data-sources
-
-
