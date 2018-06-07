@@ -85,73 +85,68 @@ dataFrame.show();
 ```
 #### 2.3 无类型DataSet操作（DataFrame操作）
 
-`DataFrames`为`Scala`，`Java`，`Python`和`R`中的结构化数据操作提供了一种特定领域的语言(DSL)。
+DataFrames 为 Scala， Java， Python 和 R 中的结构化数据操作提供了一种特定领域的语言(DSL)。
 
-如上所述，在Spark 2.0中，DataFrames只是Scala和Java API中的行数据集(DataSet of Rows)。 与来自强类型Scala/Java数据集的“类型转换`typed transformations`”相反，这些操作也称为“无类型转换`untyped transformations`”(These operations are also referred as “untyped transformations” in contrast to “typed transformations” come with strongly typed Scala/Java Datasets.)。
+如上所述，在 Spark 2.0 中，DataFrames 只是 Scala 和 Java API 中的 Rows 类型的 Dataset。这些操作也被称为 `无类型转换`，与强类型的 Scala/Java DataSets 中的 `类型转换` 不同。
 
-这里我们列举了使用Datasets的结构化数据处理的一些基本示例：
-```
-Dataset<Row> dataFrame = session.read().json("SparkDemo/src/main/resources/people.json");
+这里我们列举了使用 Datasets 进行结构化数据处理的一些基本示例：
+```java
+Dataset<Row> dataFrame = sparkSession.read().json("src/main/resources/person.json");
 
-// 以树格式输出范式
-dataFrame.printSchema();
-// 只选择name列数据
+// 选择name这一列
 dataFrame.select("name").show();
+/**
+ * +-------+
+ |   name|
+ +-------+
+ |Michael|
+ |   Andy|
+ | Justin|
+ +-------+
+ */
+
 // 选择name age列 age加一
 dataFrame.select(col("name"), col("age").plus(1)).show();
+/**
+ * +-------+---------+
+ |   name|(age + 1)|
+ +-------+---------+
+ |Michael|     null|
+ |   Andy|       31|
+ | Justin|       20|
+ +-------+---------+
+ */
+
 // 过滤age大于21岁
 dataFrame.filter(col("age").gt(21)).show();
+/**
+ * +---+----+
+ |age|name|
+ +---+----+
+ | 30|Andy|
+ +---+----+
+ */
+
 // 按age分组求人数
 dataFrame.groupBy("age").count().show();
+/**
+ * +----+-----+
+ | age|count|
+ +----+-----+
+ |  19|    1|
+ |null|    1|
+ |  30|    1|
+ +----+-----+
+ */
 ```
-对应输出结果：
-```
-(1)
-root
-    |-- age: long (nullable = true)
-    |-- name: string (nullable = true)
 
-(2)
-+-------+
-|   name|
-+-------+
-|Michael|
-|   Andy|
-| Justin|
-+-------+
-
-(3)
-+-------+---------+
-|   name|(age + 1)|
-+-------+---------+
-|Michael|     null|
-|   Andy|       31|
-| Justin|       20|
-+-------+---------+
-
-(4)
-+---+----+
-|age|name|
-+---+----+
-| 30|Andy|
-+---+----+
-
-(5)
-+----+-----+
-| age|count|
-+----+-----+
-|  19|    1|
-|null|    1|
-|  30|    1|
-+----+-----+
-```
 有关可在数据集上执行的操作类型的完整列表，请参阅[API文档](http://spark.apache.org/docs/latest/api/java/org/apache/spark/sql/Dataset.html)。
 
 除了简单的列引用和表达式，Datasets还具有丰富的函数库，包括字符串操作，日期算术，常用的数学运算等。 完整列表可参阅在[DataFrame函数参考](http://spark.apache.org/docs/latest/api/scala/index.html#org.apache.spark.sql.functions$)。
 
 #### 2.4 编程方式运行SQL查询
 
-`SparkSession`上的sql函数使应用程序能以编程方式运行SQL查询，并将结果以`DataSet<Row>`返回。
+SparkSession 上的sql函数使应用程序能以编程方式运行SQL查询，并将结果以`DataSet<Row>`返回。
 
 ```
 // 创建DataFrame
