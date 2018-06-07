@@ -11,11 +11,11 @@ categories: Spark
 permalink: spark-sql-sparksession-new-entry-point
 ---
 
-在 Spark 1.x 中，将 HiveContext 作为使用 DataFrame API 的入口并不直观。在 Spark 2.0 引入 SparkSession 作为一个新的入口，并且包含 SQLContext 和 HiveContext 了的特性，同时为了向后兼容，两者都保留下来。SparkSession 有很多特性，在这里我们展示一些更重要的特性。
+在 Spark 1.x 中，使用 HiveContext 作为 DataFrame API 的入口显得并不直观。在 Spark 2.0 引入 SparkSession 作为一个新的入口，并且包含 SQLContext 和 HiveContext 的特性，同时为了向后兼容，两者都保留下来。SparkSession 有很多特性，在这里我们展示一些更重要的特性。
 
 ### 1. 创建SparkSession
 
-SparkSession　可以使用建造者模式创建。如果 SparkContext 存在，那么 SparkSession 将会重用它，但是如果不存在就会创建一个 SparkContext。在I/O期间，在 builder 中设置的配置选项会自动传递给 Spark 和 Hadoop。
+SparkSession 可以使用建造者模式创建。如果 SparkContext 存在，那么 SparkSession 将会重用它，但是如果不存在就会创建一个 SparkContext。在I/O期间，在 builder 中设置的配置选项会自动传递给 Spark 和 Hadoop。
 
 Java版本：
 ```java
@@ -68,7 +68,7 @@ SparkSession 可以在数据上执行SQL查询，结果以 DataFrame 形式返�
 display(spark.sql("select * from person"))
 ```
 
-email	iq	name
+email|iq|name
 ---|---|---
 matei@databricks.com|180|Matei Zaharia
 rxin@databricks.com|80|Reynold Xin
