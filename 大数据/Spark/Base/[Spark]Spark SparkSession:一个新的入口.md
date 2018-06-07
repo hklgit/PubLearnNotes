@@ -90,7 +90,7 @@ abcd
 ```
 ### 5. 直接使用元数据
 
-SparkSession还包含一个 catalog 方法，该方法包含操作 Metastore（即数据目录）的方法。这些方法以 Datasets 形式返回，所以你可以使用相同的 Datasets API来玩它们。
+SparkSession还包含一个 catalog 方法，该方法包含操作 Metastore（即数据目录）的方法。这些方法以 Datasets 形式返回结果，所以你可以在它们上面使用相同的 Datasets API。
 ```
 // To get a list of tables in the current database
 val tables = spark.catalog.listTables()
@@ -118,7 +118,7 @@ person|default|null|MANAGED|false
 display(spark.catalog.listColumns("smart"))
 ```
 name|description|dataType|nullable|isPartition|isBucket
----|---|---|---|---
+---|---|---|---|---|---
 email|null|string|true|false|false
 iq|null|bigint|true|false|false
 name|null|string|true|false|false
