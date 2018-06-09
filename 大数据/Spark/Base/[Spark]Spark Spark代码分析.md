@@ -21,6 +21,23 @@ permalink: spark-base-spark-code-analysis
 - 作业由 stage 组成。stage 的边界是 shuffle 操作。
 
 
+Code|Executed on  Driver/Executor
+---|---
+javaSparkContext = getJavaSparkContext|Driver
+JavaRDD<String> stringJavaRDD = javaSparkContext.textFile(inputPath);|Results in Data Read operation in all  Executors
+.flatMap	|Executor (Map Task)
+.mapToPair	|Executor (Map Task)
+.reduceByKey	|Executor (Reduce Task)
+.repartition|decides parallelism for Num Reduce Task. (if used after Map task, Results in a Shuffle Task on Executors )
+.saveAsTextFile(outputPath);	 |saves output from all Reduce Task on Executor
+stringJavaRDD.count()	|On Driver , Data Pulled from all tasks to Driver to perform count
+
+
+
+
+
+
+
 
 
 
