@@ -12,7 +12,7 @@ set hive.enforce.bucketing = true;
 
 ### 添加分区
 ```sql
-alter table tmp_toutiao_ads_show add partition(dt='20180417') location 'hdfs://qunarcluster/user/wirelessdev/log/ads/show/20180417';
+ALTER TABLE ods_deeplink_click_order ADD IF NOT EXISTS PARTITION(dt='20180529', type='all') LOCATION 'day=20180529/type=all_order';
 ```
 ### 查看分区
 ```sql
