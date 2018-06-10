@@ -87,7 +87,7 @@ dataFrame.show();
 
 DataFrames 为 Scala， Java， Python 和 R 中的结构化数据操作提供了一种特定领域的语言(DSL)。
 
-如上所述，在 Spark 2.0 中，DataFrames 只是 Scala 和 Java API 中的 Rows 类型的 Dataset。这些操作也被称为 `无类型转换`，与强类型的 Scala/Java DataSets 中的 `类型转换` 不同。
+如上所述，在 Spark 2.0 中，DataFrames 只是 Scala 和 Java API 中的 Rows 类型的 Dataset。这些操作也被称为 `无类型转换`，与强类型的 Scala/Java DataSets 中的 `类型转换` 相反。
 
 这里我们列举了使用 Datasets 进行结构化数据处理的一些基本示例：
 ```java
@@ -146,71 +146,94 @@ dataFrame.groupBy("age").count().show();
 
 #### 2.4 编程方式运行SQL查询
 
-SparkSession 上的sql函数使应用程序能以编程方式运行SQL查询，并将结果以`DataSet<Row>`返回。
+SparkSession 上的 sql 函数能使应用程序以编程的方式运行 SQL 查询，并将结果以 DataSet<Row> 形式返回。
 
-```
+Java版本：
+```sql
 // 创建DataFrame
-Dataset<Row> dataFrame = session.read().json("SparkDemo/src/main/resources/people.json");
-// 将DataFrame注册为SQL临时视图
+Dataset<Row> dataFrame = sparkSession.read().json("src/main/resources/person.json");
+// 注册 DataFrame 为 SQL 临时视图
 dataFrame.createOrReplaceTempView("people");
-// 使用SQL查询数据
-Dataset<Row> sqlDataFrame = session.sql("SELECT name, age FROM people where age < 30");
-// 输出结果
-sqlDataFrame.show();
+// 运行
+Dataset<Row> result = sparkSession.sql("SELECT * FROM people");
+// 输出
+result.show();
+/**
+ * +----+-------+
+ | age|   name|
+ +----+-------+
+ |null|Michael|
+ |  30|   Andy|
+ |  19| Justin|
+ +----+-------+
+ */
 ```
-输出结果：
-```
-+------+---+
-|  name|age|
-+------+---+
-|Justin| 19|
-+------+---+
+Scala版本：
+```scala
+dataFrame.createOrReplaceTempView("people")
+val result = sparkSession.sql("SELECT * FROM people")
+result.show()
 ```
 
 #### 2.5 全局临时视图
 
-`Spark SQL`中的临时视图是会话范围的，如果创建它的会话终止，临时视图也将消失。 如果要在所有会话之间共享临时视图，并保持活动状态直到Spark应用程序终止，你可以创建一个全局临时视图。全局临时视图与系统保留的数据库`global_temp`相关联，我们必须使用限定名称来引用它。
+Spark SQL 中的临时视图是 Session 级别的，如果创建它的 Session 终止，临时视图也将会消失。如果要在所有 Session 之间共享临时视图，并保持活动状态保持到 Spark 应用程序终止，可以创建一个全局临时视图。全局临时视图与系统预留数据库 global_temp 相关联，我们必须使用该限定名称来引用它。例如，`SELECT * FROM global_temp.view1`。
 
-例如：
-```
-SELECT * FROM global_temp.view1。
-```
-
-```
+Java版本：
+```java
 // 创建DataFrame
-Dataset<Row> dataFrame = session.read().json("SparkDemo/src/main/resources/people.json");
+Dataset<Row> dataFrame = sparkSession.read().json("src/main/resources/person.json");
 // 将DataFrame注册为全局临时视图
 dataFrame.createGlobalTempView("people");
-// 全局临时视图与系统保留的数据库global_temp有关
-Dataset<Row> sqlDataFrame = session.sql("SELECT name, age FROM global_temp.people where age < 30");
+
+// 全局临时视图与系统保留的数据库global_temp关联
+Dataset<Row> sqlDataFrame = sparkSession.sql("SELECT * FROM global_temp.people");
 // 输出结果
 sqlDataFrame.show();
+/**
+ +----+-------+
+ | age|   name|
+ +----+-------+
+ |null|Michael|
+ |  30|   Andy|
+ |  19| Justin|
+ +----+-------+
+ */
 
 // 全局临时视图是跨会话的
-Dataset<Row> sqlDataFrame2 = session.newSession().sql("SELECT name, age FROM global_temp.people where age < 30");
+Dataset<Row> sqlDataFrame2 = sparkSession.newSession().sql("SELECT * FROM global_temp.people");
 sqlDataFrame2.show();
+/**
+ +----+-------+
+ | age|   name|
+ +----+-------+
+ |null|Michael|
+ |  30|   Andy|
+ |  19| Justin|
+ +----+-------+
+ */
 ```
-输出结:
-```
-+------+---+
-|  name|age|
-+------+---+
-|Justin| 19|
-+------+---+
-
-+------+---+
-|  name|age|
-+------+---+
-|Justin| 19|
-+------+---+
+Scala版本：
+```scala
+dataFrame.createGlobalTempView("people")
+sparkSession.sql("SELECT * FROM global_temp.people").show()
+sparkSession.newSession().sql("SELECT * FROM global_temp.people").show()
 ```
 
-#### 2.6 创建数据集DataSet
+#### 2.6 创建DataSet
 
-`DataSet`与`RDD`类似，但是，不是使用Java序列化或Kryo，而是使用专门的编码器来序列化对象以进行网络处理或传输。虽然编码器和标准序列化都将可以将对象转换成字节，但是编码器是动态生成的代码(code generated dynamically)，并使用一种让Spark可以执行多个操作（如过滤，排序和散列），而无需将字节反序列化对象的格式(encoders are code generated dynamically and use a format that allows Spark to perform many operations like filtering, sorting and hashing without deserializing the bytes back into an object.)。
+DataSet 与 RDD 类似，但是，不是使用 Java 或 Kryo 序列化，而是使用专门的 Encoder 来序列化对象以进行处理或网络传输。虽然 Encoder 和标准序列化都可以将对象转换成字节，但是 Encoder 是动态生成的代码，并使用一种让 Spark 可以执行多种操作（如过滤，排序和散列），而无需将字节反序列化成对象的格式。
 
-```
+Java版本：
+```java
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.Collections;
+import org.apache.spark.api.java.function.MapFunction;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
+import org.apache.spark.sql.Encoder;
+import org.apache.spark.sql.Encoders;
 
 public class Person implements Serializable{
     private String name;
@@ -232,16 +255,6 @@ public class Person implements Serializable{
         this.age = age;
     }
 }
-```
-
-```
-import java.util.Arrays;
-import java.util.Collections;
-import org.apache.spark.api.java.function.MapFunction;
-import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Row;
-import org.apache.spark.sql.Encoder;
-import org.apache.spark.sql.Encoders;
 
 // 创建Person对象
 Person person = new Person();
@@ -250,108 +263,192 @@ person.setAge(32);
 
 // 根据Java Bean创建Encoders
 Encoder<Person> personEncoder = Encoders.bean(Person.class);
-Dataset<Person> dataSet = session.createDataset(
-    Collections.singletonList(person),
-    personEncoder
+Dataset<Person> dataSet = sparkSession.createDataset(
+        Collections.singletonList(person),
+        personEncoder
 );
 dataSet.show();
+/**
+ +---+----+
+ |age|name|
+ +---+----+
+ | 32|Andy|
+ +---+----+
+ */
 
 // 大多数常见类型的编码器都在Encoders中提供
 Encoder<Integer> integerEncoder = Encoders.INT();
-Dataset<Integer> primitiveDS = session.createDataset(Arrays.asList(1, 2, 3), integerEncoder);
+Dataset<Integer> primitiveDS = sparkSession.createDataset(Arrays.asList(1, 2, 3), integerEncoder);
 Dataset<Integer> transformedDS = primitiveDS.map(new MapFunction<Integer, Integer>() {
     @Override
     public Integer call(Integer value) throws Exception {
         return value + 1;
     }
 }, integerEncoder);
-transformedDS.collect(); // Returns [2, 3, 4]
+transformedDS.show();
+/**
+ +-----+
+ |value|
+ +-----+
+ |    2|
+ |    3|
+ |    4|
+ +-----+
+ */
 
 // DataFrames可以通过提供的类来转换为DataSet 基于名称映射
 // 创建DataFrame
-Dataset<Row> dataFrame = session.read().json("SparkDemo/src/main/resources/people.json");
+Dataset<Row> dataFrame = sparkSession.read().json("src/main/resources/person.json");
 // DataFrame转换为DataSet
 Dataset<Person> peopleDS = dataFrame.as(personEncoder);
 peopleDS.show();
+/**
+ +----+-------+
+ | age|   name|
+ +----+-------+
+ |null|Michael|
+ |  30|   Andy|
+ |  19| Justin|
+ +----+-------+
+ */
 ```
+Scala版本：
+```scala
+case class Person(name: String, age: Long)
 
+// Encoders are created for case classes
+val caseClassDS = Seq(Person("Andy", 32)).toDS()
+caseClassDS.show()
+
+// Encoders for most common types are automatically provided by importing spark.implicits._
+val primitiveDS = Seq(1, 2, 3).toDS()
+primitiveDS.map(_ + 1).collect() // Returns: Array(2, 3, 4)
+
+// DataFrames can be converted to a Dataset by providing a class. Mapping will be done by name
+val path = "src/main/resources/person.json"
+val peopleDS = spark.read.json(path).as[Person]
+peopleDS.show()
+```
 
 #### 2.7 与RDD交互
 
-Spark SQL支持两种不同的方法将现有`RDD`转换为`Datasets`。
-- 第一种方法使用反射来推断包含特定类型对象的RDD的模式。 当您在编写Spark应用程序时，您已经知道架构，这种基于反射的方法会导致更简洁的代码，并且运行良好。
-- 第二种方法是通过编程接口来创建`DataSet`，允许构建一个范式，并将其应用到现有的RDD。虽然此方法更详细，但构造Datasets时，直到运行时才知道列及其类型( While this method is more verbose, it allows you to construct Datasets when the columns and their types are not known until runtime.)。
+Spark SQL 支持两种不同的方法将现有 RDD 转换为 Datasets。
+- 第一种方法使用反射来推断 RDD 的 schema，RDD 包含了特定类型的对象。当你在编写 Spark 应用程序时，你已经知道 schema，这种基于反射的方法会使代码更简洁，并且运行良好。
+- 第二种方法是通过编程接口来创建 DataSet，允许构建一个 schema，并将其应用到现有的 RDD 上。虽然此方法更详细，但直到运行时才知道列及其类型，才能构造 DataSets。
 
+##### 2.7.1 使用反射推导schema
 
-##### 2.7.1 使用反射推导范式
+Spark SQL 支持自动将 JavaBeans 的 RDD 转换为 DataFrame。使用反射获取的 BeanInfo 定义了表的 schema。目前为止，Spark SQL 还不支持包含 Map 字段的 JavaBean。但是支持嵌套的 JavaBeans 和 List 或 Array 字段。你可以通过创建一个实现 Serializable 的类并为其所有字段设置 getter 和 setter 方法来创建一个 JavaBean。
 
-`Spark SQ`L支持自动将JavaBeans的RDD转换为`DataFrame`。 使用反射获取的Bean信息定义了表的范式。 目前为止，`Spark SQL`还不支持包含Map字段的JavaBean。 但是支持嵌套的JavaBeans和List或Array字段。你可以通过创建一个实现`Serializable`的类并为其所有字段设置`getter`和`setter`方法来创建一个JavaBean。
+Java版本：
+```java
+import org.apache.spark.api.java.JavaRDD;
+import org.apache.spark.api.java.function.Function;
+import org.apache.spark.api.java.function.MapFunction;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
+import org.apache.spark.sql.Encoder;
+import org.apache.spark.sql.Encoders;
 
-```
-// 从文本文件创建一个Person对象的RDD
-JavaRDD<Person> peopleRDD = session.read().textFile(textPath).javaRDD().map(new Function<String, Person>() {
-    @Override
-    public Person call(String line) throws Exception {
-        String[] parts = line.split(",");
-        Person person = new Person();
-        person.setName(parts[0]);
-        if(parts.length > 1){
+// 从文本文件中创建Person对象的RDD
+JavaRDD<Person> personRDD = sparkSession.read()
+        .textFile("src/main/resources/person.txt")
+        .javaRDD()
+        .map(line -> {
+            String[] parts = line.split(",");
+            Person person = new Person();
+            person.setName(parts[0]);
             person.setAge(Integer.parseInt(parts[1].trim()));
-        }
-        return person;
-    }
-});
+            return person;
+        });
 
-// 将范式应用到JavaBeans的RDD上获取DataFrame
-Dataset<Row> peopleDataFrame = session.createDataFrame(peopleRDD, Person.class);
-// 将DataFrame注册为临时视图
-peopleDataFrame.createOrReplaceTempView("people");
-// 使用由spark提供的sql方法来运行SQL语句
-Dataset<Row> teenagersDataFrame = session.sql("SELECT name FROM people WHERE age BETWEEN 13 AND 19");
+// 在 JavaBean 的 RDD 上应用 schema 生成 DataFrame
+Dataset<Row> personDataFrame = sparkSession.createDataFrame(personRDD, Person.class);
+// 注册为临时视图
+personDataFrame.createOrReplaceTempView("people");
 
-// 可以通过字段索引访问结果行的列
+// 运行SQl
+Dataset<Row> teenagersDataFrame = sparkSession.sql("SELECT name FROM people WHERE age BETWEEN 13 AND 19");
+
+// Row中的列可以通过字段索引获取
 Encoder<String> stringEncoder = Encoders.STRING();
-Dataset<String> teenagerNamesByIndexDF = teenagersDataFrame.map(new MapFunction<Row, String>() {
-    @Override
-    public String call(Row row) throws Exception {
-        return "Name: " + row.getString(0);
-    }
-}, stringEncoder);
+Dataset<String> teenagerNamesByIndexDF = teenagersDataFrame.map(
+        (MapFunction<Row, String>) row -> "Name: " + row.getString(0),
+        stringEncoder);
 teenagerNamesByIndexDF.show();
+/**
+ +------------+
+ |       value|
+ +------------+
+ |Name: Justin|
+ +------------+
+ */
 
-// 可以通过字段名称访问结果行的列
-Dataset<String> teenagerNamesByFieldDF = teenagersDataFrame.map(new MapFunction<Row, String>() {
-    @Override
-    public String call(Row row) throws Exception {
-        return "Name: " + row.<String>getAs("name");
-    }
-}, stringEncoder);
+// Row中的列可以通过字段名称获取
+Dataset<String> teenagerNamesByFieldDF = teenagersDataFrame.map(
+        (MapFunction<Row, String>) row -> "Name: " + row.<String>getAs("name"),
+        stringEncoder);
 teenagerNamesByFieldDF.show();
+/**
+ +------------+
+ |       value|
+ +------------+
+ |Name: Justin|
+ +------------+
+ */
 ```
-输出结果:
+Scala版本：
+```scala
+// For implicit conversions from RDDs to DataFrames
+import spark.implicits._
+
+// Create an RDD of Person objects from a text file, convert it to a Dataframe
+val peopleDF = spark.sparkContext
+  .textFile("src/main/resources/person.txt")
+  .map(_.split(","))
+  .map(attributes => Person(attributes(0), attributes(1).trim.toInt))
+  .toDF()
+// Register the DataFrame as a temporary view
+peopleDF.createOrReplaceTempView("people")
+
+// SQL statements can be run by using the sql methods provided by Spark
+val teenagersDF = spark.sql("SELECT name, age FROM people WHERE age BETWEEN 13 AND 19")
+
+// The columns of a row in the result can be accessed by field index
+teenagersDF.map(teenager => "Name: " + teenager(0)).show()
+// +------------+
+// |       value|
+// +------------+
+// |Name: Justin|
+// +------------+
+
+// or by field name
+teenagersDF.map(teenager => "Name: " + teenager.getAs[String]("name")).show()
+// +------------+
+// |       value|
+// +------------+
+// |Name: Justin|
+// +------------+
+
+// No pre-defined encoders for Dataset[Map[K,V]], define explicitly
+implicit val mapEncoder = org.apache.spark.sql.Encoders.kryo[Map[String, Any]]
+// Primitive types and case classes can be also defined as
+// implicit val stringIntMapEncoder: Encoder[Map[String, Any]] = ExpressionEncoder()
+
+// row.getValuesMap[T] retrieves multiple columns at once into a Map[String, T]
+teenagersDF.map(teenager => teenager.getValuesMap[Any](List("name", "age"))).collect()
+// Array(Map("name" -> "Justin", "age" -> 19))
 ```
-+------------+
-|       value|
-+------------+
-|Name: Justin|
-+------------+
 
-+------------+
-|       value|
-+------------+
-|Name: Justin|
-+------------+
-```
+##### 2.7.2 使用编程方式指定Schema
 
-##### 2.7.2 使用编程接口指定范式
+当 JavaBean 类不能提前定义时（例如，记录的结构以字符串编码，或者解析文本数据集，不同用户字段映射方式不同），可以通过编程方式创建 DataSet<Row>，有如下三个步骤：
+- 从原始 RDD(例如，JavaRDD<String>)创建 Rows 的 RDD(JavaRDD<Row>);
+- 创建由 StructType 表示的 schema，与步骤1中创建的 RDD 中的 Rows 结构相匹配。
+- 通过SparkSession提供的 createDataFrame 方法将 schema 应用到 Rows 的 RDD。
 
-当JavaBean类不能提前定义时（例如，记录的结构以字符串编码，或者文本数据集将被解析，对于不同的用户来说，字段的投影方式不同），可以通过编程方式创建`DataSet<Row>`有如下三个步骤：
-- 从原始RDD(例如，JavaRDD<String>)创建`Rows`的RDD(JavaRDD<Row>);
-- 创建由StructType表示的范式，与步骤1中创建的RDD中的Rows结构相匹配。
-- 通过SparkSession提供的`createDataFrame`方法将范式应用于行的RDD。
-
-
-```
+Java版本：
+```java
 import java.util.ArrayList;
 import java.util.List;
 
@@ -365,12 +462,20 @@ import org.apache.spark.sql.types.DataTypes;
 import org.apache.spark.sql.types.StructField;
 import org.apache.spark.sql.types.StructType;
 
-// 创建RDD
-JavaRDD<String> peopleRDD = session.sparkContext().textFile(textPath, 1).toJavaRDD();
-// 在字符串中编码范式
-String schemaString = "name age";
+// JavaRDD<String>
+JavaRDD<String> peopleRDD = sparkSession.sparkContext()
+        .textFile("src/main/resources/person.txt", 1)
+        .toJavaRDD();
 
-// 根据字符串定义的范式生成范式
+// JavaRDD<Row>
+JavaRDD<Row> rowRDD = peopleRDD.map((Function<String, Row>) record -> {
+    String[] attributes = record.split(",");
+    return RowFactory.create(attributes[0], attributes[1].trim());
+});
+
+// 字符串 schema
+String schemaString = "name age";
+// 根据字符串 schema 产生 schema
 List<StructField> fields = new ArrayList<>();
 for (String fieldName : schemaString.split(" ")) {
     StructField field = DataTypes.createStructField(fieldName, DataTypes.StringType, true);
@@ -378,42 +483,70 @@ for (String fieldName : schemaString.split(" ")) {
 }
 StructType schema = DataTypes.createStructType(fields);
 
-// 将RDD(people)的记录转换为Rows
-JavaRDD<Row> rowRDD = peopleRDD.map(new Function<String, Row>() {
-    @Override
-    public Row call(String record) throws Exception {
-        String[] attributes = record.split(",");
-        return RowFactory.create(attributes[0], attributes[1].trim());
-    }
-});
+// Dataset<Row>
+Dataset<Row> peopleDataFrame = sparkSession.createDataFrame(rowRDD, schema);
 
-// 将范式应用到RDD
-Dataset<Row> peopleDataFrame = session.createDataFrame(rowRDD, schema);
-// 将DataFrame注册为SQL临时视图
+// 临时视图
 peopleDataFrame.createOrReplaceTempView("people");
 
-// SQL可以在使用DataFrames创建的临时视图中运行
-Dataset<Row> results = session.sql("SELECT name FROM people");
+// 运行SQL
+Dataset<Row> results = sparkSession.sql("SELECT name FROM people");
 
-// SQL查询的结果是DataFrames，并支持所有正常的RDD操作
-// 结果中的行的列可以通过字段索引或字段名称访问
-Dataset<String> namesDS = results.map(new MapFunction<Row, String>() {
-    @Override
-    public String call(Row row) throws Exception {
-        return "Name: " + row.getString(0);
-    }
-}, Encoders.STRING());
+Dataset<String> namesDS = results.map(
+        (MapFunction<Row, String>) row -> "Name: " + row.getString(0),
+        Encoders.STRING());
 namesDS.show();
+/**
+ +-------------+
+ |        value|
+ +-------------+
+ |Name: Michael|
+ |   Name: Andy|
+ | Name: Justin|
+ +-------------+
+ */
 ```
-输出结果：
-```
-+-------------+
-|        value|
-+-------------+
-|Name: Michael|
-|   Name: Andy|
-| Name: Justin|
-+-------------+
+Scala版本：
+```scala
+import org.apache.spark.sql.types._
+
+// Create an RDD
+val peopleRDD = spark.sparkContext.textFile("src/main/resources/person.txt")
+
+// The schema is encoded in a string
+val schemaString = "name age"
+
+// Generate the schema based on the string of schema
+val fields = schemaString.split(" ")
+  .map(fieldName => StructField(fieldName, StringType, nullable = true))
+val schema = StructType(fields)
+
+// Convert records of the RDD (people) to Rows
+val rowRDD = peopleRDD
+  .map(_.split(","))
+  .map(attributes => Row(attributes(0), attributes(1).trim))
+
+// Apply the schema to the RDD
+val peopleDF = spark.createDataFrame(rowRDD, schema)
+
+// Creates a temporary view using the DataFrame
+peopleDF.createOrReplaceTempView("people")
+
+// SQL can be run over a temporary view created using DataFrames
+val results = spark.sql("SELECT name FROM people")
+
+// The results of SQL queries are DataFrames and support all the normal RDD operations
+// The columns of a row in the result can be accessed by field index or by field name
+results.map(attributes => "Name: " + attributes(0)).show()
+/**
+ +-------------+
+ |        value|
+ +-------------+
+ |Name: Michael|
+ |   Name: Andy|
+ | Name: Justin|
+ +-------------+
+ */
 ```
 
 

@@ -20,7 +20,6 @@ permalink: spark-base-spark-code-analysis
 - 诸如 grouby，reduceByKey，combineByKey，AggregateByKey 之类的 Transformation 都生成 Shuffle，在 stage 中会生成阶段性结果。
 - 作业由 stage 组成。stage 的边界是 shuffle 操作。
 
-<<<<<<< HEAD
 
 Code|Executed on  Driver/Executor
 ---|---
@@ -39,14 +38,6 @@ stringJavaRDD.count()	|On Driver , Data Pulled from all tasks to Driver to perfo
 
 
 
-=======
-从Driver角度：
-- ToolRunner.run（新的WordCount（），参数）在驱动程序上执行。
-- 转换中使用的Lambda函数/匿名/静态类在驱动程序上实例化。
-- 在转换中使用的Lambda函数/匿名/静态类被序列化并发送到DAG定义的任务。
-- 诸如collect（），count（）之类的操作在驱动程序上执行。 这些操作导致从任务（执行者）上的任务中收集数据到驱动程序上，并计算总和，平均值等。这些操作导致大量数据传入驱动程序。
-- MapPartitions（），map（），reduceByKey（），combineByKey（），aggregateByKey（），groupByKey（）等操作作为Map Task或Reduce Task的一部分在执行器上执行。
->>>>>>> d41a6048970b60d3c816407f7a79fc6d95560b39
 
 
 
