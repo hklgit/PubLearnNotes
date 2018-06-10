@@ -61,7 +61,7 @@ val configMap:Map[String, String] = spark.conf.getAll()
 spark.catalog.listDatabases.show(false)
 spark.catalog.listTables.show(false)
 ```
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-sql-how-to-use-sparksession-in-spark-2-0-1.png?raw=true)
 
 #### 1.4 创建DataSets和DataFrame
 
@@ -82,7 +82,8 @@ val lpDF = langPercentDF.withColumnRenamed("_1", "language").withColumnRenamed("
 //order the DataFrame in descending order of percentage
 lpDF.orderBy(desc("percent")).show(false)
 ```
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-sql-how-to-use-sparksession-in-spark-2-0-2.png?raw=true)
+
 #### 1.5 使用SparkSession API读取JSON数据
 
 和任何Scala对象一样，你可以使用 spark，SparkSession 对象来访问其公共方法和实例字段。我可以读取 JSON 或 CVS 或 TXT 文件，或者我可以读取 parquet 表。例如，在下面这段代码中，我们将读取一个邮政编码的 JSON 文件，该文件返回一个 DataFrame，Rows的集合。
@@ -106,7 +107,7 @@ zipsDF.cache()
 val resultsDF = spark.sql("SELECT city, pop, state, zip FROM zips_table")
 resultsDF.show(10)
 ```
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-sql-how-to-use-sparksession-in-spark-2-0-3.png?raw=true)
 
 #### 1.7 使用SparkSession保存和读取Hive表
 
@@ -120,7 +121,7 @@ spark.table("zips_table").write.saveAsTable("zips_hive_table")
 val resultsHiveDF = spark.sql("SELECT city, pop, state, zip FROM zips_hive_table WHERE pop > 40000")
 resultsHiveDF.show(10)
 ```
-![](4)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-sql-how-to-use-sparksession-in-spark-2-0-4.png?raw=true)
 
 正如你所看到的，输出中的结果通过使用 DataFrame API，Spark SQL和Hive查询运行完全相同。其次，让我们把注意力转向 SparkSession 自动为你创建的两个Spark开发人员环境。
 
@@ -128,7 +129,7 @@ resultsHiveDF.show(10)
 
 最后，对于历史上下文，让我们简单了解一下 SparkContext 的底层功能。
 
-![](5)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-sql-how-to-use-sparksession-in-spark-2-0-5.png?raw=true)
 
 如图所示，SparkContext 是一个访问 Spark 所有功能的入口；每个 JVM 仅存在一个 SparkContext。Spark Driver 使用它连接到集群管理器进行通信，提交 Spark 作业并知道要与之通信的资源管理器（YARN，Mesos或Standalone）。它允许你配置 Spark 参数。通过 SparkContext，Driver 可以访问其他上下文，如SQLContext，HiveContext和 StreamingContext 来编程Spark。
 
