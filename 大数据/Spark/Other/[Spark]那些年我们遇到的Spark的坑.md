@@ -326,7 +326,15 @@ LongAccumulator evenAccumulator = new LongAccumulator();
 sparkContext.sc().register(evenAccumulator, "Even Num Accumulator");
 ```
 
-
+### 8. A read-only user or a user in a read-only database
+```
+Caused by: ERROR 25505: A read-only user or a user in a read-only database is not permitted to disable read-only mode on a connection.
+        at org.apache.derby.iapi.error.StandardException.newException(Unknown Source)
+        at org.apache.derby.iapi.error.StandardException.newException(Unknown Source)
+        at org.apache.derby.impl.sql.conn.GenericAuthorizer.setReadOnlyConnection(Unknown Source)
+        at org.apache.derby.impl.sql.conn.GenericLanguageConnectionContext.setReadOnly(Unknown Source)
+        ... 8 more
+```
 
 
 
