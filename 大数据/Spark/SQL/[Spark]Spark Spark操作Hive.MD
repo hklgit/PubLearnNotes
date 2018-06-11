@@ -22,11 +22,6 @@ Spark SQL 的 Hive 支持的最重要的部分之一是与 Hive metastore 进行
 
 
 
-
-
-
-
-
 > Spark版本:2.3.0
 
 原文：http://spark.apache.org/docs/2.3.0/sql-programming-guide.html#hive-tables
