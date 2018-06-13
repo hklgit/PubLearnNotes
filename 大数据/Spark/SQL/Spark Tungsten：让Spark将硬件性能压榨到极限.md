@@ -2,7 +2,7 @@
 layout: post
 author: sjf0115
 title: Spark Tungsten：让Spark将硬件性能压榨到极限
-date: 2018-06-03 15:31:01
+date: 2018-03-08 19:31:01
 tags:
   - Spark
   - Spark SQL
@@ -49,7 +49,7 @@ JVM对象带来的另一个问题是GC。从高等级上看，通常情况下GC�
 
 新内存管理的首次亮相将出现在Spark 1.4版本，它包含了一个由Spark管理，可以直接在内存中操作二进制数据的hashmap。对比标准的Java HashMap，该实现避免了很多中间环节开销，并且对垃圾收集器透明。
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-sql-project-tungsten-bringing-spark-closer-to-bare-metal-1.jpg?raw=true)
 
 当下，这个功能仍然处于开发阶段，但是其展现的初始测试行能已然令人兴奋。如上图所示，我们在3个不同的途径中对比了聚合计算的吞吐量——开发中的新模型、offheap模型、以及java.util.HashMap。新的hashmap可以支撑每秒超过100万的聚合操作，大约是java.util.HashMap的两倍。更重要的是，在没有太多参数调优的情况下，随着内存利用增加，这个模式基本上不存在性能的衰弱，而使用JVM默认模式最终已被GC压垮。
 
@@ -63,7 +63,7 @@ JVM对象带来的另一个问题是GC。从高等级上看，通常情况下GC�
 
 我们不妨看向对记录排序的例子。一个标准的排序步骤需要为记录储存一组的指针，并使用quicksort 来互换指针直到所有记录被排序。基于顺序扫描的特性，排序通常能获得一个不错的缓存命中率。然而，排序一组指针的缓存命中率却很低，因为每个比较运算都需要对两个指针解引用，而这两个指针对应的却是内存中两个随机位置的数据。
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-sql-project-tungsten-bringing-spark-closer-to-bare-metal-3.jpg?raw=true)
 
 那么，我们该如何提高排序中的缓存本地性？其中一个方法就是通过指针顺序地储存每个记录的sort key。举个例子，如果sort key是一个64位的整型，那么我们需要在指针阵列中使用128位（64位指针，64位sort key）来储存每条记录。这个途径下，每个quicksort对比操作只需要线性的查找每对pointer-key，从而不会产生任何的随机扫描。希望上述解释可以让你对我们提高缓存本地性的方法有一定的了解。
 
@@ -77,7 +77,7 @@ JVM对象带来的另一个问题是GC。从高等级上看，通常情况下GC�
 
 在通过表达式求值优化内部组件的CPU效率之外，我们还期望将代码生成推到更广泛的地方，其中一个就是shuffle过程中将数据从内存二进制格式转换到wire-protocol。如之前所述，取代带宽，shuffle通常会因数据系列化出现瓶颈。通过代码生成，我们可以显著地提升序列化吞吐量，从而反过来作用到shuffle网络吞吐量的提升。
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-sql-project-tungsten-bringing-spark-closer-to-bare-metal-4.jpg?raw=true)
 
 上面的图片对比了单线程对800万复杂行做shuffle的性能，分别使用的是Kryo和代码生成，在速度上后者是前者的2倍以上。
 
