@@ -38,7 +38,7 @@ Apache Spark 对开发人员的吸引力之一是其易于使用的 API，适用
 
 我们提到在 Spark 2.0 中，DataFrame API 将与 Datasets API 合并，实现跨库的数据处理功能的统一。由于这种统一，开发人员现在只需要记忆更少的概念，并且只需要使用一个名为 Dataset 的高级和类型安全的API。
 
-![](1)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-sql-how-to-select-rdds-dataframes-and-datasets-1.png?raw=true)
 
 ### 3. Dataset
 
@@ -68,7 +68,7 @@ R*	|DataFrame
 
 所有的这些转换都被解释成关于类型安全的图谱，内容就是你的 Spark 代码里的语法和分析错误。Dataset 是最具有严格约束的，却是对于开发者来说最具有效率的。
 
-![](2)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-sql-how-to-select-rdds-dataframes-and-datasets-2.png?raw=true)
 
 #### 4.2 对结构化和半结构化数据进行高级抽象和自定义视图
 
@@ -94,7 +94,7 @@ val ds = spark.read.json(“/databricks-public-datasets/data/iot/iot_devices.jso
 
 我们大多数人都用过结构化数据，习惯于以列式方式查看和处理数据或访问对象内的特定属性。将 Dataset 作为 Dataset [ElementType] 有类型对象的集合，你可以很容易地获得强类型 JVM 对象的编译时安全性和自定义视图。从上面的代码中得到的强类型 DataSet[T] 可以很容易地用高级方法显示或处理。
 
-![](3)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-sql-how-to-select-rdds-dataframes-and-datasets-3.png?raw=true)
 
 #### 4.3 易于使用结构化的API
 
@@ -119,7 +119,7 @@ display(dsAvgTmp)
 
 首先，由于 DataFrame 和 Dataset API 构建在 Spark SQL 引擎之上，因此它使用 Catalyst 来生成优化的逻辑和物理查询计划。 在 R，Java，Scala 或 Python DataFrame / Dataset API 中，所有关系类型查询都使用相同的代码优化器，提供空间和速度效率。 DataSet[T] 有类型的 API 针对数据工程任务进行了优化，但无类型的 DataSet[Row]（DataFrame的别名）却更快，更适用于交互式分析。
 
-![](4)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-sql-how-to-select-rdds-dataframes-and-datasets-4.png?raw=true)
 
 其次，Spark 作为一个编译器，它理解 Dataset 类型的 JVM 对象，因此它使用 Encoders 将特定于类型的 JVM 对象映射到 Tungsten 的内部的内存表示。因此，Tungsten Encoders 可以高效地对 JVM 对象进行序列化/反序列化，并生成压缩的字节码，这样执行效率就非常高了。
 
@@ -142,7 +142,7 @@ val deviceEventsDS = ds.select($"device_name", $"cca3", $"c02_level").where($"c0
 val eventsRDD = deviceEventsDS.rdd.take(10)
 ```
 
-![](5)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-sql-how-to-select-rdds-dataframes-and-datasets-5.png?raw=true)
 
 ### 5. 整合在一起
 
