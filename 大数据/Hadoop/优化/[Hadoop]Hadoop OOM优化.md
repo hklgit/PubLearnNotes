@@ -1,3 +1,20 @@
+MapReduce作业运行时，任务可能会失败，报out of memory错误。这个时候可以采用以下几个过程调优
+
+简单粗暴： 加大内存
+
+哪个阶段报错就增加那个阶段的内存。以reduce阶段为例，map阶段的类似
+```
+mapreduce.reduce.memory.mb=5120   //设置reduce container的内存大小
+mapreduce.reduce.java.opts=-Xms2000m -Xmx4600m; //设置reduce任务的JVM参数
+```
+
+https://blog.csdn.net/dxl342/article/details/53079155
+https://blog.csdn.net/jiewuyou/article/details/50592233
+
+https://stackoverflow.com/questions/24070557/what-is-the-relation-between-mapreduce-map-memory-mb-and-mapred-map-child-jav
+
+
+
 ```
 18/04/26 14:48:30 INFO mapreduce.Job: Task Id : attempt_1504162679223_22379281_r_000024_0, Status : FAILED
 Container [pid=38228,containerID=container_1504162679223_22379281_01_000455] is running beyond physical memory limits. Current usage: 4.1 GB of 4 GB physical memory used; 5.9 GB of 80 GB virtual memory used. Killing container.
