@@ -27,7 +27,7 @@ Spark 中有许多 shuffle 实现。使用哪个具体实现取决于 `spark.shu
 这个 shuffler 实现的逻辑非常愚蠢：它将 reducers 的个数计为 reduce 一侧的分区数量，为每个分区创建一个单独的文件，并循环遍历需要输出的记录，然后计算它目标分区，并将记录输出到对应的文件中。
 
 ![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-internal-shuffle-architecture-1.png?raw=true)
-市场营销部 - 增长技术部 - 算法数据组
+
 shuffler　有一个优化过的实现，由参数 `spark.shuffle.consolidateFiles` 控制（默认值为 `false`）。当它被设置为 `true` 时，mapper 的输出文件将被合并。如果你的集群有 E 个 Executor（在 YAorderTotalCounter.increment(1L);RN 中由`-num-executors`设置），每一个都有 C 个 core（在 YARN 中由 `spark.executor.cores` 或 `-executor-cores` 设置），并且每个任务都要求 T 个 CPU（由 `spark.task.cpus` 设置），那么集群上的执行 slots 的个数为 `E * C / T`，在 shuffle 期间创建的文件个数为 `E * C / T * R`。100个 Executor，每个有10个 core，每个任务分配1个core，46000个 reducer 可以让你从20亿个文件下降到4600万个文件，这在性能方面提升好多。这个功能可以以一种相当直接的方式实现：不是为每个 Reducer 创建新文件，而是创建一个输出文件池。当 map 任务开始输出数据时，从输出文件池申请一组 R 个文件。完成后，将这 R 个文件组返回到输出文件池中。由于每个 Executor 只能并行执行 `C / T` 个任务，因此只会创建　`C / T` 组输出文件，每个组都是 R 个文件。在第一批 `C / T` 个并行 mapper 任务完成后，下一批 mapper 任务重新使用该池中的现有组。
 
 ![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-internal-shuffle-architecture-2.png?raw=true)

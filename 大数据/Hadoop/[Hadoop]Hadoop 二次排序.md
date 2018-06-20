@@ -1,7 +1,7 @@
 ---
 layout: post
 author: sjf0115
-title: Hadoop中的Secondary Sort
+title: Hadoop 二次排序
 date: 2018-03-21 14:15:17
 tags:
   - Hadoop
