@@ -49,7 +49,7 @@ shuffler　有一个优化过的实现，由参数 `spark.shuffle.consolidateFil
 
 从Spark 1.2.0开始，这就是 Spark 使用的默认 shuffle 算法（`spark.shuffle.manager = sort`）。通常来说，这是试图实现类似于 Hadoop MapReduce 所使用的 shuffle 逻辑。使用 `hash shuffle`，你可以为每个 reducer 输出一个单独的文件，而使用 `sort shuffle` 时：输出一个按  reducer id 排序的文件并进行索引，通过获取文件中相关数据块的位置信息并在 fread 之前执行 fseek，你就可以轻松地获取与 reducer x 相关的数据块。但是，当然对于少量的 reducers 来说，显然使用哈希来分离文件会比排序更快，所以 `sort shuffle` 有一个'后备'计划：当 reducers 的数量小于 `spark.shuffle.sort.bypassMergeThreshold` 时（默认情况下为200），我们使用'后备'计划通过哈希将数据分到不同的文件中，然后将这些文件合并为一个文件。实现逻辑在类[BypassMergeSortShuffleWriter](https://github.com/apache/spark/blob/master/core/src/main/java/org/apache/spark/shuffle/sort/BypassMergeSortShuffleWriter.java)中实现的。
 
-关于这个实现的有趣之处在于它在 map 端对数据进行排序，但不会在 reduce 端对排序的结果进行合并 - 如果需要排序数据，你需要对数据进行重新排序。 关于 Cloudera 的这个想法可以参阅[博文](http://blog.cloudera.com/blog/2015/01/improving-sort-performance-in-apache-spark-its-a-double/)。实现逻辑充分利用 mapper 的输出已经排序的特点，在 reducer 端对文件进行合并而不是采取其他手段。我们都知道，Spark 在 reducer 端使用 TimSort 完成排序，这是一个很棒的排序算法，实际上是利用了输入已经排序的特点（通过计算 minun 并将它们合并在一起）。
+关于这个实现的有趣之处在于它在 map 端对数据进行排序，但不会在 reduce 端对排序的结果进行合并 - 如果需要排序数据，你需要对数据进行重新排序。 关于 Cloudera 的这个想法可以参阅[博文](http://blog.cloudera.com/blog/2015/01/improving-sort-performance-in-apache-spark-its-a-double/)。实现逻辑充分利用 mapper 输出已经排序的特点，在 reducer 端对文件进行合并而不是采取其他手段。我们都知道，Spark 在 reducer 端使用 TimSort 完成排序，这是一个很棒的排序算法，实际上是利用了输入已经排序的特点（通过计算 minun 并将它们合并在一起）。
 
 如果你没有足够的内存来存储整个 map 输出会怎么样？ 你可能需要将中间数据溢写到磁盘上。参数 `spark.shuffle.spill` 负责启用/禁用溢写，默认情况下会启用溢写。如果你将其禁用并且没有足够的内存来存储 map 输出，那么你会遇到 OOM 错误，因此请注意这一点。
 
