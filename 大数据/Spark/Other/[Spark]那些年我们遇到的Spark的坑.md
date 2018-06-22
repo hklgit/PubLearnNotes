@@ -335,7 +335,22 @@ Caused by: ERROR 25505: A read-only user or a user in a read-only database is no
         at org.apache.derby.impl.sql.conn.GenericLanguageConnectionContext.setReadOnly(Unknown Source)
         ... 8 more
 ```
+### 9.
 
+```
+18/06/21 18:18:26 INFO metastore.ObjectStore: Initialized ObjectStore
+18/06/21 18:18:26 WARN metastore.ObjectStore: Version information not found in metastore. hive.metastore.schema.verification is not enabled so recording the schema version 1.2.0
+18/06/21 18:18:26 WARN metastore.ObjectStore: Failed to get database default, returning NoSuchObjectException
+18/06/21 18:18:26 WARN metadata.Hive: Failed to access metastore. This class should not accessed in runtime.
+org.apache.hadoop.hive.ql.metadata.HiveException: java.lang.RuntimeException: Unable to instantiate org.apache.hadoop.hive.ql.metadata.SessionHiveMetaStoreClient
+...
+
+Caused by: java.net.URISyntaxException: Relative path in absolute URI: hdfs://qunarcluster./spark-warehouse
+	at java.net.URI.checkPath(URI.java:1823)
+	at java.net.URI.<init>(URI.java:745)
+	at org.apache.hadoop.fs.Path.initialize(Path.java:203)
+	... 70 more
+```
 
 
 

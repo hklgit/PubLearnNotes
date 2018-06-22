@@ -1,21 +1,29 @@
+---
+layout: post
+author: sjf0115
+title: Hive Union使用指南
+date: 2017-03-07 20:30:01
+tags:
+  - Hive
+
+categories: Hive
+permalink: hive-base-how-to-use-union
+---
+
 #### 1. union语法
-```
+
+```sql
 select_statement UNION [ALL | DISTINCT] select_statement UNION [ALL | DISTINCT] select_statement ...
 ```
-UNION将多个SELECT语句的结果集合并为一个独立的结果集。当前只能支持UNION ALL(bag union)。不消除重复行。每个select语句返回的列的数量和名字必须一样，否则，一个语法错误会被抛出。
+UNION 将多个 SELECT 语句的结果集合并为一个独立的结果集。当前只能支持 UNION ALL(bag union)。不消除重复行。每个select语句返回的列的数量和名字必须一样，否则，一个语法错误会被抛出。
 
-从语法中可以看出UNION有两个可选的关键字：
-```
-使用DISTINCT关键字与使用UNION 默认值效果一样，都会删除重复行
-使用ALL关键字，不会删除重复行，结果集包括所有SELECT语句的匹配行（包括重复行）
-```
+从语法中可以看出 UNION 有两个可选的关键字：
+- 使用 DISTINCT 关键字与使用 UNION 默认值效果一样，都会删除重复行
+- 使用 ALL 关键字，不会删除重复行，结果集包括所有 SELECT 语句的匹配行（包括重复行）
 
-**注意**
-```
+> 注意
 Hive 1.2.0之前的版本仅支持UNION ALL，其中重复的行不会被删除。
-Hive 1.2.0和更高版本中，UNION的默认行为是从结果中删除重复的行。 
-
-```
+Hive 1.2.0和更高版本中，UNION的默认行为是从结果中删除重复的行。
 
 DISTINCT union可以显式使用UNION DISTINCT，也可以通过使用UNION而不使用以下DISTINCT或ALL关键字来隐式生成。
 
@@ -28,7 +36,7 @@ DISTINCT union可以显式使用UNION DISTINCT，也可以通过使用UNION而�
 ```
 在Hive 0.12.0和更低版本中，UNION只能在子查询中使用，例如“SELECT * FROM（select_statement UNION ALL select_statement）unionResult”。
 从Hive 0.13.0开始，UNION也可以在顶级查询中使用：例如“select_statement UNION ALL select_statement UNION ALL ...”。 （见HIVE-6189。）
-在Hive 1.2.0之前，仅支持UNION ALL。 
+在Hive 1.2.0之前，仅支持UNION ALL。
 Hive 1.2.0以后版本可以支持支持UNION（或UNION DISTINCT）。 （见HIVE-9039。）
 ```
 
@@ -72,7 +80,7 @@ SELECT key FROM (SELECT key FROM src1 ORDER BY key LIMIT 10)subq2
 ```
 SELECT key FROM src
 UNION
-SELECT key FROM src1 
+SELECT key FROM src1
 ORDER BY key LIMIT 10
 ```
 
