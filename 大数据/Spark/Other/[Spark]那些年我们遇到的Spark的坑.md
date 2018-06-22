@@ -352,7 +352,21 @@ Caused by: java.net.URISyntaxException: Relative path in absolute URI: hdfs://qu
 	... 70 more
 ```
 
+### 10.
 
+```
+Caused by: MetaException(message:Got exception: org.apache.thrift.transport.TTransportException java.net.SocketException: Broken pipe)
+	at org.apache.hadoop.hive.metastore.MetaStoreUtils.logAndThrowMetaException(MetaStoreUtils.java:1213)
+	at org.apache.hadoop.hive.metastore.HiveMetaStoreClient.getAllDatabases(HiveMetaStoreClient.java:1033)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.lang.reflect.Method.invoke(Method.java:483)
+	at org.apache.hadoop.hive.metastore.RetryingMetaStoreClient.invoke(RetryingMetaStoreClient.java:156)
+	at com.sun.proxy.$Proxy18.getAllDatabases(Unknown Source)
+	at org.apache.hadoop.hive.ql.metadata.Hive.getAllDatabases(Hive.java:1234)
+	... 46 more
+```
 
 
 ....

@@ -85,6 +85,19 @@ HiveServer2的Web用户界面（UI）提供配置，日志记录，度量(metric
 - Hive Metrics可以通过使用`Metrics Dump`选项卡查看。
 - 可以使用``本地日志``选项卡查看日志。
 
+例如如下配置：
+```xml
+<property>
+  <name>hive.server2.webui.host</name>
+  <value>127.0.0.1</value>
+</property>
+
+<property>
+  <name>hive.server2.webui.port</name>
+  <value>10002</value>
+</property>
+```
+
 该接口目前正在[HIVE-12338](https://issues.apache.org/jira/browse/HIVE-12338)上开发。
 
 ![image](https://cwiki.apache.org/confluence/download/attachments/30758712/hs2-webui.png?version=1&modificationDate=1452895731000&api=v2)
