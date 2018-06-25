@@ -19,17 +19,17 @@ permalink: spark-running-spark-applications-on-yarn
 
 #### 1.1 Cluster部署模式
 
-在 Cluster 模式下，Spark Driver 在集群主机上的 ApplicationMaster 上运行。YARN 容器中的单个进程负责驱动应用程序并向 YARN 请求资源。启动应用程序的客户端没有必要一直在整个应用程序生命周期中运行。
+在 Cluster 模式下，Spark Driver 在集群主机上的 ApplicationMaster 上运行，它负责向 YARN 申请资源，并监督作业的运行状况。当用户提交了作业之后，就可以关掉 Client，作业会继续在 YARN 上运行。
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-running-spark-applications-on-yarn-1.png?raw=true)
 
-Cluster 模式不太适合使用 Spark 进行交互式操作。需要用户输入的 Spark 应用程序（如spark-shell和pyspark）需要 Spark Driver 在启动 Spark 应用程序的客户端进程内运行。
+Cluster 模式不太适合使用 Spark 进行交互式操作。需要用户输入的 Spark 应用程序（如spark-shell和pyspark）需要 Spark Driver 在启动 Spark 应用程序的 Client 进程内运行。
 
 #### 1.2 Client部署模式
 
-在 Client 模式下，Spark Driver 在提交作业的主机上运行。ApplicationMaster 仅负责从 YARN 中请求 executor 容器。在容器启动后，客户端与容器通信以调度工作。
+在 Client 模式下，Spark Driver 在提交作业的主机上运行。ApplicationMaster 仅负责从 YARN 中请求 Executor 容器。在容器启动后，Client 与容器通信以调度工作。
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-running-spark-applications-on-yarn-2.png?raw=true)
 
 模式|Client模式|Cluster模式
 ---|---|---
