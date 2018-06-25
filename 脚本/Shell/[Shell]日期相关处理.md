@@ -1,9 +1,6 @@
 ```
 xiaosi@yoona:~/company/sh$ echo `date +%Y-%m-%d`
 2016-05-30
-xiaosi@Qunar:~/company/sh$ echo `date +%Y-%m-%d %H:%M:%S`
-date: 额外的操作数 "%H:%M:%S"
-Try 'date --help' for more information.
 xiaosi@Qunar:~/company/sh$ echo `date +'%Y-%m-%d %H:%M:%S'`
 2016-05-30 17:02:37
 ```

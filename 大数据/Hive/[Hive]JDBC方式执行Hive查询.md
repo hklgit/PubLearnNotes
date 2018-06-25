@@ -1,10 +1,50 @@
 
 
-### 1. 启动hiveServer2服务
+### 1. HiveServer2配置
+
+```xml
+<!-- HiveServer2 -->
+<property>
+  <name>hive.server2.transport.mode</name>
+  <value>binary</value>
+  <description>Expects one of [binary, http].Transport mode of HiveServer2.</description>
+</property>
+
+<property>
+  <name>hive.server2.thrift.bind.host</name>
+  <value>xxx</value>
+  <description>Bind host on which to run the HiveServer2 Thrift service.</description>
+</property>
+
+<property>
+  <name>hive.server2.thrift.port</name>
+  <value>10000</value>
+  <description>Port number of HiveServer2 Thrift interface when hive.server2.transport.mode is 'binary'.</description>
+</property>
+
+<!-- Web UI -->
+<property>
+  <name>hive.server2.webui.host</name>
+  <value>xxx</value>
+</property>
+
+<property>
+  <name>hive.server2.webui.port</name>
+  <value>10002</value>
+</property>
+
+<property>
+  <name>hive.server2.enable.doAs</name>
+  <value>false</value>
+  <description>Setting this property to true will have HiveServer2 execute Hive operations as the user making the calls to it.</description>
+</property>
+```
+
+### 2. 启动hiveServer2服务
 
 在使用JDBC执行Hive查询时, 必须首先开启 Hive 的远程服务。
 
-#### 1.1 检查服务是否启动
+#### 2.1 检查服务是否启动
 
 hiveServer2 的 thrift 的默认端口为 10000:
 ```
@@ -14,28 +54,6 @@ hiveServer2 的 thrift 的默认端口为 10000:
     <description>Port number of HiveServer2 Thrift interface when hive.server2.transport.mode is 'binary'.</description>
 </property>
 ```
-
-```
-<property>
-  <name>hive.server2.transport.mode</name>
-  <value>binary</value>
-  <description>Expects one of [binary, http].Transport mode of HiveServer2.</description>
-</property>
-
-<property>
-  <name>hive.server2.thrift.bind.host</name>
-  <value></value>
-  <description>Bind host on which to run the HiveServer2 Thrift service.</description>
-</property>
-
-<property>
-    <name>hive.server2.thrift.port</name>
-    <value>10000</value>
-    <description>Port number of HiveServer2 Thrift interface when hive.server2.transport.mode is 'binary'.</description>
-</property>
-```
-
-
 通过端口来判断 hiveServer2 是否启动:
 ```
 xiaosi@yoona:~$ sudo netstat -anp | grep 10000
@@ -44,7 +62,7 @@ xiaosi@yoona:~$ sudo netstat -anp | grep 10000
 
 如果没有启动hiveServer2服务，通过如下命令启动：
 ```
-xiaosi@yoona:~$ hive --service hiveserver2 >/dev/null 2>/dev/null &
+xiaosi@yoona:~$ sudo -uxiaosi hive --service hiveserver2 >/dev/null 2>/dev/null &
 [1] 11978
 ```
 根据进程ID查看端口号：
