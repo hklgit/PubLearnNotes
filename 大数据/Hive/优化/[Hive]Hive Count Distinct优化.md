@@ -20,8 +20,7 @@ FROM TABLE_NAME
 WHERE ...;
 ```
 这条语句是从一个表的符合WHERE条件的记录中统计不重复的id的总数。该语句转化为MapReduce作业后执行示意图如下，图中还列出了我们实验作业中Reduce阶段的数据规模：
-![]()
-
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hive/hive-tuning-count-distinct-1.jpg?raw=true)
 由于引入了DISTINCT，因此在Map阶段无法利用Combine对输出结果去重，必须将id作为Key输出，在Reduce阶段再对来自于不同Map Task、相同Key的结果进行去重，计入最终统计值。
 
 我们看到作业运行时的Reduce Task个数为1，对于统计大数据量时，这会导致最终Map的全部输出由单个的ReduceTask处理。这唯一的Reduce Task需要Shuffle大量的数据，并且进行排序聚合等处理，这使得它成为整个作业的IO和运算瓶颈。
@@ -44,7 +43,9 @@ FROM
 ) t;
 ```
 在实际运行时，我们发现Hive还对这两阶段的作业做了额外的优化。它将第二个MapReduce作业Map中的Count过程移到了第一个作业的Reduce阶段。这样在第一阶段Reduce就可以输出计数值，而不是去重的全部id。这一优化大幅地减少了第一个作业的Reduce输出IO以及第二个作业Map的输入数据量。最终在同样的运行环境下优化后的语句执行只需要原语句20%左右的时间。优化后的MapReduce作业流如下：
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hive/hive-tuning-count-distinct-2.jpg?raw=true)
+
+从上述优化过程我们可以看出，一个简单的统计需求，如果不理解Hive和MapReduce的工作原理，它可能会比优化后的执行过程多四、五倍的时间。我们在利用Hive简化开发的同时，也要尽可能优化SQL语句，提升计算作业的执行效率。
 
 > 注：文中测试环境Hive版本为0.9
 
