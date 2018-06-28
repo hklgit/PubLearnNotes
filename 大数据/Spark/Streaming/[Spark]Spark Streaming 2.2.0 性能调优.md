@@ -52,7 +52,7 @@ unifiedStream.pprint()
 
 ##### 1.1.2 调整Receiver的块间隔
 
-另一个应该考虑的参数是 Receiver 的 `block interval`，由配置参数 `spark.streaming.blockInterval` 决定。对于大多数的 Receiver，接收到的数据在存储到 Spark 内存之前会合并为数据块。每个批次中块的个数决定了任务的个数，这些任务用来处理类似 map 转换操作中接收到数据。Receiver 中每批次的任务个数大约等于 `batch interval / block interval`。例如，200 ms 的 `block interval`将会在每2s的批次中创建10个任务。如果任务个数太少（即少于每台机器的 core 的数量），将会导致效率变低，因为会有闲置的核没有用来处理数据。要增加给定 `batch interval` 的任务个数，需要降低 `block interval`。但是，建议 `block interval` 最小值为50毫秒，如果低于该值时，任务启动开销可能会有问题。
+另一个应该考虑的参数是 Receiver 的 `block interval`，由配置参数 `spark.streaming.blockInterval` 决定。对于大多数的 Receiver，接收到的数据在存储到 Spark 内存之前会合并为大的数据块。每个批次中块的个数决定了任务的个数，这些任务用来处理类似 map 转换操作中接收到数据。Receiver 中每批次的任务个数大约等于 `batch interval / block interval`。例如，200 ms 的 `block interval`将会在每2s的批次中创建10个任务。如果任务个数太少（即少于每台机器的 core 的数量），将会导致效率变低，因为会有闲置的核没有用来处理数据。要增加给定 `batch interval` 的任务个数，需要降低 `block interval`。但是，建议 `block interval` 最小值为50毫秒，如果低于该值时，任务启动开销可能会有问题。
 
 使用多输入流/ Receiver 接收数据的另一种方法是显式对输入数据流重新分区（使用 `inputStream.repartition（<分区个数>）`）。这会在进一步处理之前将收到的批量数据分布到集群中指定数量的机器上。
 

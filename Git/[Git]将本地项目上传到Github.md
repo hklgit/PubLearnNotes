@@ -25,6 +25,12 @@ xiaosi@yoona:~/code/PubLearnNotes$ git commit -am "ADD:test"
 ```
 xiaosi@yoona:~/code/PubLearnNotes$ git remote add origin git@github.com:sjf0115/PubLearnNotes.git
 ```
+执行上述命令时，有可能会报如下异常：
+```
+fatal: 远程 origin 已经存在。
+```
+
+
 推送到远程仓库
 ```
 xiaosi@yoona:~/code/PubLearnNotes$ git push origin master
