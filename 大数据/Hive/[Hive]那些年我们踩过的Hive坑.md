@@ -489,10 +489,26 @@ JDK 1.1 = 45 (0x2D hex)
 
 根据上面的分析把JDK版本提升到JDK 1.7即可．
 
-#### 14. MetaException
+### 14. MetaException
 
 #### 14.1 问题描述
 ```
 Caused by: MetaException(message:Hive Schema version 2.1.0 does not match metastore's schema version 1.2.0 Metastore is not upgraded or corrupt)
 ...
 ```
+
+### 15.
+
+```
+Caused by: java.sql.SQLException: The MySQL server is running with the --read-only option so it cannot execute this statement
+        at com.mysql.jdbc.SQLError.createSQLException(SQLError.java:1074)
+        at com.mysql.jdbc.MysqlIO.checkErrorPacket(MysqlIO.java:4074)
+        at com.mysql.jdbc.MysqlIO.checkErrorPacket(MysqlIO.java:4006)
+        at com.mysql.jdbc.MysqlIO.sendCommand(MysqlIO.java:2468)
+        at com.mysql.jdbc.MysqlIO.sqlQueryDirect(MysqlIO.java:2629)
+				...
+        at org.datanucleus.api.jdo.JDOTransaction.commit(JDOTransaction.java:107)
+        ... 45 more
+```
+https://blog.csdn.net/lwei_998/article/details/50445830
+https://www.cnblogs.com/gomysql/p/3671896.html
