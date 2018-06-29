@@ -186,3 +186,5 @@ Kryo序列化且注册自定义类|43.4MB|9s
 原文：http://spark.apache.org/docs/2.3.1/tuning.html#data-serialization
 
 https://facaiy.com/misc/2017/01/21/spark-kyro.html
+
+https://segmentfault.com/q/1010000007041500
