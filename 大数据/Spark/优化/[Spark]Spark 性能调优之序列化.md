@@ -11,6 +11,14 @@ categories: Spark
 permalink: spark-performance-data-serialization
 ---
 
+### 1. 序列化
+
+序列化是将对象转换为字节流，本质上可以理解为将链表存储的非连续空间的数据存储转换为连续空间的存储的数组中。这样就可以将数据进行流式传输或者块存储。相反，反序列化就是将字节流转换为对象。
+
+序列化主要有以下两个目的：
+- 进程间通信：不同节点之间进行数据的传输。
+- 数据持久化存储到磁盘：本地节点将对象写入磁盘。
+
 分布式应用中，序列化处于举足轻重的地位。那些需要大量时间进行序列化的数据格式和占据过大空间的对象会拖慢整个应用。通常情况下，序列化是Spark调优的第一步。Spark为了权衡兼容性和性能提供了两种序列化库。
 
 ### 2. Java序列化
@@ -183,7 +191,7 @@ Kryo序列化且注册自定义类|43.4MB|9s
 
 > Spark 版本 2.3.1
 
-原文：http://spark.apache.org/docs/2.3.1/tuning.html#data-serialization
+资料：http://spark.apache.org/docs/2.3.1/tuning.html#data-serialization
 
 https://facaiy.com/misc/2017/01/21/spark-kyro.html
 
