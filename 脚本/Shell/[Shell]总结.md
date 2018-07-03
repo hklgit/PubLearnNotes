@@ -74,7 +74,7 @@ xiaosi@yoona:~$ echo | awk -v day="${date}" 'BEGIN{print day}'
 ```
 如果想在BEGIN程序块中获取变量值上述方法行不通，需利用下面格式：
 ```
-awk –v 变量名=变量值 [–v 变量2=值2 …] 'BEGIN{action}' 
+awk –v 变量名=变量值 [–v 变量2=值2 …] 'BEGIN{action}'
 ```
 
 ### 6. awk 分组排序
@@ -83,3 +83,8 @@ awk –v 变量名=变量值 [–v 变量2=值2 …] 'BEGIN{action}'
 ... | awk -F"\t" '{arrays[$3]+=1} END {for(k in arrays){print k,arrays[k]}}'    
 ```
 
+### 7. 删除过期文件
+
+```
+find $location -mtime +30 -type f |xargs rm -f
+```
