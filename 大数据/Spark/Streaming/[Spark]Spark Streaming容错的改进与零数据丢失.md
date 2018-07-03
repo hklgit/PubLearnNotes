@@ -48,6 +48,7 @@ Spark和它的RDD抽象设计允许无缝地处理集群中任何worker节点的
 - 处理数据（红色箭头）——每批数据的间隔，流上下文使用块信息产生弹性分布数据集RDD和它们的作业（job）。StreamingContext通过运行任务处理executor内存中的块来执行作业。
 - 周期性地设置检查点（橙色箭头）——为了恢复的需要，流计算（换句话说，即 StreamingContext提供的DStreams ）周期性地设置检查点，并保存到同一个容错文件系统中另外的一组文件中。
 
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-streaming-improved-driver-fault-tolerance-and-zero-data-loss-1.png?raw=true)
 
 当一个失败的driver重启时，下列事情出现（参考下一个图示）。
 - 恢复计算（橙色箭头）——使用检查点信息重启driver，重新构造上下文并重启接收器。
@@ -55,6 +56,8 @@ Spark和它的RDD抽象设计允许无缝地处理集群中任何worker节点的
 - 未完成作业的重新形成（红色箭头）——由于失败而没有处理完成的批处理，将使用恢复的元数据再次产生RDD和对应的作业。
 - 读取保存在日志中的块数据（蓝色箭头）——在这些作业执行时，块数据直接从预写日志中读出。这将恢复在日志中可靠地保存的所有必要数据。
 - 重发尚未确认的数据（紫色箭头）——失败时没有保存到日志中的缓存数据将由数据源再次发送。因为接收器尚未对其确认。
+
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-streaming-improved-driver-fault-tolerance-and-zero-data-loss-2.png?raw=true)
 
 因此通过预写日志和可靠的接收器，Spark Streaming就可以保证没有输入数据会由于driver的失败（或换言之，任何失败）而丢失。
 
