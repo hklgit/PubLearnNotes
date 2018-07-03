@@ -1,6 +1,6 @@
 ---
 layout: post
-author: sjf0115
+author: 彭根禄
 title: Spark Streaming 容错的改进与零数据丢失
 date: 2018-07-01 20:28:01
 tags:
@@ -15,9 +15,9 @@ permalink: spark-streaming-improved-driver-fault-tolerance-and-zero-data-loss
 
 ### 1. 背景
 
-Spark和它的RDD抽象设计允许无缝地处理集群中任何worker节点的故障。鉴于Spark Streaming建立于Spark之上，因此其worker节点也具备了同样的容错能力。然而，Spark Streaming的长正常运行时间需求其应用程序必须也具备从driver进程（协调各个worker的主要应用进程）故障恢复的能力。使Spark driver能够容错是件很棘手的事情，因为它可能是任意计算模式实现的任意用户程序。不过Spark Streaming应用程序在计算上有一个内在的结构——在每段micro-batch数据周期性地执行同样的Spark计算。这种结构允许把应用的状态（亦称checkpoint）周期性地保存到可靠的存储空间中，并在driver重新启动时恢复该状态。
+Spark和它的RDD抽象设计允许无缝地处理集群中任何worker节点的故障。鉴于Spark Streaming建立于Spark之上，因此其worker节点也具备了同样的容错能力。然而，Spark Streaming的长时间正常运行需求需要其应用程序必须也具备从driver进程（协调各个worker的主要应用进程）故障恢复的能力。使Spark driver能够容错是件很棘手的事情，因为它可能是任意计算模式实现的任意用户程序。不过Spark Streaming应用程序在计算上有一个内在的结构 - 在每段micro-batch数据周期性地执行同样的Spark计算。这种结构允许把应用的状态（亦称checkpoint）周期性地保存到可靠的存储空间中，并在driver重新启动时恢复该状态。
 
-对于文件这样的源数据，这个driver恢复机制足以做到零数据丢失，因为所有的数据都保存在了像HDFS或S3这样的容错文件系统中了。但对于像Kafka和Flume等其它数据源，有些接收到的数据还只缓存在内存中，尚未被处理，它们就有可能会丢失。这是由于Spark应用的分布操作方式引起的。当driver进程失败时，所有在standalone/yarn/mesos集群运行的executor，连同它们在内存中的所有数据，也同时被终止。对于Spark Streaming来说，从诸如Kafka和Flume的数据源接收到的所有数据，在它们处理完成之前，一直都缓存在executor的内存中。纵然driver重新启动，这些缓存的数据也不能被恢复。为了避免这种数据损失，我们在Spark 1.2发布版本中引进了预写日志（Write Ahead Logs）功能。
+对于文件这样的源数据，这个driver恢复机制足以做到零数据丢失，因为所有的数据都保存在了像HDFS或S3这样的容错文件系统中了。但对于像Kafka和Flume等其它数据源，有些接收到的数据还只缓存在内存中，尚未被处理，它们就有可能会丢失。这是由于Spark应用的分布式操作引起的。当driver进程失败时，所有在standalone/yarn/mesos集群运行的executor，连同它们在内存中的所有数据，也同时被终止。对于Spark Streaming来说，从诸如Kafka和Flume的数据源接收到的所有数据，在它们处理完成之前，一直都缓存在executor的内存中。纵然driver重新启动，这些缓存的数据也不能被恢复。为了避免这种数据损失，我们在Spark 1.2发布版本中引进了预写日志（Write Ahead Logs）功能。
 
 ### 2. 预写日志
 
