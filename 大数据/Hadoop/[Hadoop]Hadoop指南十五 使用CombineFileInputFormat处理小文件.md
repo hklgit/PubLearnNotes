@@ -112,3 +112,6 @@ public class CombineInputExample extends Configured implements Tool {
 
 ```
 会mapreduce.input.fileinputformat.split.maxsize参数的设置，大家可以不设置这个参数并且和设置这个参数运行情况对比，观察Map Task的个数变化。
+
+https://www.iteblog.com/archives/2139.html
+http://www.idryman.org/blog/2013/09/22/process-small-files-on-hadoop-using-combinefileinputformat-1/
