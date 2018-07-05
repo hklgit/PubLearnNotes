@@ -19,9 +19,9 @@ MapReduce 在做Shuffle时，默认使用HashPartitioner对数据进行分区。
 
 ### 2. 分散同一个Reducer上的相同Key
 
-为数据量特别大的Key增加随机前/后缀，使得原来Key相同的数据变为Key不相同的数据，从而使倾斜的数据集分散到不同的Reducer中，彻底解决数据倾斜问题。
+如果没有聚合操作（例如，计算key对应的pv,uv），为数据量特别大的Key增加随机前/后缀，使得原来Key相同的数据变为Key不相同的数据，从而使倾斜的数据分散到不同的Reducer中，彻底解决数据倾斜问题。如果涉及聚合操作，可以使用Combiner在Map端先进行聚合再传输到Reducer中。
 
-
+### 3. Join
 
 
 

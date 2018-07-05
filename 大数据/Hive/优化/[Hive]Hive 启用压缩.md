@@ -54,9 +54,9 @@ io.compression.codecs=
 ```
 或者我们可以使用 set 命令在 hive shell 中设置这些属性，如下所示:
 ```
-hive> set hive.exec.compress.intermediate=true;
-hive> set hive.intermediate.compression.codec=org.apache.hadoop.io.compress.SnappyCodec;
-hive> set hive.intermediate.compression.type=BLOCK;
+set hive.exec.compress.intermediate=true;
+set hive.intermediate.compression.codec=org.apache.hadoop.io.compress.SnappyCodec;
+set hive.intermediate.compression.type=BLOCK;
 ```
 ### 3. 在最终输出上启用压缩
 
@@ -73,10 +73,10 @@ hive> set hive.intermediate.compression.type=BLOCK;
 ```
 或者
 ```
-hive> set hive.exec.compress.output=true;
-hive> set mapreduce.output.fileoutputformat.compress=true;
-hive> set mapreduce.output.fileoutputformat.compress.codec=org.apache.hadoop.io.compress.GzipCodec;  
-hive> set mapreduce.output.fileoutputformat.compress.type=BLOCK;
+set hive.exec.compress.output=true;
+set mapreduce.output.fileoutputformat.compress=true;
+set mapreduce.output.fileoutputformat.compress.codec=org.apache.hadoop.io.compress.GzipCodec;  
+set mapreduce.output.fileoutputformat.compress.type=BLOCK;
 ```
 ### 4. Example
 
