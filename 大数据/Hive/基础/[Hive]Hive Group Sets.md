@@ -1,3 +1,15 @@
+---
+layout: post
+author: sjf0115
+title: Hive Group Sets
+date: 2018-07-05 19:16:01
+tags:
+  - Hive
+
+categories: Hive
+permalink: hive-base-group-sets
+---
+
 GROUPING SETS 子句是 SELECT 语句的 GROUP BY 子句的扩展。通过 GROUPING SETS 子句，您可采用多种方式对结果分组，而不必使用多个 SELECT 语句来实现这一目的。这就意味着，能够减少响应时间并提高性能。
 
 ```
@@ -50,39 +62,39 @@ LOCATION '/user/wirelessdev/tmp/data_group/example/input/read_pv/';
 
 ### 2. Example
 
-```
+```sql
 SELECT a, b, SUM(c) FROM tab1 GROUP BY a, b GROUPING SETS ( (a,b) )
 ```
 等价于:
-```
+```sql
 SELECT a, b, SUM(c) FROM tab1 GROUP BY a, b
 ```
 
-```
+```sql
 SELECT a, b, SUM( c ) FROM tab1 GROUP BY a, b GROUPING SETS ( (a,b), a)
 ```
 等价于:
-```
+```sql
 SELECT a, b, SUM( c ) FROM tab1 GROUP BY a, b
 UNION
 SELECT a, null, SUM( c ) FROM tab1 GROUP BY a
 ```
 
-```
+```sql
 SELECT a,b, SUM( c ) FROM tab1 GROUP BY a, b GROUPING SETS (a,b)
 ```
 等价于:
-```
+```sql
 SELECT a, null, SUM( c ) FROM tab1 GROUP BY a
 UNION
 SELECT null, b, SUM( c ) FROM tab1 GROUP BY b
 ```
 
-```
+```sql
 SELECT a, b, SUM( c ) FROM tab1 GROUP BY a, b GROUPING SETS ( (a, b), a, b, ( ) )
 ```
 等价于:
-```
+```sql
 SELECT a, b, SUM( c ) FROM tab1 GROUP BY a, b
 UNION
 SELECT a, null, SUM( c ) FROM tab1 GROUP BY a, null
@@ -94,49 +106,9 @@ SELECT null, null, SUM( c ) FROM tab1
 
 ### 3. Grouping__ID
 
-```sql
-SELECT GROUPING__ID, dt, platform, channel, SUM(pv), COUNT(DISTINCT userName)
-FROM tmp_read_pv
-GROUP BY dt, platform, channel GROUPING SETS ( dt, (dt, platform), (dt, channel), (dt, platform, channel));
-```
+GROUPING SETS会对GROUP BY子句中的列进行多维组合，结果整体展现，对于没有参与GROUP BY的那一列置为NULL值。如果列本身值就为NULL，则可能会发生冲突。这样我们就没有办法去区分该列显示的NULL值是列本身值就是NULL值，还是因为该列没有参与GROUP BY而被置为NULL值。所以需要一些方法来识别列中的NULL，GROUPING__ID函数就是解决方案。
 
-GROUPING__ID|日期|平台|浏览量|用户数
----|---|---|---|---
-1|20180627|NULL|NULL|242.0|8
-5|20180627|NULL|toutiao|149.0|6
-5|20180627|NULL|uc|93.0|6
-3|20180627|adr|NULL|137.0|6
-7|20180627|adr|toutiao|82.0|5
-7|20180627|adr|uc|55.0|4
-3|20180627|ios|NULL|105.0|2
-7|20180627|ios|toutiao|67.0|1
-7|20180627|ios|uc|38.0|2
-1|20180628|NULL|NULL|282.0|9
-3|20180628|NULL|NULL|26.0|1
-5|20180628|NULL|NULL|96.0|1
-5|20180628|NULL|toutiao|89.0|7
-5|20180628|NULL|uc|97.0|6
-7|20180628|NULL|uc|26.0|1
-3|20180628|adr|NULL|96.0|4
-7|20180628|adr|toutiao|35.0|4
-7|20180628|adr|uc|61.0|3
-3|20180628|ios|NULL|160.0|4
-7|20180628|ios|NULL|96.0|1
-7|20180628|ios|toutiao|54.0|3
-7|20180628|ios|uc|10.0|2
-
-当我们没有统计某一列时，它的值显示为NULL，这可能与列本身就有NULL值冲突，这就需要一种方法区分是没有统计还是值本来就是NULL。
-
-#### 简单方式
-
-如果数据中本身的值没有为NULL，我们是可以使用如下方式：
-```
-
-```
-
-#### GROUPING__ID
-
-如果数据中本身的值有为NULL的，这就与我们没有统计这一列而造成的NULL形成冲突，我们可以借助GROUPING__ID如下统计：
+此函数返回一个位向量，与每列是否存在对应。用二进制形式中的每一位来标示对应列是否参与GROUP BY，如果某一列参与了GROUP BY，对应位就被置为`1`，否则为`0`。这可以用于区分数据中是否存在空值。
 
 ```sql
 SELECT GROUPING__ID, dt, platform, channel, SUM(pv), COUNT(DISTINCT userName)
@@ -144,49 +116,51 @@ FROM tmp_read_pv
 GROUP BY dt, platform, channel GROUPING SETS ( dt, (dt, platform), (dt, channel), (dt, platform, channel));
 ```
 
-GROUPING__ID|类型|日期|平台|浏览量|用户数
+序号|GROUPING__ID|二进制|日期|平台|渠道|浏览量|用户数
 ---|---|---|---|---|---
-1|dt|20180627|NULL|NULL|242.0|8
-1|dt|20180628|NULL|NULL|282.0|9
-3|dt_platform|20180628|NULL|NULL|26.0|1
-3|dt_platform|20180628|ios|NULL|160.0|4
-3|dt_platform|20180628|adr|NULL|96.0|4
-3|dt_platform|20180627|ios|NULL|105.0|2
-3|dt_platform|20180627|adr|NULL|137.0|6
-5|dt_channel|20180628|NULL|toutiao|89.0|7
-5|dt_channel|20180628|NULL|NULL|96.0|1
-5|dt_channel|20180627|NULL|uc|93.0|6
-5|dt_channel|20180627|NULL|toutiao|149.0|6
-5|dt_channel|20180628|NULL|uc|97.0|6
-7|dt_platform_channel|20180628|NULL|uc|26.0|1
-7|dt_platform_channel|20180628|ios|NULL|96.0|1
-7|dt_platform_channel|20180628|ios|toutiao|54.0|3
-7|dt_platform_channel|20180627|ios|uc|38.0|2
-7|dt_platform_channel|20180627|adr|uc|55.0|4
-7|dt_platform_channel|20180627|adr|toutiao|82.0|5
-7|dt_platform_channel|20180628|ios|uc|10.0|2
-7|dt_platform_channel|20180628|adr|uc|61.0|3
-7|dt_platform_channel|20180628|adr|toutiao|35.0|4
-7|dt_platform_channel|20180627|ios|toutiao|67.0|1
+1|1|100|20180627|NULL|NULL|242.0|8
+2|5|101|20180627|NULL|toutiao|149.0|6
+3|5|101|20180627|NULL|uc|93.0|6
+4|3|110|20180627|adr|NULL|137.0|6
+5|7|111|20180627|adr|toutiao|82.0|5
+6|7|111|20180627|adr|uc|55.0|4
+7|3|110|20180627|ios|NULL|105.0|2
+8|7|111|20180627|ios|toutiao|67.0|1
+9|7|111|20180627|ios|uc|38.0|2
+10|1|100|20180628|NULL|NULL|282.0|9
+11|3|110|20180628|NULL|NULL|26.0|1
+12|5|101|20180628|NULL|NULL|96.0|1
+13|5|101|20180628|NULL|toutiao|89.0|7
+14|5|101|20180628|NULL|uc|97.0|6
+15|7|111|20180628|NULL|uc|26.0|1
+16|3|110|20180628|adr|NULL|96.0|4
+17|7|111|20180628|adr|toutiao|35.0|4
+18|7|111|20180628|adr|uc|61.0|3
+19|3|110|20180628|ios|NULL|160.0|4
+20|7|111|20180628|ios|NULL|96.0|1
+21|7|111|20180628|ios|toutiao|54.0|3
+22|7|111|20180628|ios|uc|10.0|2
+
+例如上面的第
+
+如果列本身值没有为NULL，可以使用如下简单方式来
+```
+
+```
 
 GROUPING__ID 的值与 GROUP BY 表达式中列的取值和顺序有关，所以如果重新排列 GROUPING__ID 对应的含义也会变化。
-```sql
-SELECT GROUPING__ID, dt, platform, channel, SUM(pv), COUNT(DISTINCT userName)
-FROM tmp_read_pv
-GROUP BY dt, platform, channel GROUPING SETS ( dt, (dt, platform), (dt, channel), (dt, platform, channel));
+
+### 4. Grouping函数
+
+Grouping函数用来表示GROUP BY子句中的表达式是否对给定行进行聚合。`0` 表示该列作为 GROUPING SETS 的一部分，而 `1` 表示该列不属于 GROUPING SETS 一部分，即没有使用该列对该行进行聚合。具体请看以下查询：
 ```
 
-日期|平台|渠道|GROUPING__ID|二进制
----|---|---|---|---
-20180628 |ios |uc |7 | 1 1 1
-NULL |ios |uc |6 | 0 1 1
-NULL |NULL |uc |4 | 0 0 1
-20180628 |ios |NULL |3 | 1 1 0
-NULL |ios |NULL |2 | 0 1 0
-20180628 |NULL |NULL |1 | 1 0 0
+```
 
 
 
 
 
 参考：https://stackoverflow.com/questions/29577887/grouping-in-hive
+
+https://cwiki.apache.org/confluence/display/Hive/Enhanced+Aggregation%2C+Cube%2C+Grouping+and+Rollup

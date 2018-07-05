@@ -138,7 +138,7 @@ NULL  |NULL	|	NULL |NULL |NULL |5	|34764
 
 ### 5. LEFT SEMI JOIN
 
-
+LEFT SEMI JOIN以高效的方式实现不相关的IN/EXISTS子查询语义。从Hive 0.13开始，子查询支持 IN/NOT IN/EXISTS/NOT EXISTS运算，因此大多数JOIN不再需要手动执行。使用LEFT SEMI JOIN的限制是右侧表只能在ON子句中使用，而不能在WHERE或SELECT子句中使用。
 
 ```sql
 SELECT Persons.Id, Persons.LastName, Persons.FirstName, Persons.Address, Persons.City
@@ -160,17 +160,3 @@ PersonId|LastName|FirstName|Address|City
 ---|---|---|---|---|---|---
 1 |Adams |John |Oxford Street |London
 3 |Carter |Thomas |Changan Street |Beijing
-
-### 6. LEFT ANTI JOIN
-
-```sql
-SELECT Persons.Id, Persons.LastName, Persons.FirstName, Persons.Address, Persons.City
-FROM tmp_person_test Persons
-LEFT ANTI JOIN tmp_order_test Orders
-ON Persons.Id = Orders.PersonId;
-```
-
-
-
-
-....

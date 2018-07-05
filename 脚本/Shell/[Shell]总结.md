@@ -88,3 +88,8 @@ awk –v 变量名=变量值 [–v 变量2=值2 …] 'BEGIN{action}'
 ```
 find $location -mtime +30 -type f |xargs rm -f
 ```
+
+### 8. 分组求和
+```
+awk '{sum += $1};END {print sum}'
+```
