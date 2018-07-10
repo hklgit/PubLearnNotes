@@ -10,22 +10,19 @@
 - DStream操作符：定义Streaming应用程序的操作集合
 - 未完成的batch：对应作业还在队列中未完成的batch
 
-(2) Data checkpointing ：将生成的RDD保存到可靠的存储系统中，这在有状态跨batch处理数据的Transformation中是有必要的。在这种Transformation中，生成的RDD依赖于先前batch的RDD，这会导致依赖链的长度会随时间持续增长。为了避免故障恢复时间无限增长（与依赖链的长度成正比）。有状态的Transformation的中间RDD将会定期存储到可靠存储系统中以切断依赖链。
+(2) Data checkpointing：将生成的RDD保存到可靠的存储系统中，这在有状态跨batch处理数据的Transformation中是有必要的。在这种Transformation中，生成的RDD依赖于先前batch的RDD，这会导致依赖链的长度会随时间持续增长。为了避免故障恢复时间无限增长（与依赖链的长度成正比）。有状态的Transformation的中间RDD将会定期存储到可靠存储系统中以切断依赖链。
 
 总而言之，元数据检查点主要用于从Driver故障中恢复，如果使用有状态的Transformation，即使基本的函数也需要数据或RDD检查点。
 
 ### 2. 何时开启Checkpointing
 
-当遇到一下场景时，可以为应用程序启用Checkpointing：
+当遇到以下场景时，可以为应用程序启用Checkpointing：
 - 使用有状态的Transformation：如果在应用程序中使用 updateStateByKey或reduceByKeyAndWindow，则必须提供检查点目录以允许定期RDDCheckpointing。
 - 从运行应用程序的Driver上进行故障恢复：元数据检查点根据进度信息进行恢复。
 
 请注意，在运行一个没有上述有状态Transformation的简单流应用程序时可以不启用检查点。在这种情况下，Driver故障恢复也只能恢复一部分（那些已接收但未处理的数据可能会丢失）。这通常是可以接受的，并且许多人以这种方式运行Spark Streaming应用程序。
 
 ### 3. 如何配置Checkpointing
-
-
-
 
 可以通过设置一个容错，可靠的文件系统（例如，HDFS，S3等）目录来启用检查点，检查点信息保存到该目录中。这是通过使用 `streamingContext.checkpoint（checkpointDirectory）` 完成。这可以允许你使用上述有状态的Transformation。此外，如果想使应用程序从Driver故障中恢复，则应重写流应用程序以使其具有以下行为：
 - 当程序第一次启动时，创建一个新的StreamingContext，启动所有流然后调用`start()` 方法。
@@ -80,7 +77,7 @@ context.start()
 context.awaitTermination()
 ```
 
-如果checkpointDirectory目录存在，则会根据检查点数据重新创建context。如果该目录不存在（即，第一次运行），则将调用函数 `functionToCreateContext` 以创建新context并设置DStream。请参阅Scala示例[RecoverableNetworkWordCount](https://github.com/apache/spark/blob/master/examples/src/main/scala/org/apache/spark/examples/streaming/RecoverableNetworkWordCount.scala)。
+如果checkpointDirectory目录存在，则会根据检查点数据重新创建context。如果该目录不存在（即，第一次运行），则将调用函数 `functionToCreateContext` 以创建新context并设置DStream。请参阅示例[RecoverableNetworkWordCount](https://github.com/apache/spark/blob/master/examples/src/main/java/org/apache/spark/examples/streaming/JavaRecoverableNetworkWordCount.java)。
 
 除了使用getOrCreate之外，还需要确保driver进程在失败时自动重新启动。这只能通过用于运行应用程序的部署基础结构来完成。具体请参考：[部署](http://spark.apache.org/docs/latest/streaming-programming-guide.html#deploying-applications)。
 
@@ -88,6 +85,6 @@ context.awaitTermination()
 
 https://aiyanbo.gitbooks.io/spark-programming-guide-zh-cn/content/spark-streaming/basic-concepts/checkpointing.html
 
-
+> Spark版本 2.3.1
 
 原文：http://spark.apache.org/docs/2.3.1/streaming-programming-guide.html#checkpointing
