@@ -34,13 +34,13 @@ pairRDD.saveAsHadoopFile(outputPath, String.class, String.class, RDDMultipleText
 ```
 
 ```
-[xiaosi@ying ~]$  sudo -uxiaosi hadoop fs -ls tmp/data_group/order_feature/
+[xiaosi@ying ~]$  sudo -uxiaosi hadoop fs -ls tmp/data_group/example/output/price
 Found 3 items
 -rw-r--r--   3 xiaosi xiaosi          0 2018-07-12 16:24 tmp/data_group/order_feature/_SUCCESS
--rw-r--r--   3 xiaosi xiaosi     723754 2018-07-12 16:23 tmp/data_group/order_feature/have_order
--rw-r--r--   3 xiaosi xiaosi     799216 2018-07-12 16:23 tmp/data_group/order_feature/no_order
+-rw-r--r--   3 xiaosi xiaosi     723754 2018-07-12 16:23 tmp/data_group/example/output/price/adr
+-rw-r--r--   3 xiaosi xiaosi     799216 2018-07-12 16:23 tmp/data_group/example/output/price/ios
 ```
-
+我们可以看到输出已经根据RDD的key将属于不同的类型记录写到不同的文件中，但是每个key对应都只有一个文件。
 
 
 
