@@ -57,7 +57,7 @@ scala.sys.addShutdownHook({
 
 #### 2.2.2 Spark 1.4版本之后
 
-上面方式可以达到我们的需求，但是在每个程序里面都添加这样的重复代码也未免太过麻烦了！值得高兴的是，从Apache Spark 1.4版本开始，Spark内置提供了spark.streaming.stopGracefullyOnShutdown参数来决定是否需要以Gracefully方式来关闭Streaming程序（详情请参见[SPARK-7776](https://issues.apache.org/jira/browse/SPARK-7776)）。Spark会在启动 StreamingContext 的时候注册这个钩子，如下：
+上面方式可以达到我们的需求，但是在每个程序里面都添加这样的重复代码也未免太过麻烦了！值得高兴的是，从Apache Spark 1.4版本开始，Spark内置提供了 `spark.streaming.stopGracefullyOnShutdown` 参数来决定是否需要以Gracefully方式来关闭Streaming程序（详情请参见[SPARK-7776](https://issues.apache.org/jira/browse/SPARK-7776)）。Spark会在启动 StreamingContext 的时候注册这个钩子，如下：
 ```scala
 shutdownHookRef = ShutdownHookManager.addShutdownHook(StreamingContext.SHUTDOWN_HOOK_PRIORITY)(stopOnShutdown)
 
@@ -70,6 +70,6 @@ private def stopOnShutdown(): Unit = {
 ```
 从上面的代码可以看出，我们可以根据自己的需求来设置 `spark.streaming.stopGracefullyOnShutdown` 的值，而不需要在每个 Streaming 程序里面手动调用 StreamingContext 的 stop 方法，确实方便多了。不过虽然这个参数在Spark 1.4开始引入，但是却是在Spark 1.6才开始才有文档正式介绍（可以参见https://github.com/apache/spark/pull/8898 和 http://spark.apache.org/docs/1.6.0/configuration.html）
 
-参考:https://www.iteblog.com/archives/1890.html
+参考: https://www.iteblog.com/archives/1890.html
 
 https://metabroadcast.com/blog/stop-your-spark-streaming-application-gracefully
