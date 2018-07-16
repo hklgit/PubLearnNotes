@@ -23,11 +23,11 @@ Spark 中最重要的功能之一是在操作之间将数据集持久化(缓存)
 
 持久化级别 | 说明
 ---|---
-MEMORY_ONLY|将 RDD 以反列化的 Java 对象存储在 JVM 中。如果没有足够的内存存储 RDD，则某些分区将不会被缓存，每次需要时都会重新计算。这是默认级别。
-MEMORY_AND_DISK | 将 RDD 以反序列化的 Java 对象存储在 JVM 中。如果数据在内存中放不下，则溢写到磁盘上．需要时则会从磁盘上读取
-MEMORY_ONLY_SER (Java and Scala) | 将 RDD 以序列化的 Java 对象(每个分区一个字节数组)的方式存储．这通常比反序列化对象更具空间效率，特别是在使用[快速序列化器](http://spark.apache.org/docs/2.3.0/tuning.html)的情况下，但是这种方式读取数据会消耗更多的CPU。
+MEMORY_ONLY|将 RDD 以 Java 对象形式存储在 JVM 中。如果没有足够的内存存储 RDD，则某些分区将不会被缓存，每次需要时都会重新计算。这是默认级别。
+MEMORY_AND_DISK | 将 RDD 以 Java 对象形式存储在 JVM 中。如果数据在内存中放不下，则溢写到磁盘上．需要时则会从磁盘上读取
+MEMORY_ONLY_SER (Java and Scala) | 此级别与`MEMORY_ONLY`完全相同，但会在存储到内存之前序列化对象。这通常比 Java 对象更具空间效率，特别是在使用[快速序列化器](http://spark.apache.org/docs/2.3.0/tuning.html)的情况下，但是这种方式读取数据会消耗更多的CPU。
 MEMORY_AND_DISK_SER (Java and Scala) | 与 `MEMORY_ONLY_SER` 类似，但如果数据在内存中放不下，则溢写到磁盘上，而不是每次需要时重新计算它们。
-DISK_ONLY | 将 RDD 分区存储在磁盘上。
+DISK_ONLY | 将 RDD 分区存储在磁盘上而不是内存上。
 MEMORY_ONLY_2, MEMORY_AND_DISK_2等 | 与上面的储存级别相同，只不过将持久化数据存为两份，在两个集群节点上备份每个分区。
 OFF_HEAP（实验中）| 与 `MEMORY_ONLY_SER` 类似，但将数据存储在 [堆外内存](http://spark.apache.org/docs/2.3.0/configuration.html#memory-management) 中。 这需要启用堆内存。
 
