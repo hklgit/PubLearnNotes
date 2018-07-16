@@ -12,12 +12,12 @@ permalink: spark-sql-dataframe-interoperating-with-rdds
 ---
 
 Spark SQL 支持两种不同的方法将现有 RDD 转换为 Datasets。
-- 第一种方法使用反射来推断 RDD 的 schema，RDD 包含了特定类型的对象。当你在编写 Spark 应用程序时，你已经知道 schema，这种基于反射的方法会使代码更简洁，并且运行良好。
-- 第二种方法是通过编程接口来创建 DataSet，允许构建一个 schema，并将其应用到现有的 RDD 上。虽然此方法更详细，但直到运行时才知道列及其类型，才能构造 DataSets。
+- 第一种方法使用反射来推断包含特定类型对象的 RDD 的 schema。当你在编写 Spark 应用程序时，你已经知道了 schema，这种基于反射的方法会使代码更简洁，并且运行良好。
+- 第二种方法是通过编程接口来创建 DataSet，这种方法允许构建一个 schema，并将其应用到现有的 RDD 上。虽然这种方法更详细，但直到运行时才知道列及其类型，才能构造 DataSets。
 
-##### 2.7.1 使用反射推导schema
+### 1. 使用反射推导schema
 
-Spark SQL 支持自动将 JavaBeans 的 RDD 转换为 DataFrame。使用反射获取的 BeanInfo 定义了表的 schema。目前为止，Spark SQL 还不支持包含 Map 字段的 JavaBean。但是支持嵌套的 JavaBeans 和 List 或 Array 字段。你可以通过创建一个实现 Serializable 的类并为其所有字段设置 getter 和 setter 方法来创建一个 JavaBean。
+Spark SQL 支持自动将 JavaBeans 的 RDD 转换为 DataFrame。使用反射获取的 BeanInfo 定义了表的 schema。目前为止，Spark SQL 还不支持包含 Map 字段的 JavaBean。但是支持嵌套的 JavaBeans，List 以及 Array 字段。你可以通过创建一个实现 Serializable 的类并为其所有字段设置 getter 和 setter 方法来创建一个 JavaBean。
 
 Java版本：
 ```java
@@ -31,15 +31,15 @@ import org.apache.spark.sql.Encoders;
 
 // 从文本文件中创建Person对象的RDD
 JavaRDD<Person> personRDD = sparkSession.read()
-        .textFile("src/main/resources/person.txt")
-        .javaRDD()
-        .map(line -> {
-            String[] parts = line.split(",");
-            Person person = new Person();
-            person.setName(parts[0]);
-            person.setAge(Integer.parseInt(parts[1].trim()));
-            return person;
-        });
+  .textFile("src/main/resources/person.txt")
+  .javaRDD()
+  .map(line -> {
+    String[] parts = line.split(",");
+    Person person = new Person();
+    person.setName(parts[0]);
+    person.setAge(Integer.parseInt(parts[1].trim()));
+    return person;
+});
 
 // 在 JavaBean 的 RDD 上应用 schema 生成 DataFrame
 Dataset<Row> personDataFrame = sparkSession.createDataFrame(personRDD, Person.class);
@@ -52,8 +52,9 @@ Dataset<Row> teenagersDataFrame = sparkSession.sql("SELECT name FROM people WHER
 // Row中的列可以通过字段索引获取
 Encoder<String> stringEncoder = Encoders.STRING();
 Dataset<String> teenagerNamesByIndexDF = teenagersDataFrame.map(
-        (MapFunction<Row, String>) row -> "Name: " + row.getString(0),
-        stringEncoder);
+  (MapFunction<Row, String>) row -> "Name: " + row.getString(0),
+  stringEncoder
+);
 teenagerNamesByIndexDF.show();
 /**
  +------------+
@@ -65,8 +66,9 @@ teenagerNamesByIndexDF.show();
 
 // Row中的列可以通过字段名称获取
 Dataset<String> teenagerNamesByFieldDF = teenagersDataFrame.map(
-        (MapFunction<Row, String>) row -> "Name: " + row.<String>getAs("name"),
-        stringEncoder);
+  (MapFunction<Row, String>) row -> "Name: " + row.<String>getAs("name"),
+  stringEncoder
+);
 teenagerNamesByFieldDF.show();
 /**
  +------------+
@@ -119,7 +121,7 @@ teenagersDF.map(teenager => teenager.getValuesMap[Any](List("name", "age"))).col
 // Array(Map("name" -> "Justin", "age" -> 19))
 ```
 
-##### 2.7.2 使用编程方式指定Schema
+### 2. 使用编程方式指定Schema
 
 当 JavaBean 类不能提前定义时（例如，记录的结构以字符串编码，或者解析文本数据集，不同用户字段映射方式不同），可以通过编程方式创建 DataSet<Row>，有如下三个步骤：
 - 从原始 RDD(例如，JavaRDD<String>)创建 Rows 的 RDD(JavaRDD<Row>);
@@ -143,8 +145,8 @@ import org.apache.spark.sql.types.StructType;
 
 // JavaRDD<String>
 JavaRDD<String> peopleRDD = sparkSession.sparkContext()
-        .textFile("src/main/resources/person.txt", 1)
-        .toJavaRDD();
+  .textFile("src/main/resources/person.txt", 1)
+  .toJavaRDD();
 
 // JavaRDD<Row>
 JavaRDD<Row> rowRDD = peopleRDD.map((Function<String, Row>) record -> {
