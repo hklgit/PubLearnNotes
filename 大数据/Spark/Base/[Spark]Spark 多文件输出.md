@@ -54,7 +54,7 @@ Found 3 items
 -rw-r--r--   3 xiaosi xiaosi     723754 2018-07-12 16:23 tmp/data_group/example/output/price/adr
 -rw-r--r--   3 xiaosi xiaosi     799216 2018-07-12 16:23 tmp/data_group/example/output/price/ios
 ```
-我们可以看到输出已经根据RDD的key将属于不同的类型记录写到不同的文件中，每个key对应一个文件，如果想每个key对应多个文件输出，需要修改一下我们自定义的RDDMultipleTextOutputFormat，如下代码所示：
+我们可以看到输出已经根据RDD的key将属于不同类型的记录写到不同的文件中，每个key对应一个文件，如果想每个key对应多个文件输出，需要修改一下我们自定义的RDDMultipleTextOutputFormat，如下代码所示：
 ```java
 public class RDDMultipleTextOutputFormat<K, V> extends MultipleTextOutputFormat<K, V> {
     @Override
@@ -79,7 +79,7 @@ Found 2 items
 
 ### 2. DataFrame 方式
 
-如果你使用Spark 1.4+，使用DataFrame API会变得更加容易。（DataFrames是在Spark 1.3中引入的，但我们需要的partitionBy（）是在1.4中引入的。）
+如果你使用的是Spark 1.4+，借助DataFrame API会变得更加容易。（DataFrames是在Spark 1.3中引入的，但我们需要的partitionBy（）是在1.4中引入的。）
 
 如果你使用的是RDD，首先需要将其转换为DataFrame。拥有DataFrame后，基于特定 key 输出到多个文件中就很简单了。
 ```java
