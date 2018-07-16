@@ -193,6 +193,6 @@ df = spark.read.parquet("examples/src/main/resources/users.parquet")
 
 partitionBy 创建一个目录结构, 如 [Partition Discovery](http://spark.apache.org/docs/latest/sql-programming-guide.html#partition-discovery) 部分所述. 因此, 对基数较高的列的适用性有限。相反, bucketBy 可以在固定数量的桶中分配数据, 并且可以在唯一值无限时使用数据。
 
-> Spark 版本：2.3.0
+> Spark 版本：2.3.1
 
-原文：http://spark.apache.org/docs/latest/sql-programming-guide.html#generic-loadsave-functions
+原文：http://spark.apache.org/docs/2.3.1/sql-programming-guide.html#generic-loadsave-functions
