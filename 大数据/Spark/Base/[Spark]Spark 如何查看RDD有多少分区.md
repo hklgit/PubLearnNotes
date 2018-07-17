@@ -23,7 +23,7 @@ res1: Array[Int] = Array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 
 ```
 在Spark的应用程序UI中，你可以从以下图中看到"Total Tasks"表示分区数：
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-base-how-many-partitions-does-an-rdd-have-1.png?raw=true)
 
 ### 2. 使用UI查看缓存的分区
 
@@ -37,7 +37,7 @@ res3: Array[Int] = Array(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 
 ```
 从下图中注意到缓存了四个分区：
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-base-how-many-partitions-does-an-rdd-have-2.png?raw=true)
 
 ### 3. 以编程方式检查RDD分区
 
