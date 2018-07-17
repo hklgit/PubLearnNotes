@@ -23,7 +23,7 @@ Accumulator<Double> doubleAccumulator2 = sparkContext.accumulator(0.0, "Double A
 Accumulator<Integer> intAccumulator2 = sparkContext.accumulator(0, "Int Accumulator 2");java
 ```
 
-在 Spark２.0.0 之后的版本中，之前的的 Accumulator 已被废除，用 AccumulatorV2 代替:
+在 Spark2.0.0 之后的版本中，之前的的 Accumulator 已被废除，用 AccumulatorV2 代替:
 ```
 @deprecated("use AccumulatorV2", "2.0.0")
 class Accumulator[T] private[spark] (
