@@ -22,7 +22,7 @@ permalink: elasticsearch-how-to-use-analysis-and-analyser
 
 分析器（Analyzer） 一般由三部分构成，字符过滤器（Character Filters）、分词器（Tokenizers）、分词过滤器（Token filters）。
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ElasticSearch/elasticsearch-how-to-use-analysis-and-analyser-1.png?raw=true)
 
 #### 2.1 字符过滤器
 
