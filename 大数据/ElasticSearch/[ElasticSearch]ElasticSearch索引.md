@@ -1,13 +1,25 @@
+---
+layout: post
+author: sjf0115
+title: ElasticSearch2.x 索引
+date: 2016-10-20 19:15:17
+tags:
+  - ElasticSearch
+  - ElasticSearch 基础
+
+categories: ElasticSearch
+permalink: elasticsearch-how-to-use-index
+---
+
 ### 1. 背景
 
-假设我们刚好在Qunar工作，这时人力资源部门出于某种目的需要让我们创建一个员工目录，它有以下不同的需求：
+假设我们刚好在一家工作，这时人力资源部门出于某种目的需要让我们创建一个员工目录，它有以下不同的需求：
 - 数据能够包含多个值的标签、数字和纯文本。
 - 检索任何员工的所有信息。
 - 支持结构化搜索，例如查找30岁以上的员工。
 - 支持简单的全文搜索和更复杂的短语(phrase)搜索。
 - 高亮搜索结果中的关键字。
 - 能够利用图表管理分析这些数据。
-
 
 ### 2. 索引员工文档
 
@@ -29,8 +41,6 @@ Elasticsearch集群可以包含多个索引(indices)（数据库），每一个�
 
 默认情况下，文档中的所有字段都会被索引（拥有一个倒排索引），只有这样他们才是可被搜索的。
 
-
-
 ### 3. 创建
 
 创建员工目录，我们将进行如下操作：
@@ -41,7 +51,7 @@ Elasticsearch集群可以包含多个索引(indices)（数据库），每一个�
 
 
 实际上这些都是很容易的（尽管看起来有许多步骤）。我们能通过一个命令执行完成的操作：
-```
+```json
 curl -XPUT 'localhost:9200/qunar-index/employee/1'  -d '
 {
     "first_name" : "John",
@@ -52,7 +62,7 @@ curl -XPUT 'localhost:9200/qunar-index/employee/1'  -d '
 }'
 ```
 输出信息：
-```
+```json
 {"_index":"qunar-index","_type":"employee","_id":"1","_version":1,"_shards":{"total":2,"successful":1,"failed":0},"created":true}
 ```
 我们看到path: /qunar-index/employee/1 包含三部分信息：
@@ -68,9 +78,8 @@ employee|类型名
 
 让我们比较舒服的是它不需要你做额外的管理操作，比如创建索引或者定义每个字段的数据类型。我们能够直接索引文档，Elasticsearch已经内置所有的缺省设置，所有管理操作都是透明的。
 
-
 接下来，让我们在目录中加入更多员工信息：
-```
+```json
 curl -XPUT 'localhost:9200/qunar-index/employee/2'  -d '
 {
     "first_name" : "li",
@@ -113,10 +122,3 @@ curl -XPUT 'localhost:9200/qunar-index/employee/6'  -d '
 }';
 
 ```
-
-
-
-
-
-
-
