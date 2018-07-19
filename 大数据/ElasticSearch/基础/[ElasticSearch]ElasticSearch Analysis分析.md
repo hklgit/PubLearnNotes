@@ -1,4 +1,17 @@
-分析(analysis)是将文本（如任何电子邮件的正文）转换为添加到倒排索引中进行搜索的`tokens`或`terms`的过程。 分析由分析器`analyzer`执行，分析器可以是内置分析器或者每个索引定制的自定义分析器。
+---
+layout: post
+author: sjf0115
+title: ElasticSearch Analysis分析
+date: 2016-10-20 19:15:17
+tags:
+  - ElasticSearch
+  - ElasticSearch 基础
+
+categories: ElasticSearch
+permalink: elasticsearch-how-to-use-analysis
+---
+
+分析(analysis)是将文本（如任何电子邮件的正文）转换为添加到倒排索引中进行搜索的`tokens`或`terms`的过程。分析由分析器`analyzer`执行，分析器可以是内置分析器或者每个索引定制的自定义分析器。
 
 ### 1. 索引时分析(Index time analysis)
 
@@ -60,10 +73,6 @@ curl -XPUT 'localhost:9200/my_index?pretty' -H 'Content-Type: application/json' 
 - `standard` 标准分析器.
 
 
+> ElasticSearch版本 5.4
 
-==ElasticSearch版本==
-
-5.4 
-
-
-原文：https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis.html
+原文：https://www.elastic.co/guide/en/elasticsearch/reference/5.4/analysis.html

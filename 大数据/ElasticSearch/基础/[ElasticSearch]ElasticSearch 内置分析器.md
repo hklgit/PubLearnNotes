@@ -1,13 +1,26 @@
+---
+layout: post
+author: sjf0115
+title: ElasticSearch 内置分析器
+date: 2016-10-08 20:15:17
+tags:
+  - ElasticSearch
+  - ElasticSearch 基础
+
+categories: ElasticSearch
+permalink: elasticsearch-built-in-analyzer
+---
+
 ### 1. 配置内置分析器
 
-内置分析器可以直接使用，不需任何配置。 然而，其中一些分析器支持可选配置来改变其行为。 例如，标准分析器可以配置支持停止词列表：
-```
+内置分析器可以直接使用，不需任何配置。然而，其中一些分析器支持可选配置来改变其行为。例如，标准分析器可以配置为支持停止词列表：
+```json
 curl -XPUT 'localhost:9200/my_index?pretty' -H 'Content-Type: application/json' -d'
 {
   "settings": {
     "analysis": {
       "analyzer": {
-        "std_english": { 
+        "std_english": {
           "type":      "standard",
           "stopwords": "_english_"
         }
@@ -19,11 +32,11 @@ curl -XPUT 'localhost:9200/my_index?pretty' -H 'Content-Type: application/json' 
       "properties": {
         "my_text": {
           "type":     "text",
-          "analyzer": "standard", 
+          "analyzer": "standard",
           "fields": {
             "english": {
               "type":     "text",
-              "analyzer": "std_english" 
+              "analyzer": "std_english"
             }
           }
         }
@@ -34,61 +47,75 @@ curl -XPUT 'localhost:9200/my_index?pretty' -H 'Content-Type: application/json' 
 '
 curl -XPOST 'localhost:9200/my_index/_analyze?pretty' -H 'Content-Type: application/json' -d'
 {
-  "field": "my_text", 
+  "field": "my_text",
   "text": "The old brown cow"
 }
 '
 curl -XPOST 'localhost:9200/my_index/_analyze?pretty' -H 'Content-Type: application/json' -d'
 {
-  "field": "my_text.english", 
+  "field": "my_text.english",
   "text": "The old brown cow"
 }
 '
-
 ```
 
 我们基于标准分析器定义一个`std_english`分析器，但配置删除预定义的英文词汇表:
-```
+```json
 "analyzer": {
-    "std_english": { 
+    "std_english": {
         "type":"standard",
         "stopwords": "_english_"
     }
 }
 ```
-`my_text`字段直接使用标准分析器，没有任何配置。 停用词不会从此字段中删除。 所得的`terms`是：`[ the, old, brown, cow ]`:
-```
+`my_text` 字段直接使用标准分析器，没有任何配置：
+```json
 "my_text": {
     "type": "text",
     "analyzer": "standard"
 }
 ```
-`my_text.english`字段使用`std_english`分析器，因此停用词将被删除。 得出的结果是:`[ old, brown, cow ]`:
+因此，这个字段不会删除停用词。所得的`terms`是：
 ```
+[ the, old, brown, cow ]
+```
+
+`my_text.english` 字段使用`std_english`分析器：
+```json
 "my_text": {
     "type": "text",
-    "analyzer": "standard", 
+    "analyzer": "standard",
     "fields": {
         "english": {
-             "type":"text",
-              "analyzer": "std_english" 
+            "type":"text",
+            "analyzer": "std_english"
         }
     }
 }
 ```
+因此会删除停用词。得出的结果是:
+```
+[ old, brown, cow ]
+```
 
 ### 2. 标准分析器(Standard Analyzer)
 
-如果没有指定分析器，将使用默认分析器(标准分析器)。对于文本分析，它对于任何语言都是最佳选择（对于任何一个国家的语言，这个分析器基本够用）。它根据Unicode Consortium（http://www.unicode.org/reports/tr29/ ）的定义的单词边界(word boundaries)来切分文本，然后去掉大部分标点符号。最后，把所有词转为小写。
+如果没有指定分析器，默认使用 `standard` 分析器。对于文本分析，它对于任何语言都是最佳选择（对于任何一个国家的语言，这个分析器基本够用）。它根据[Unicode Consortium](http://www.unicode.org/reports/tr29/)定义的单词边界(word boundaries)来切分文本，然后去掉大部分标点符号。最后，把所有词转为小写。
 
 #### 2.1 定义
 
-- 分词器(Tokenizer) ：`Standard Tokenizer`
-- 分词过滤器(Token Filters) ：`Standard Token Filter` `Lower Case Token Filter` `top Token Filter (默认情况下禁用)`
+`standard` 分析器包含一下：
+
+(1) 分词器(Tokenizer) ：`Standard Tokenizer`
+
+(2) 分词过滤器(Token Filters) ：
+- `Standard Token Filter`
+- `Lower Case Token Filter`
+- `top Token Filter (默认情况下禁用)`
 
 #### 2.2 输出Example
 
-```
+```json
 curl -XPOST 'localhost:9200/_analyze?pretty' -H 'Content-Type: application/json' -d'
 {
   "analyzer": "standard",
@@ -98,7 +125,7 @@ curl -XPOST 'localhost:9200/_analyze?pretty' -H 'Content-Type: application/json'
 ```
 
 Java版本:
-```
+```java
 String text = "The 2 QUICK Brown-Foxes jumped over the lazy dog's bone.";
 String analyzer = "standard";
 IndicesAdminClient indicesAdminClient = client.admin().indices();
@@ -113,11 +140,11 @@ AnalyzeResponse response = analyzeRequestBuilder.get();
 
 #### 2.3 配置
 
-标准分析器接受以下参数：
+`standard` 分析器接受以下参数：
 
 参数 | 说明
 ---|---
-max_token_length | 最大token长度。 如果一个token超过此长度，则以`max_token_length`进行分割。 默认为255。
+max_token_length | 最大token长度。如果一个token超过此长度，则以`max_token_length`进行分割。默认为255。
 stopwords | 预定义的停用词列表，如`_english_`或包含一组停用词的数组。 默认为`\ _none_`。
 stopwords_path |包含停用词文件的路径。
 
@@ -125,8 +152,8 @@ stopwords_path |包含停用词文件的路径。
 
 #### 2.4 配置Example
 
-在此示例中，我们将标准分析器配置`max_token_length`为5（用于演示目的），并使用预定义的英文停用词列表：
-```
+在此示例中，我们将 `standard` 分析器配置`max_token_length`为5（用于演示目的），并使用预定义的英文停用词列表：
+```json
 curl -XPUT 'localhost:9200/my_index?pretty' -H 'Content-Type: application/json' -d'
 {
   "settings": {
@@ -217,12 +244,12 @@ curl -XPOST 'localhost:9200/_analyze?pretty' -H 'Content-Type: application/json'
 
 
 
+> Elasticsearch 版本：5.4
 
+原文: https://www.elastic.co/guide/en/elasticsearch/reference/5.4/configuring-analyzers.html
 
+https://www.elastic.co/guide/en/elasticsearch/reference/5.4/analysis-standard-analyzer.html
 
-原文:
+https://www.elastic.co/guide/en/elasticsearch/reference/5.4/analysis-simple-analyzer.html
 
-https://www.elastic.co/guide/en/elasticsearch/reference/current/configuring-analyzers.html
-https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-standard-analyzer.html
-https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-simple-analyzer.html
-https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-whitespace-analyzer.html
+https://www.elastic.co/guide/en/elasticsearch/reference/5.4/analysis-whitespace-analyzer.html
