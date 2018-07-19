@@ -1,7 +1,7 @@
 ---
 layout: post
 author: sjf0115
-title: ElasticSearch2.x Mapping映射
+title: ElasticSearch Mapping映射
 date: 2016-10-19 19:15:17
 tags:
   - ElasticSearch
@@ -293,6 +293,6 @@ try {
 }
 ```
 
-> Elasticsearch 版本： 2.x
+> Elasticsearch版本： 5.4
 
 参考：https://www.elastic.co/guide/en/elasticsearch/guide/2.x/mapping-intro.html
