@@ -75,7 +75,7 @@ curl -XPOST 'localhost:9200/my_index/_analyze?pretty' -H 'Content-Type: applicat
     "analyzer": "standard"
 }
 ```
-因此，这个字段不会删除停用词。所得的`terms`是：
+因此，这个字段不会删除停用词。所得的词条为：
 ```
 [ the, old, brown, cow ]
 ```
@@ -104,7 +104,7 @@ curl -XPOST 'localhost:9200/my_index/_analyze?pretty' -H 'Content-Type: applicat
 
 #### 2.1 定义
 
-`standard` 分析器包含一下：
+`standard` 分析器包含一下内容：
 
 (1) 分词器(Tokenizer) ：`Standard Tokenizer`
 
@@ -133,7 +133,7 @@ AnalyzeRequestBuilder analyzeRequestBuilder = indicesAdminClient.prepareAnalyze(
 analyzeRequestBuilder.setAnalyzer(analyzer);
 AnalyzeResponse response = analyzeRequestBuilder.get();
 ```
-上述句子将产生以下`term`：
+上述句子将产生以下词条：
 ```
 [ the, 2, quick, brown, foxes, jumped, over, the, lazy, dog's, bone ]
 ```
@@ -176,7 +176,7 @@ curl -XPOST 'localhost:9200/my_index/_analyze?pretty' -H 'Content-Type: applicat
 }
 '
 ```
-上述示例产生以下`terms`：
+上述示例产生以下词条：
 ```
 [ 2, quick, brown, foxes, jumpe, d, over, lazy, dog's, bone ]
 ```
@@ -191,7 +191,7 @@ curl -XPOST 'localhost:9200/my_index/_analyze?pretty' -H 'Content-Type: applicat
 
 #### 3.2 输出Example
 
-```
+```json
 curl -XPOST 'localhost:9200/_analyze?pretty' -H 'Content-Type: application/json' -d'
 {
   "analyzer": "simple",
@@ -199,7 +199,7 @@ curl -XPOST 'localhost:9200/_analyze?pretty' -H 'Content-Type: application/json'
 }
 '
 ```
-以上示例产生如下`terms`：
+以上示例产生如下词条：
 ```
 [ the, quick, brown, foxes, jumped, over, the, lazy, dog, s, bone ]
 ```
@@ -209,16 +209,15 @@ curl -XPOST 'localhost:9200/_analyze?pretty' -H 'Content-Type: application/json'
 
 ### 4. 空格分析器（Whitespace analyzer）
 
-空白分析器在遇到空格字符时将文本分解成`terms`。
+空白分析器在遇到空格字符时将文本切分成词条。
 
 #### 4.1 定义
 
-分析器(Tokenizer) : `
-Whitespace Tokenizer`
+分析器(Tokenizer) : `Whitespace Tokenizer`
 
 #### 4.2 输出Example
 
-```
+```json
 curl -XPOST 'localhost:9200/_analyze?pretty' -H 'Content-Type: application/json' -d'
 {
   "analyzer": "whitespace",
@@ -226,23 +225,13 @@ curl -XPOST 'localhost:9200/_analyze?pretty' -H 'Content-Type: application/json'
 }
 '
 ```
-以上示例产生如下`terms`：
+以上示例产生如下词条：
 ```
 [ The, 2, QUICK, Brown-Foxes, jumped, over, the, lazy, dog's, bone. ]
 ```
 #### 4.3 配置
 
 无
-
-
-
-
-
-
-
-
-
-
 
 > Elasticsearch 版本：5.4
 
