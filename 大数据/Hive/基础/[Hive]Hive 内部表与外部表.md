@@ -19,7 +19,7 @@ permalink: hive-managed-table-external-table
 #### 1.1 创建表
 
 我们可以用下面的语句在Hive里面创建一个内部表：
-```
+```sql
 CREATE  TABLE IF NOT EXISTS tb_station_coordinate(
   station string,
   lon string,
