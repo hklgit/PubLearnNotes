@@ -33,7 +33,7 @@ Elasticsearch -> Indices   -> Types  -> Documents -> Fields
 Elasticsearch集群可以包含多个 index （数据库），每一个 index 可以包含多个 types （表），每一个 type 又可以包含多个文档（行），然后每个文档包含多个字段（列）。
 
 
-> 你可能已经注意到索引(index)这个词在Elasticsearch中有着不同的含义，所以有必要在此做一下区分:
+你可能已经注意到索引(index)这个词在Elasticsearch中有着不同的含义，所以有必要在此做一下区分:
 - 索引（名词）：如上文所述，一个索引(index)就像是传统关系数据库中的数据库，它是相关文档存储的地方，index的复数是indices 或indexes。
 - 索引（动词）：索引一个文档，表示把一个文档存储到索引（名词）里，以便它可以被检索或者查询。这很像SQL中的INSERT关键字，差别是，如果文档已经存在，新的文档将覆盖旧的文档。
 - 倒排索引：传统数据库为特定列增加一个索引，例如B-Tree索引来加速检索。Elasticsearch和Lucene使用一种叫做倒排索引(inverted index)的数据结构来达到相同目的。
