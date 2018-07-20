@@ -115,6 +115,35 @@ SELECT
 FROM tmp_read_pv
 GROUP BY dt, platform, channel GROUPING SETS ( dt, (dt, platform), (dt, channel), (dt, platform, channel));
 ```
+结果如下:
+
+GROUPING__ID|日期昵称|平台昵称|渠道昵称|日期|平台|渠道|浏览量|用户数
+---|---|---|---|---|---|---|---|---
+1|20180627| total|total|20180627| NULL| NULL| 242.0|8
+1|20180628| total|total|20180628| NULL| NULL| 282.0|9
+3|20180628| adr|total|20180628| adr|NULL| 96.0| 4
+3|20180627| ios|total|20180627| ios|NULL| 105.0|2
+3|20180628| NULL| total|20180628| NULL| NULL| 26.0| 1
+3|20180627| adr|total|20180627| adr|NULL| 137.0|6
+3|20180628| ios|total|20180628| ios|NULL| 160.0|4
+5|20180628| total|NULL| 20180628| NULL| NULL| 96.0| 1
+5|20180628| total|toutiao|20180628| NULL| toutiao|89.0| 7
+5|20180627| total|toutiao|20180627| NULL| toutiao|149.0|6
+5|20180628| total|uc| 20180628| NULL| uc| 97.0| 6
+5|20180627| total|uc| 20180627| NULL| uc| 93.0| 6
+7|20180627| adr|uc| 20180627| adr|uc| 55.0| 4
+7|20180627| ios|toutiao|20180627| ios|toutiao|67.0| 1
+7|20180628| ios|uc| 20180628| ios|uc| 10.0| 2
+7|20180628| NULL| uc| 20180628| NULL| uc| 26.0| 1
+7|20180628| adr|uc| 20180628| adr|uc| 61.0| 3
+7|20180628| ios|NULL| 20180628| ios|NULL| 96.0| 1
+7|20180627| adr|toutiao||20180627| adr|toutiao|82.0| 5
+7|20180628| adr|toutiao||20180628| adr|toutiao|35.0| 4
+7|20180627| ios|uc| 20180627| ios|uc| 38.0| 2
+7|20180628| ios|toutiao|20180628| ios|toutiao|54.0| 3
+
+> Hive2.1.1版本下生成的数据
+
 如果对于列本身值没有为 `NULL` 的情况，可以使用如下简单方式来实现：
 ```sql
 SELECT
