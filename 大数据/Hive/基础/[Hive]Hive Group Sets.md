@@ -119,7 +119,7 @@ GROUP BY dt, platform, channel GROUPING SETS ( dt, (dt, platform), (dt, channel)
 ```
 
 序号|GROUPING__ID|二进制|日期|平台|渠道|浏览量|用户数
----|---|---|---|---|---
+---|---|---|---|---|---|---|---
 1|1|100|20180627|NULL|NULL|242.0|8
 2|1|100|20180628|NULL|NULL|282.0|9
 3|3|110|20180627|adr|NULL|137.0|6
