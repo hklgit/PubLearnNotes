@@ -74,6 +74,7 @@ SELECT GROUPING__ID, dt, platform, channel, SUM(pv), COUNT(DISTINCT userName)
 FROM tmp_read_pv
 GROUP BY dt, platform, channel GROUPING SETS ( dt, (dt, platform), (dt, channel), (dt, platform, channel));
 ```
+输出结果如下：
 
 序号|GROUPING__ID|位向量|日期|平台|渠道|浏览量|用户数
 ---|---|---|---|---|---|---|---
@@ -101,6 +102,33 @@ GROUP BY dt, platform, channel GROUPING SETS ( dt, (dt, platform), (dt, channel)
 22|7|111|20180628|ios|uc|10.0|2
 
 > Hive2.1.1版本下生成的数据
+
+序号|GROUPING__ID|位向量|日期|平台|渠道|浏览量|用户数
+---|---|---|---|---|---|---|---
+1|3|011|20180627|NULL|NULL|242.0|8
+2|3|011|20180628|NULL|NULL|282.0|9
+3|1|001|20180627|adr|NULL|137.0|6
+4|1|001|20180627|ios|NULL|105.0|2
+5|1|001|20180628|NULL|NULL|26.0|1
+6|1|001|20180628|adr|NULL|96.0|4
+7|1|001|20180628|ios|NULL|160.0|4
+8|2|010|20180627|NULL|toutiao|149.0|6
+9|2|010|20180627|NULL|uc|93.0|6
+10|2|010|20180628|NULL|NULL|96.0|1
+11|2|010|20180628|NULL|toutiao|89.0|7
+12|2|010|20180628|NULL|uc|97.0|6
+13|7|111|20180627|adr|toutiao|82.0|5
+14|7|111|20180627|adr|uc|55.0|4
+15|7|111|20180627|ios|toutiao|67.0|1
+16|7|111|20180627|ios|uc|38.0|2
+17|7|111|20180628|NULL|uc|26.0|1
+18|7|111|20180628|adr|toutiao|35.0|4
+19|7|111|20180628|adr|uc|61.0|3
+20|7|111|20180628|ios|NULL|96.0|1
+21|7|111|20180628|ios|toutiao|54.0|3
+22|7|111|20180628|ios|uc|10.0|2
+
+> Hive2.3.0以上版本
 
 例如上面的第5，10，17，20行所示，有些字段本身值就为 `NULL`。
 
