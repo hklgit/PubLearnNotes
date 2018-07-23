@@ -14,6 +14,7 @@ permalink: hive-base-grouping-sets
 
 > 在Hive 0.10.0版本中添加了 Grouping sets，CUBE 和 ROLLUP 运算符以及 GROUPING__ID 函数。参见[HIVE-2397](https://issues.apache.org/jira/browse/HIVE-2397)，[HIVE-3433](https://issues.apache.org/jira/browse/HIVE-3433)，[HIVE-3471](https://issues.apache.org/jira/browse/HIVE-3471)和 [HIVE-3613](https://issues.apache.org/jira/browse/HIVE-3613)。另外在Hive 0.11.0版本进行的优化 [HIVE-3552](https://issues.apache.org/jira/browse/HIVE-3552)。
 
+
 ### 1. GROUPING SETS
 
 GROUP BY 中的 GROUPING SETS 子句允许我们在同一记录集中指定多个 GROUP BY 选项。所有 GROUPING SET 子句都可以逻辑表示为 UNION 连接的几个 GROUP BY 查询。下面展示了几个这样的等价示例。这有助于我们了解 GROUPING SETS 子句的思想。GROUPING SETS 子句中的空白set`（）`计算整体聚合。
