@@ -32,7 +32,12 @@ SHOW PARTITIONS people;
 ```sql
 ALTER TABLE people DROP PARTITION (dt='20180701');
 ```
-(4) 添加多个分区
+(4) 修改分区:
+```sql
+ALTER TABLE people PARTITION (dt='20180701') SET LOCATION "new location";
+ALTER TABLE people PARTITION (dt='20180701') RENAME TO PARTITION (dt='20180702');
+```
+(5) 添加多个分区
 ```sql
 CREATE EXTERNAL TABLE IF NOT EXISTS people (
   line string

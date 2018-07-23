@@ -1,6 +1,19 @@
+---
+layout: post
+author: sjf0115
+title: ElasticSearch Scroll游标搜索
+date: 2016-10-27 12:45:17
+tags:
+  - ElasticSearch
+  - ElasticSearch 基础
+
+categories: ElasticSearch
+permalink: elasticsearch-scroll-search
+---
+
 ### 1. 深分页
 
-在[[ElasticSearch]Search之分页](http://blog.csdn.net/sunnyyoona/article/details/72558047)一文中，我们初步了解到分布式系统中深度分页．在这里我们再具体的了解一下深分页，可能带来的问题，以及ElasticSearch给出的解决方案．
+在[]一文中，我们初步了解到分布式系统中深度分页．在这里我们再具体的了解一下深分页，可能带来的问题，以及ElasticSearch给出的解决方案．
 
 在 [[ElasticSearch2.x]原理之分布式搜索](http://blog.csdn.net/sunnyyoona/article/details/72781802) 一文中我们了解到分布式搜索的工作原理，分布式搜索这种先查后取的过程支持用`from`和`size`参数分页，但是这是有限制的．　请记住，每个分片必须构建一个长度为`from+size`的优先级队列，所有这些队列都需要传递回协调节点。 协调节点需要对`number_of_shards *（from + size）`个文档进行排序，以便正确找到`size`个文档。
 
@@ -23,10 +36,10 @@
 要滚动查询结果，我们执行一个搜索请求，并将`scroll`值设置为保持滚动窗口打开的时间长度。 每次运行滚动请求时都会刷新滚动到期时间，因此只需要足够长的时间来处理当前批次的结果，而不是所有与查询匹配的文档。 超时设置是非常重要的，因为保持滚动窗口打开需要消耗资源，我们希望在不再需要时释放它们。 设置这个超时能够让 Elasticsearch 在稍后空闲的时候自动释放这部分资源。
 
 ```
-GET /old_index/_search?scroll=1m 
+GET /old_index/_search?scroll=1m
 {
     "query": { "match_all": {}},
-    "sort" : ["_doc"], 
+    "sort" : ["_doc"],
     "size":  1000
 }
 ```
@@ -35,10 +48,10 @@ GET /old_index/_search?scroll=1m
 上面语句保持游标查询窗口一分钟。并且根据`_doc`进行排序；
 
 对此请求的响应包括`_scroll_id`，它是一个Base-64编码的长字符串。 现在我们可以将`_scroll_id`传递给`_search/scroll`接口来检索下一批结果：
-```
+```json
 GET /_search/scroll
 {
-    "scroll": "1m", 
+    "scroll": "1m",
     "scroll_id" : "cXVlcnlUaGVuRmV0Y2g7NTsxMDk5NDpkUmpiR2FjOFNhNnlCM1ZDMWpWYnRROzEwOTk1OmRSamJHYWM4U2E2eUIzVkMxalZidFE7MTA5OTM6ZFJqYkdhYzhTYTZ5QjNWQzFqVmJ0UTsxMTE5MDpBVUtwN2lxc1FLZV8yRGVjWlI2QUVBOzEwOTk2OmRSamJHYWM4U2E2eUIzVkMxalZidFE7MDs="
 }
 ```
@@ -56,4 +69,4 @@ GET /_search/scroll
 当没有更多的命中返回时，我们已经处理了所有匹配的文档。
 
 
-原文：https://www.elastic.co/guide/en/elasticsearch/guide/current/scroll.html
+原文：https://www.elastic.co/guide/en/elasticsearch/guide/2.x/scroll.html
