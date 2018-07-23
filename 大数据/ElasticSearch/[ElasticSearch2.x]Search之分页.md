@@ -13,7 +13,7 @@ permalink: elasticsearch-pagination-search
 
 ### 1. 分页
 
-之前的文章[](http://blog.csdn.net/sunnyyoona/article/details/72553319)我们知道，我们的空搜索匹配到集群中的13个文档。 但是，命中数组中只有10个文档（文章只显示了2条数据，故意省略掉）。 我们如何查看其他文档呢？
+之前的文章[ElasticSearch 空搜索与多索引多类型搜索](http://smartsi.club/2016/10/23/elasticsearch-empty-search-and-multi-index-multi-type-search/)我们知道，我们的空搜索匹配到集群中的13个文档。 但是，命中数组中只有10个文档（文章只显示了2条数据，故意省略掉）。 我们如何查看其他文档呢？
 
 与SQL使用`LIMIT`关键字返回一个'页面'的结果数据相同，Elasticsearch 接受 from 和 size 参数：
 - size　表示应返回的结果数，默认为10

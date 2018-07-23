@@ -1,7 +1,7 @@
 ---
 layout: post
 author: sjf0115
-title: ElasticSearch 控搜索与多索引多类型搜索
+title: ElasticSearch 空搜索与多索引多类型搜索
 date: 2016-10-23 16:15:17
 tags:
   - ElasticSearch
