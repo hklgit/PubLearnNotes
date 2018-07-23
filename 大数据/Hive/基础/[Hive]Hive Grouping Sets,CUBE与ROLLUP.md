@@ -190,8 +190,8 @@ GROUP BY a，b，c GROUPING SETS（（a，b，c），（a，b），（a），（
 
 演示数据：
 ```
-20180627  adr uc  d918  30
 20180627	adr	toutiao	d918	7
+20180627  adr uc  d918  30
 20180628	adr	uc	d918	15
 20180628	adr	toutiao	d918	10
 20180627	ios	uc	828b	16
