@@ -2,7 +2,7 @@
 layout: post
 author: sjf0115
 title: ElasticSearch 内置分析器
-date: 2016-10-08 20:15:17
+date: 2016-10-21 20:15:17
 tags:
   - ElasticSearch
   - ElasticSearch 基础
@@ -59,7 +59,7 @@ curl -XPOST 'localhost:9200/my_index/_analyze?pretty' -H 'Content-Type: applicat
 '
 ```
 
-我们基于标准分析器定义一个`std_english`分析器，但配置删除预定义的英文词汇表:
+我们基于标准分析器定义一个`std_english`分析器，同时配置删除预定义的英文词汇表:
 ```json
 "analyzer": {
     "std_english": {
