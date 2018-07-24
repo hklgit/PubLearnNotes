@@ -50,7 +50,6 @@ Designing for Scale](https://www.elastic.co/guide/en/elasticsearch/guide/2.x/sca
 ![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ElasticSearch/elasticsearch-internal-distributed-document-store-2.png?raw=true)
 
 下面是成功在主分片和副本分片上创建，索引以及删除文档所必须的步骤：
-
 - 客户端发送了一个新建，索引 或者删除文档请求给节点 1；
 - 节点 1 通过请求文档的 id 值判断出该文档应该被存储在分片 0 中，并且知道分片 0  的主分片 P0 位于节点 3 上。因此节点 1 会把这个请求转发给节点 3；
 - 节点 3 在主分片上执行请求。如果请求执行成功，节点 3 并行将该请求转发给节点 1 和节点 2 上的的副本分片（R0）。一旦所有的副本分片都成功地执行了请求，则向节点 3 报告成功，节点 3 向协调节点 （Node 1 ）报告成功，协调节点向客户端报告成功。
@@ -88,7 +87,6 @@ int( (primary + 3 replicas) / 2 ) + 1 = 3
 
 
 下面是从主分片或者副本分片上检索文档所需要的一系列步骤：
-
 - 客户端发送了一个 Get 请求给节点 1；
 - 节点 1 通过请求文档的 id 值判断出该文档被存储在分片 0 中。三个节点上都存有分片 0 的复制（节点1上R0，节点2上R0，节点3上P0）。这一次，它将请求转发给节点 2 。
 - 节点 2 返回文档给节点 1 ，节点 1 在返回文档给客户端。
@@ -138,7 +136,6 @@ bulk API，允许在单个批量请求中执行多个创建、索引、删除和
 ![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ElasticSearch/elasticsearch-internal-distributed-document-store-6.png?raw=true)
 
 bulk API 按如下步骤顺序执行：
-
 - 客户端向 节点 1 发送 bulk 请求。
 - 节点 1 为每个节点创建一个批量请求，并将这些请求并行转发到每个包含主分片的节点主机。
 - 主分片一个接一个按顺序执行每个操作。当每个操作成功时，主分片并行转发新文档（或删除）到副本分片，然后执行下一个操作。 一旦所有的副本分片报告所有操作成功，该节点将向协调节点报告成功，协调节点将这些响应收集整理并返回给客户端。
