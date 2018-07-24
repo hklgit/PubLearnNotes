@@ -41,59 +41,46 @@ permalink: hive-base-orc-file-format
 #### 1.2 Stripe结构
 
 从上图我们可以看出，每个 `Stripe` 都包含index data、row data以及stripe footer。Stripe footer包含流位置的目录；Row data在表扫描的时候会用到。
-　　Index data包含每列的最大和最小值以及每列所在的行。行索引里面提供了偏移量，它可以跳到正确的压缩块位置。具有相对频繁的行索引，使得在stripe中快速读取的过程中可以跳过很多行，尽管这个stripe的大小很大。在默认情况下，最大可以跳过10000行。拥有通过过滤谓词而跳过大量的行的能力，你可以在表的 secondary keys 进行排序，从而可以大幅减少执行时间。比如你的表的主分区是交易日期，那么你可以对次分区（state、zip code以及last name）进行排序。
+Index data包含每列的最大和最小值以及每列所在的行。行索引里面提供了偏移量，它可以跳到正确的压缩块位置。具有相对频繁的行索引，使得在stripe中快速读取的过程中可以跳过很多行，尽管这个stripe的大小很大。在默认情况下，最大可以跳过10000行。拥有通过过滤谓词而跳过大量的行的能力，你可以在表的 secondary keys 进行排序，从而可以大幅减少执行时间。比如你的表的主分区是交易日期，那么你可以对次分区（state、zip code以及last name）进行排序。
 
 ### 2. 语法
 
 文件格式在表（或分区）级别指定。你可以使用HiveQL语句指定ORC文件格式，例如：
 ```sql
-CREATE TABLE ... STORED AS ORC
-ALTER TABLE ... [PARTITION partition_spec] SET FILEFORMAT ORC
-SET hive.default.fileformat=Orc
-```
-参数全部放在 `TBLPROPERTIES` 中（参见创建表）。他们是：
-
-![]()
-
-例如，在不压缩的情况下创建ORC存储表：
-```sql
-create table Addresses (
+CREATE TABLE Addresses (
   name string,
   street string,
   city string,
   state string,
   zip int
 )
-stored as orc tblproperties ("orc.compress"="NONE");
+STORED AS orc tblproperties ("orc.compress"="NONE");
+```
+除此之外，还可以为表指定压缩算法：
+```sql
+CREATE TABLE Addresses (
+  name string,
+  street string,
+  city string,
+  state string,
+  zip int
+)
+STORED AS orc tblproperties ("orc.compress"="Zlib");
+```
+> 通常不需要设置压缩算法，因为Hive会设置默认的压缩算法 `hive.exec.orc.default.compress=ZLIB`。
+
+我们通常的做法是将 HDFS 中的数据作为文本，在其上创建 Hive 外部表，然后将数据以 ORC 格式存储在Hive中：
+```sql
+CREATE TABLE Addresses_ORC STORED AS ORC AS SELECT * FROM Addresses_TEXT;
 ```
 
+### 3. 高级设置
+
+属性全部放在 `TBLPROPERTIES` 中。ORC具有通常不需要修改的属性。但是，对于特殊情况，你可以修改下表中列出的属性：
+
+![]()
+
 > 从Hive 0.14.0开始　`ALTER TABLE table_name [PARTITION partition_spec] CONCATENATE` 可用于将小的ORC文件合并为一个更大的文件。合并发生在 `Stripe` 级别，这可以避免对数据进行解压缩和解码。
-
-### 3. 序列化与压缩
-
-ORC文件中列数据的序列化取决于数据类型是 Integer 还是 String。
-
-#### 3.1 Integer列序列化
-
-Integer列序列化为两种流：
-当前比特流：值是否为非空？
-数据流：整数流
-
-整数数据以利用公共数字分布的方式序列化：
-整数使用可变宽度编码进行编码，该编码对于小整数具有较少的字节。
-重复值是行程编码的。
-在范围（-128到127）中由常量相差的值是行程编码的。
-
-#### 3.2 String序列化
-
-#### 3.3 压缩
-
-
-
-
-
-
-
 
 参考：　https://cwiki.apache.org/confluence/display/Hive/LanguageManual+ORC
 
