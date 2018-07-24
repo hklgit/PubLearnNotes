@@ -9,7 +9,7 @@
 #### 1.1 自定义Java类
 
 下面自定义一个Java类OperationAddUDF，实现了Int，Double，Float以及String类型的加法操作。
-```
+```java
 package com.sjf.open.hive.udf;
 import org.apache.hadoop.hive.ql.exec.UDF;
 import org.apache.hadoop.hive.serde2.ByteStream;
