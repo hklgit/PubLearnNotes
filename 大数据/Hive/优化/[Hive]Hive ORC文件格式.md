@@ -28,11 +28,7 @@ permalink: hive-base-orc-file-format
 
 #### 1.1 文件结构
 
-`ORC` 文件包含一组称为 `Stripe` 的行数据，以及 `File Footer` 中的辅助信息。在文件的末尾，`PostScript` 保存了压缩参数和压缩页脚的大小。
-
-`Stripe` 默认大小为250MB。大的 `Stripe` 大小可实现HDFS的大量高效读取。
-
-`File Footer` 包含文件中的 `Stripe` 列表，每个 `Stripe` 有多少行以及每列的数据类型。还包了一些含列级聚合的计数，最小值，最大值以及总和。
+`ORC` 文件包含了多个 `Stripe`。除此之外，`File Footer` 还包含了一些额外辅助信息。在文件的末尾，`PostScript` 保存了压缩参数和压缩页脚的大小。`Stripe` 默认大小为250MB。大的 `Stripe` 可实现 HDFS 的高效读取。`File Footer` 包含了文件中的 `Stripe` 列表，每个 `Stripe` 有多少行以及每列的数据类型。还包了一些含列级聚合的计数，最小值，最大值以及总和。
 
 下图说明了ORC文件结构：
 
