@@ -1,8 +1,8 @@
 ---
 layout: post
 author: sjf0115
-title: ElasticSearch2.x 内部原理之分布式文档存储
-date: 2016-07-06 23:15:17
+title: ElasticSearch 内部原理之分布式文档存储
+date: 2016-10-25 20:15:17
 tags:
   - ElasticSearch
   - ElasticSearch 内部原理
@@ -10,7 +10,6 @@ tags:
 categories: ElasticSearch
 permalink: elasticsearch-internal-distributed-document-store
 ---
-
 
 之前的文章中，我们已经知道如何存储数据到索引中以及如何检索它。但是我们掩盖了数据存储到集群中以及从集群中获取数据的具体实现的技术细节。
 
@@ -151,6 +150,5 @@ bulk API 还可以在整个批量请求的最顶层使用 consistency 参数，�
 
 
 > ElasticSearch版本: 2.x
-
 
 原文： https://www.elastic.co/guide/en/elasticsearch/guide/2.x/distributed-docs.html
