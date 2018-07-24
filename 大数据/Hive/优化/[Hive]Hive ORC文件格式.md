@@ -28,20 +28,23 @@ permalink: hive-base-orc-file-format
 
 #### 1.1 文件结构
 
-`ORC` 文件包含一组称为 `Stripe` 的行数据，以及 `file footer` 中的辅助信息。在文件的末尾，`postscript` 保存了压缩参数和压缩页脚的大小。
+`ORC` 文件包含一组称为 `Stripe` 的行数据，以及 `File Footer` 中的辅助信息。在文件的末尾，`PostScript` 保存了压缩参数和压缩页脚的大小。
 
 `Stripe` 默认大小为250MB。大的 `Stripe` 大小可实现HDFS的大量高效读取。
 
-`file footer` 包含文件中的 `Stripe` 列表，每个 `Stripe` 有多少行以及每列的数据类型。还包了一些含列级聚合的计数，最小值，最大值以及总和。
+`File Footer` 包含文件中的 `Stripe` 列表，每个 `Stripe` 有多少行以及每列的数据类型。还包了一些含列级聚合的计数，最小值，最大值以及总和。
 
 下图说明了ORC文件结构：
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hive/hive-base-orc-file-format-3.png?raw=true)
 
 #### 1.2 Stripe结构
 
-从上图我们可以看出，每个 `Stripe` 都包含index data、row data以及stripe footer。Stripe footer包含流位置的目录；Row data在表扫描的时候会用到。
-Index data包含每列的最大和最小值以及每列所在的行。行索引里面提供了偏移量，它可以跳到正确的压缩块位置。具有相对频繁的行索引，使得在stripe中快速读取的过程中可以跳过很多行，尽管这个stripe的大小很大。在默认情况下，最大可以跳过10000行。拥有通过过滤谓词而跳过大量的行的能力，你可以在表的 secondary keys 进行排序，从而可以大幅减少执行时间。比如你的表的主分区是交易日期，那么你可以对次分区（state、zip code以及last name）进行排序。
+从上图我们可以看出，每个 `Stripe` 都包含 `Index data`、`Row data` 以及 `Stripe Footer`。`Stripe Footer` 包含流位置的目录(a directory of stream locations)。`Row data` 在表扫描的时候会用到。
+
+`Index data` 包含每列的最大值和最小值以及每列所在的行（还可以包括位字段或布隆过滤器）。行索引里面提供了偏移量，它可以跳到正确的压缩块位置以及解压缩块的字节位置。请注意，ORC索引仅用于选择 `Stripe` 和行组，而不用于查询。
+
+尽管 `Stripe` 大小很大，具有相对频繁的行索引，可以跳过 `Stripe` 内很多行快速读取。在默认情况下，最大可以跳过10000行。通过过滤谓词，可以跳过大量的行，你可以根据表的 `Secondary Keys` 进行排序，从而大幅减少执行时间。例如，你的表的主分区是交易日期，那么你可以在 state、zip code以及last name 上进行排序。然后在一个 state 中查找记录将跳过所有其他 state 的记录。
 
 ### 2. 语法
 
@@ -78,7 +81,7 @@ CREATE TABLE Addresses_ORC STORED AS ORC AS SELECT * FROM Addresses_TEXT;
 
 属性全部放在 `TBLPROPERTIES` 中。ORC具有通常不需要修改的属性。但是，对于特殊情况，你可以修改下表中列出的属性：
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hive/hive-base-orc-file-format-2.png?raw=true)
 
 > 从Hive 0.14.0开始　`ALTER TABLE table_name [PARTITION partition_spec] CONCATENATE` 可用于将小的ORC文件合并为一个更大的文件。合并发生在 `Stripe` 级别，这可以避免对数据进行解压缩和解码。
 
