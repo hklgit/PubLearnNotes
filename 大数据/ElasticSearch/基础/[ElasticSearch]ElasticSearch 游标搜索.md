@@ -13,7 +13,7 @@ permalink: elasticsearch-scroll-search
 
 ### 1. 深分页
 
-在[]一文中，我们初步了解到分布式系统中深度分页．在这里我们再具体的了解一下深分页，可能带来的问题，以及ElasticSearch给出的解决方案．
+在[]一文中，我们初步了解到分布式系统中深度分页。在这里我们再具体的了解一下深分页，可能带来的问题，以及ElasticSearch给出的解决方案．
 
 在 [[ElasticSearch2.x]原理之分布式搜索](http://blog.csdn.net/sunnyyoona/article/details/72781802) 一文中我们了解到分布式搜索的工作原理，分布式搜索这种先查后取的过程支持用`from`和`size`参数分页，但是这是有限制的．　请记住，每个分片必须构建一个长度为`from+size`的优先级队列，所有这些队列都需要传递回协调节点。 协调节点需要对`number_of_shards *（from + size）`个文档进行排序，以便正确找到`size`个文档。
 
