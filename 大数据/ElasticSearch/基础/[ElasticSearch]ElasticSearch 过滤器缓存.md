@@ -1,11 +1,23 @@
- 过滤器(Filter)的核心实际是采用一个`bitset`记录与过滤器匹配的文档。当Elasticsearch确定一个bitset可能会在将来被重用时，它将被直接缓存在内存中供以后使用。一旦缓存，这些`bitset`可以在使用相同查询的任何地方重复使用，而无需再次重新评估整个查询。
- 
- 
-这些缓存的bitset是非常“机智”的：它们是增量更新的。 在索引新文档时，只需要将那些新文档添加到现有的`bitset`中，而不必一遍一遍地重新计算全部已经缓存的过滤器(rather than having to recompute the entire cached filter over and over. )。 过滤器与系统的其余部分都是实时的，不需要担心缓存过期问题。
+---
+layout: post
+author: sjf0115
+title: ElasticSearch 过滤器缓存
+date: 2016-10-28 19:15:17
+tags:
+  - ElasticSearch
+  - ElasticSearch 基础
 
-### 1. 独立的查询缓存(Query Caching)
+categories: ElasticSearch
+permalink: elasticsearch-base-filter-caching
+---
 
-属于一个查询组件的`bitsets`独立于搜索请求的其他部分(The bitsets belonging to a query component are independent from the rest of the search request)。 这意味着，一旦缓存，可以在多个搜索请求中重复使用查询。 它不依赖于它所存在的查询上下文。 这样使得缓存可以加速查询中经常使用的部分，而不会在较少或易变部分浪费开销。
+过滤器(Filter)的核心实际是采用一个`bitset`记录与过滤器匹配的文档。当Elasticsearch确定一个bitset可能会在将来被重用时，它将被直接缓存在内存中供以后使用。一旦缓存，这些`bitset`可以在使用相同查询的任何地方重复使用，而无需再次重新评估整个查询。
+
+这些缓存的bitset是非常'机智'的：它们是增量更新的。当你在索引新文档时，只需要将那些新文档添加到现有的`bitset`中，而不是对整个缓存一遍又一遍的重复计算。过滤器与系统的其余部分一样都是实时的，不需要担心缓存过期问题。
+
+### 1. 独立的查询缓存
+
+属于一个查询组件的`bitsets`独立于搜索请求的其他部分。这意味着，一旦缓存，可以在多个搜索请求中重复使用查询。 它不依赖于它所存在的查询上下文。 这样使得缓存可以加速查询中经常使用的部分，而不会在较少或易变部分浪费开销。
 
 类似地，如果单个搜索请求重复使用相同的非评分查询，则其缓存的`bitset`可以重用于单个搜索请求内的所有实例。
 
@@ -13,7 +25,7 @@
 - 在收件箱中，且没有被读过的
 - 不在 收件箱中，但被标注重要的
 
-```
+```json
 GET /inbox/emails/_search
 {
   "query": {
@@ -23,13 +35,13 @@ GET /inbox/emails/_search
                  "should": [
                     { "bool": {
                           "must": [
-                             { "term": { "folder": "inbox" }}, 
+                             { "term": { "folder": "inbox" }},
                              { "term": { "read": false }}
                           ]
                     }},
                     { "bool": {
                           "must_not": {
-                             "term": { "folder": "inbox" } 
+                             "term": { "folder": "inbox" }
                           },
                           "must": {
                              "term": { "important": true }
@@ -67,6 +79,6 @@ WHERE (folder='inbox' and read = false) or (folder != 'inbox' and important = tr
 
 一旦缓存，非评分计算的`bitset`会一直驻留在缓存中直到它被剔除。剔除规则是基于 LRU 的：一旦缓存满了，最近最少使用的过滤器会被剔除。
 
+> Elasticsearch版本：2.x
 
-原文：https://www.elastic.co/guide/en/elasticsearch/guide/current/filter-caching.html#_autocaching_behavior
-
+原文：https://www.elastic.co/guide/en/elasticsearch/guide/2.x/filter-caching.html#_autocaching_behavior
