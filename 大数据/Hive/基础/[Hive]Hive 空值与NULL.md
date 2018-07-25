@@ -7,7 +7,7 @@ tags:
   - Hive
 
 categories: Hive
-permalink: hive-managed-table-external-table
+permalink: hive-base-empty-string-null
 ---
 
 ### 1. NULL(null)值

@@ -1,3 +1,14 @@
+---
+layout: post
+author: sjf0115
+title: Hive 分组TopN
+date: 2018-01-01 19:16:01
+tags:
+  - Hive
+
+categories: Hive
+permalink: hive-base-group-top-n
+---
 
 ### 1. TopN
 
@@ -51,18 +62,11 @@ SELECT score FROM tmp_student_score SORT BY score LIMIT 10;
 ```
 最常用的解决方案是使用 `ROW_NUMBER()` 函数，代码所示：
 ```sql
-SELECT subject, score, class, ROW_NUMBER() OVER (PARTITION BY subject ORDER BY score DESC) as rank
-FROM tmp_student_score
-WHERE row_number() over (partition by subject order by score) <= 5;
+SELECT *
+FROM
+(
+  SELECT subject, score, class, ROW_NUMBER() OVER (PARTITION BY subject ORDER BY score DESC) AS ranks
+  FROM tmp_student_score
+) score
+WHERE ranks < 5;
 ```
-
-
-
-
-INSERT OVERWRITE DIRECTORY 'tmp/data_group/example/output/student_score'
-ROW FORMAT DELIMITED
-FIELDS TERMINATED BY '\t'
-LINES TERMINATED BY '\n'
-select * from tmp_student_score sort by score desc limit 5;
-
-...
