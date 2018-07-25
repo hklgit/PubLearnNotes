@@ -1,3 +1,4 @@
+
 在[ElascticSearch2.x]精确值查找都是单个过滤器（filter）的使用方式。 在实际应用中，我们很有可能会过滤多个值或字段。比方说，怎样用 Elasticsearch 来表达下面的 SQL ？
 ```
 SELECT product
@@ -193,4 +194,3 @@ curl -XGET 'localhost:9200/my_store/products/_search?pretty' -d'
 }
 
 ```
-
