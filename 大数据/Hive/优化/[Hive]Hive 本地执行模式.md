@@ -2,7 +2,7 @@
 layout: post
 author: sjf0115
 title: Hive 本地执行模式
-date: 2018-06-28 20:16:01
+date: 2018-06-10 20:16:01
 tags:
   - Hive
   - Hive 优化
