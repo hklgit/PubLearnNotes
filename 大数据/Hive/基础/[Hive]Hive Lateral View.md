@@ -8,9 +8,9 @@ fromClause: FROM baseTable (lateralView)*
 Lateral View一般与用户自定义表生成函数（如explode()）结合使用。 如[内置表生成函数](https://cwiki.apache.org/confluence/display/Hive/LanguageManual+UDF#LanguageManualUDF-Built-inTable-GeneratingFunctions(UDTF))中所述，UDTF为每个输入行生成零个或多个输出行。 Lateral View 首先将UDTF应用于基表的每一行，然后将结果输出行连接到输入行，以形成具有提供的表别名的虚拟表。
 
 ```
-在Hive 0.6.0之前，Lateral View 不支持谓词下推优化。 
+在Hive 0.6.0之前，Lateral View 不支持谓词下推优化。
 在Hive 0.5.0和更早版本中，如果你使用WHERE子句，你的查询如果没有没有编译。
-解决方法是在你查询之前添加 set hive.optimize.ppd = false 。 
+解决方法是在你查询之前添加 set hive.optimize.ppd = false 。
 这个问题是在Hive 0.6.0中进行修复的， 请参阅https://issues.apache.org/jira/browse/HIVE-1056。
 ```
 
@@ -88,7 +88,7 @@ Array<int> pageid_list  |  Array<string> adid_list
 
 单个Lateral View查询
 ```
-hive> SELECT pageid_list, adid 
+hive> SELECT pageid_list, adid
     > FROM tmp_laterview
     > LATERAL VIEW explode(adid_list) adTable AS adid;
 OK
@@ -101,7 +101,7 @@ OK
 
 多个Lateral View查询：
 ```
-hive> SELECT pageid, adid 
+hive> SELECT pageid, adid
     > FROM tmp_laterview
     > LATERAL VIEW explode(adid_list) adTable AS adid
     > LATERAL VIEW explode(pageid_list) adTable AS pageid;
@@ -143,10 +143,4 @@ OK
 Time taken: 0.053 seconds, Fetched: 2 row(s)
 ```
 
-
-
 原文：https://cwiki.apache.org/confluence/display/Hive/LanguageManual+LateralView
-
-
-
-
