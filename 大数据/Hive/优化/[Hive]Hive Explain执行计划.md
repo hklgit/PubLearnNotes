@@ -11,6 +11,7 @@ categories: Hive
 permalink: hive-optimization-how-to-use-explain
 ---
 
+Explain 功能可以帮助我们学习 Hive 是如何转换成 MapReduce 任务的。
 
 一个MR的执行计划分为两个部分：
 - Map Operator Tree：MAP端的执行计划
