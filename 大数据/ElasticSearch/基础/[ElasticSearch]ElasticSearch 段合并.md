@@ -19,14 +19,14 @@ Elasticsearch 通过在后台进行 `段合并` 来解决这个问题。小的�
 
 段合并不需要你做什么，在索引和搜索时会自动发生。该过程的工作原理如下图所示，两个提交过的段和一个未提交的段被合并到更大的段中：
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ElasticSearch/elasticsearch-base-sgement-merge-1.png?raw=true)
 
 - 在索引时，刷新 `refresh` 进程会创建新的段并开放供搜索。
 - 合并进程选择几个相似大小的段，在后台将它们合并到一个新的更大的段中。这不会中断索引和搜索。
 
 下图阐述了合并的完成过程：
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ElasticSearch/elasticsearch-base-sgement-merge-2.png?raw=true)
 
 - 新的片段被刷新 `flush` 到磁盘。
 - 写入一个新的提交点，其中包含新的段，并排除旧的较小段。
