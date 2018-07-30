@@ -21,9 +21,9 @@ permalink: elasticsearch-base-near-real-time-search
 
 在 Elasticsearch 和磁盘之间的是文件系统缓存。如前所述，内存中索引缓冲区中的文档(如下第一图)被写入新的段(如下第二图)．但是新的段首先被写入到文件系统缓存中 - 成本较低 - 只是稍后会被刷到磁盘 - 成本较高。但一旦文件在缓存中，它就可以像任何其他文件一样打开和读取。
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ElasticSearch/elasticsearch-base-near-real-time-search-1.png?raw=true)
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ElasticSearch/elasticsearch-base-near-real-time-search-2.png?raw=true)
 
 Lucene 允许新段被写入和打开，使其包含的文档在没有进行一次完整提交之前便对搜索可见。这是一种比提交更轻量级的过程，并在不影响性能的前提下可以被频繁地执行。
 
