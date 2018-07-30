@@ -1,3 +1,16 @@
+---
+layout: post
+author: sjf0115
+title: ElasticSearch 近实时搜索
+date: 2016-11-11 19:30:23
+tags:
+  - ElasticSearch
+  - ElasticSearch 基础
+
+categories: ElasticSearch
+permalink: elasticsearch-base-near-real-time-search
+---
+
 ### 1. 按段搜索
 
 随着`按段搜索`的发展，索引文档和文档可被搜索的延迟显着下降。新文档可以在数分钟内可被搜索，但仍然不够快。
@@ -8,10 +21,9 @@
 
 在Elasticsearch和磁盘之间的是文件系统缓存。 如前所述，内存中索引缓冲区中的文档(如下第一图)被写入新的段(如下第二图)．但是新的分段首先被写入到文件系统缓存中 - 成本较低 - 只是稍后它被刷新到磁盘 - 成本较高。但一旦文件在缓存中，它就可以像任何其他文件一样打开和读取。
 
-![image](http://img.blog.csdn.net/20170510095548192?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvU3VubnlZb29uYQ==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
+![]()
 
-
-![image](http://img.blog.csdn.net/20170510095534132?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvU3VubnlZb29uYQ==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast)
+![]()
 
 Lucene 允许新段被写入和打开--使其包含的文档在没有进行一次完整提交之前便对搜索可见。这是一种比提交更轻量级的过程，并且在不影响性能的前提下可以被频繁地执行。
 
@@ -21,8 +33,8 @@ Lucene 允许新段被写入和打开--使其包含的文档在没有进行一�
 
 这可能会让新用户感到困惑：他们索引文档并尝试搜索它，但是没有搜索到。 这个问题的解决办法是使用刷新API手动刷新一下：
 ```
-POST /_refresh 
-POST /blogs/_refresh 
+POST /_refresh
+POST /blogs/_refresh
 ```
 ==说明==
 
@@ -39,7 +51,7 @@ POST /blogs/_refresh
 PUT /my_logs
 {
   "settings": {
-    "refresh_interval": "30s" 
+    "refresh_interval": "30s"
   }
 }
 ```
@@ -50,10 +62,10 @@ PUT /my_logs
 `refresh_interval`可以在现有索引上动态更新。你可以在构建大型新索引时关闭自动刷新，然后在生产环境中开始使用索引时将其重新打开：
 ```
 PUT /my_logs/_settings
-{ "refresh_interval": -1 } 
+{ "refresh_interval": -1 }
 
 PUT /my_logs/_settings
-{ "refresh_interval": "1s" } 
+{ "refresh_interval": "1s" }
 ```
 
 ==说明==
@@ -63,3 +75,7 @@ PUT /my_logs/_settings
 ==注意==
 
 `refresh_interval`需要一个持续时间值， 例如 1s （1 秒） 或 2m （2 分钟）。 一个绝对值 1 表示的是 1毫秒 --无疑会使你的集群陷入瘫痪(每一毫秒刷新一次)。
+
+> ElasticSearch版本：2.x
+
+原文：https://www.elastic.co/guide/en/elasticsearch/guide/2.x/near-real-time.html
