@@ -29,15 +29,15 @@ permalink: elasticsearch-base-dynamically-updatable-indices
 
 Lucene 是 Elasticsearch 所基于的Java库，引入了 `按段搜索` 的概念。 每一个段本身就是一个倒排索引， 但 Lucene 中的 `index` 除表示段 `segments` 的集合外，还增加了提交点 `commit point` 的概念，一个列出了所有已知段的文件，如下图所示展示了带有一个提交点和三个分段的 Lucene 索引:
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ElasticSearch/elasticsearch-base-dynamically-updatable-indices-1.png?raw=true)
 
 新文档首先被添加到内存中的索引缓冲区中，如下图所示展示了一个在内存缓存中包含新文档准备提交的Lucene索引:
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ElasticSearch/elasticsearch-base-dynamically-updatable-indices-2.png?raw=true)
 
 然后写入到一个基于磁盘的段，如下图所示展示了在一次提交后一个新的段添加到提交点而且缓存被清空:
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ElasticSearch/elasticsearch-base-dynamically-updatable-indices-3.png?raw=true)
 
 #### 2.1 索引与分片
 
