@@ -29,7 +29,7 @@ PUT /my_index/_settings
 
 拥有两个主分片，另外加上每个主分片的一个副本，我们总共拥有四个分片：每个节点一个，如下图所示：
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ElasticSearch/elasticsearch-base-replica-shard-1.png?raw=true)
 
 ### 2. 通过副本进行负载均衡
 
@@ -46,7 +46,7 @@ PUT /my_index/_settings
 
 如下图所示：
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ElasticSearch/elasticsearch-base-replica-shard-2.png?raw=true)
 
 事实上节点 3 拥有两个副本分片，没有主分片并不重要。副本分片与主分片做着相同的工作。它们只是扮演着略微不同的角色。没有必要确保主分片均匀地分布在所有节点中。
 
