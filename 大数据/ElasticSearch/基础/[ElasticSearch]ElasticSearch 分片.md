@@ -27,7 +27,7 @@ PUT /my_index
 
 这时，我们加入第二个节点，Elasticsearch 会自动将其中一个分片移动至第二个节点，如下图所示，当重新分配完成后，每个分片都将接近至两倍于之前的计算能力。
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ElasticSearch/elasticsearch-base-shard-1.png?raw=true)
 
 我们已经可以通过简单地将一个分片通过网络复制到一个新的节点来加倍我们的处理能力。最棒的是，我们可以零停机地做到这一点。在分片移动过程中，所有的索引搜索请求都能正常运行。
 
