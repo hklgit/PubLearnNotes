@@ -1,5 +1,4 @@
-本文介绍了用于窗口函数和分析函数的Hive QL增强功能。所有窗口和分析函数操作都按照SQL标准。
-当前版本支持以下窗口函数和分析函数：
+本文介绍了用于窗口函数和分析函数的Hive QL增强功能。所有窗口和分析函数操作都按照SQL标准。当前版本支持以下窗口函数和分析函数。
 
 ### 1 窗口函数
 
@@ -65,7 +64,7 @@ COUNT(DISTINCT a) OVER (PARTITION BY c)
 ```
 在 Hive 2.2.0 后 Distinct可以支持 ORDER BY 和 窗口规范 (see HIVE-13453)。例如：
 ```
-COUNT(DISTINCT a) 
+COUNT(DISTINCT a)
 OVER (PARTITION BY c ORDER BY d ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING)
 ```
 ### 5. OVER子句中支持聚合函数（Hive 2.1.0及以后版本支持）
@@ -76,12 +75,3 @@ SELECT rank() OVER (ORDER BY sum(b))
 FROM T
 GROUP BY a;
 ```
-
-
-
-
-
-
-
-
-

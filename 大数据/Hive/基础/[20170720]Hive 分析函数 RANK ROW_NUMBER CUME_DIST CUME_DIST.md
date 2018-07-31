@@ -1,3 +1,14 @@
+---
+layout: post
+author: sjf0115
+title: Hive 分析函数
+date: 2017-02-20 20:16:01
+tags:
+  - Hive
+
+categories: Hive
+permalink: hive-base-analysis-functions
+---
 
 ### 1. 常用分析函数
 
@@ -17,8 +28,6 @@ NTILE() | 将每个分区的行尽可能均匀地划分为指定数量的分组
 ```
 window_function () OVER clause
 ```
-
-
 
 ### 3. 分析函数
 
@@ -100,7 +109,6 @@ hive> select gid, dt, pv, percent_rank() over (partition by gid order by pv) fro
 Time taken: 25.236 seconds, Fetched: 14 row(s)
 ```
 
-
 #### 3.4 ROW_NUMBER()
 
 ROW_NUMBER函数确定分区中当前行的序号。当前行的序号是由OVER子句中的ORDER BY表达式来确定的。
@@ -181,14 +189,3 @@ hive> select gid, dt, pv, ntile(4) over (partition by gid order by pv) from tmp_
 Time taken: 10.363 seconds, Fetched: 14 row(s)
 
 ```
-
-
-
-
-
-
-
-
-
-
-

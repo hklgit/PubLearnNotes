@@ -14,10 +14,10 @@ Hive中有一个内置表生成函数`exploe()`，`explode()`方法的输入是�
 
 下面提供了一份演示数据，包括两列数据，第一列是用户名称，第二列是火车票涉及的几个费用（车票费，服务费，保险费），是json格式的字符串：
 ```
-xiaosi@yoona:/opt/apache-hive-2.0.0-bin/bin$ cat /home/xiaosi/test/train_order.txt 
+xiaosi@yoona:/opt/apache-hive-2.0.0-bin/bin$ cat /home/xiaosi/test/train_order.txt
 John	{"ticketPrice":"128", "servicePrice":"20", "insurancePrice":"5"}
-Smith	{"ticketPrice":"318", "servicePrice":"30", "insurancePrice":"15"} 
-Ann	{"ticketPrice":"73", "servicePrice":"20", "insurancePrice":"2"} 
+Smith	{"ticketPrice":"318", "servicePrice":"30", "insurancePrice":"15"}
+Ann	{"ticketPrice":"73", "servicePrice":"20", "insurancePrice":"2"}
 White	{"ticketPrice":"67", "servicePrice":"15", "insurancePrice":"1"}
 Green	{"ticketPrice":"645", "servicePrice":"40", "insurancePrice":"20"}
 ```
@@ -27,8 +27,8 @@ xiaosi@yoona:/opt/apache-hive-2.0.0-bin/bin$ hadoop fs -mkdir data/train_order
 xiaosi@yoona:/opt/apache-hive-2.0.0-bin/bin$ hadoop fs -put /home/xiaosi/test/train_order.txt data/train_order
 xiaosi@yoona:/opt/apache-hive-2.0.0-bin/bin$ hadoop fs -text data/train_order/train_order.txt
 John	{"ticketPrice":"128", "servicePrice":"20", "insurancePrice":"5"}
-Smith	{"ticketPrice":"318", "servicePrice":"30", "insurancePrice":"15"} 
-Ann	{"ticketPrice":"73", "servicePrice":"20", "insurancePrice":"2"} 
+Smith	{"ticketPrice":"318", "servicePrice":"30", "insurancePrice":"15"}
+Ann	{"ticketPrice":"73", "servicePrice":"20", "insurancePrice":"2"}
 White	{"ticketPrice":"67", "servicePrice":"15", "insurancePrice":"1"}
 Green	{"ticketPrice":"645", "servicePrice":"40", "insurancePrice":"20"}
 ```
@@ -42,19 +42,19 @@ LINES TERMINATED BY '\n'
 STORED AS TEXTFILE
 LOCATION '/user/xiaosi/data/train_order';
 ```
-#### 2.2 自定义Java类 
+#### 2.2 自定义Java类
 
 自定义一个Java类，TrainOrderPriceSplitUDTF，这个类继承的是GenericUDTF接口，需要重新实现下面三个方法：
 ```
 // in this method we specify input and output parameters: input ObjectInspector and an output struct
-abstract StructObjectInspector initialize(ObjectInspector[] args) throws UDFArgumentException; 
-// here we process an input record and write out any resulting records 
+abstract StructObjectInspector initialize(ObjectInspector[] args) throws UDFArgumentException;
+// here we process an input record and write out any resulting records
 abstract void process(Object[] record) throws HiveException;
 // this function is Called to notify the UDTF that there are no more rows to process. Clean up code or additional output can be produced here.
 abstract void close() throws HiveException;
 ```
 完整代码：
-```
+```java
 package com.sjf.open.hive.udf.udtf;
 import java.util.Iterator;
 import java.util.List;
@@ -83,7 +83,7 @@ public class TrainOrderPriceSplitUDTF extends GenericUDTF {
     /**
      * The output struct represents a row of the table where the fields of the struct are the columns. The field names
      * are unimportant as they will be overridden by user supplied column aliases
-     * 
+     *
      * @param arguments
      * @return
      * @throws UDFArgumentException
@@ -114,7 +114,7 @@ public class TrainOrderPriceSplitUDTF extends GenericUDTF {
     }
     /**
      * 数据处理
-     * 
+     *
      * @param field
      * @return
      */
@@ -188,7 +188,7 @@ Number of reduce tasks is set to 0 since there's no reduce operator
 Job running in-process (local Hadoop)
 2016-11-25 17:53:42,235 Stage-1 map = 100%,  reduce = 0%
 Ended Job = job_local1692560833_0003
-MapReduce Jobs Launched: 
+MapReduce Jobs Launched:
 Stage-Stage-1:  HDFS Read: 1046 HDFS Write: 0 SUCCESS
 Total MapReduce CPU Time Spent: 0 msec
 OK
@@ -220,24 +220,3 @@ Time taken: 1.285 seconds, Fetched: 15 row(s)
 
 
 这种类型的UDTF的好处是URL只需要被解析一次，然后就可以返回多个列。这显然是性能优势。而代替方式是：如果使用UDF的话，那么就需要写多个UDF，分别抽取其URL的特定部分，这样也消耗更长的时间。
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
