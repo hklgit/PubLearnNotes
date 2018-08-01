@@ -52,13 +52,13 @@ FROM
 (
   SELECT md5KeyId, active_time
   FROM adv_push_active
-  WHERE month = '201807' AND substr(activeTime, 1, 10) = '2018-07-02'
+  WHERE month = '201711' AND substr(activeTime, 1, 10) = '2017-11-02'
 ) active
 JOIN
 (
   SELECT md5KeyId, click_time
   FROM adv_push_click
-  WHERE dt = '20180702'
+  WHERE dt = '20171102'
 ) click
 ON upper(active.md5KeyId) = upper(click.md5KeyId);
 ```
