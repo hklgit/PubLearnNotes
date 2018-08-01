@@ -43,4 +43,40 @@ SELECT　/*+MAPJOIN（a）*/ FROM src1 x JOIN src2 y ON x.key = y.key;。
 
 目前，如果小表的总大小大于25MB，Conditional Task 会选择原始 Common Join 来运行。25MB是一个非常保守的数字，你可以使用 `set hive.smalltable.filesize` 来修改。
 
+### 4. Example
+
+我们具体看一个 Map Join:
+```sql
+SELECT active.md5KeyId, active.active_time, click.click_time
+FROM
+(
+  SELECT md5KeyId, active_time
+  FROM adv_push_active
+  WHERE month = '201807' AND substr(activeTime, 1, 10) = '2018-07-02'
+) active
+JOIN
+(
+  SELECT md5KeyId, click_time
+  FROM adv_push_click
+  WHERE dt = '20180702'
+) click
+ON upper(active.md5KeyId) = upper(click.md5KeyId);
+```
+输出信息如下：
+```
+2017-11-02 17:32:55  Starting to launch local task to process map join; maximum memory = 514850816
+2017-11-02 17:33:01  Dump the side-table for tag: 0 with group count: 162 into file: file:/tmp/smartsi/xxx/hive_2017-11-02_17-32-16_498_230990327610539360-1/-local-10004/HashTable-Stage-3/MapJoin-mapfile70--.hashtable
+2017-11-02 17:33:01  Uploaded 1 File to: file:/tmp/smartsi/xxx/hive_2017-11-02_17-32-16_498_230990327610539360-1/-local-10004/HashTable-Stage-3/MapJoin-mapfile70--.hashtable (17191 bytes)
+2017-11-02 17:33:01  End of local task; Time Taken: 5.852 sec.
+Execution completed successfully
+MapredLocal task succeeded
+Launching Job 1 out of 1
+Number of reduce tasks is set to 0 since there no reduce operator
+...
+Hadoop job information for Stage-3: number of mappers: 789; number of reducers: 0
+2017-11-02 17:33:13,789 Stage-3 map = 0%,  reduce = 0%
+2017-11-02 17:34:14,076 Stage-3 map = 0%,  reduce = 0%, Cumulative CPU 3229.1 sec
+```
+我们可以看到在原始 Join 的 MapReduce 任务之前创建了一个 MapReduce Local Task。这个新任务是将小表数据从 HDFS 上读取到内存中的哈希表中，并列化为哈希表文件。后面会将这个哈希表文件上传到 Hadoop 分布式缓存中。该缓存会将这些文件发送到每个 Mapper 的本地磁盘上。这些完成之后才会启动一个只有 Map Task 的 MapReduce 作业来完成 Join。
+
 原文：https://www.facebook.com/note.php?note_id=470667928919
