@@ -1,4 +1,5 @@
-Hive支持MAPJOIN，适合场景:至少足够小以放入内存中。 在版本0.11之前，可以通过MapJoin提示调用MAPJOIN：
+
+Hive支持 MapJoin，适合场景：至少足够小可以放入内存。在版本0.11之前，可以通过MapJoin提示调用MapJoin：
 ```sql
 set hive.ignore.mapjoin.hint = false;
 select /*+ MAPJOIN(time_dim) */ count(*)
@@ -14,21 +15,18 @@ from store_sales
 join time_dim
 on (ss_sold_time_sk = t_time_sk)
 ```
-在Hive 0.10.0版本中　Hive.auto.convert.join　的默认值为false。 Hive 0.11.0以后版本将默认值更改为true（HIVE-3297）。
-请注意，在Hive 0.11.0至0.13.1版本中hive-default.xml.template错误地将默认值设置为false。
+在Hive 0.10.0版本中　`Hive.auto.convert.join`　的默认值为 `false`。Hive 0.11.0以后版本将默认值更改为 `true`（HIVE-3297）。请注意，在Hive 0.11.0至0.13.1版本中 `hive-default.xml.template` 错误地将默认值设置为 `false`。
 
+### 1. MapJoin提示
 
-#### 1. MapJoin提示
-
-第一个语句使用MAPJOIN提示来优化查询的执行时间。 在此示例中，tmp_entrance_order_user表要比tmp_entrance_order表小。
-
-```
+上面第一个语句使用 `MAPJOIN` 提示来优化查询的执行时间。在此示例中，`tmp_entrance_order_user` 表要比 `tmp_entrance_order` 表小：
+```sql
 SELECT /*+ MAPJOIN(u) */ o.gid, o.orderTime, o.businessType
 FROM tmp_entrance_order o
 JOIN tmp_entrance_order_user u
 ON u.gid = o.gid;
 ```
-默认情况下MapJoin提示优化选项是关闭的，需要开启：
+默认情况下 MapJoin 提示优化选项是关闭的，需要开启：
 ```
 set hive.ignore.mapjoin.hint = false;
 ```
@@ -36,8 +34,8 @@ set hive.ignore.mapjoin.hint = false;
 ```
 2017-04-19 03:57:07     Starting to launch local task to process map join;      maximum memory = 514850816
 2017-04-19 03:57:08     Processing rows:        8       Hashtable size: 8       Memory usage:   146857552       rate:   0.285
-2017-04-19 03:57:08     Dump the hashtable into file: file:/tmp/wirelessdev/hive_2017-04-19_15-57-05_466_914191914066790595/-local-10002/HashTable-Stage-1/MapJoin-u-11--.hashtable
-2017-04-19 03:57:08     Upload 1 File to: file:/tmp/wirelessdev/hive_2017-04-19_15-57-05_466_914191914066790595/-local-10002/HashTable-Stage-1/MapJoin-u-11--.hashtable File size: 876
+2017-04-19 03:57:08     Dump the hashtable into file: file:/tmp/xiaosi/hive_2017-04-19_15-57-05_466_914191914066790595/-local-10002/HashTable-Stage-1/MapJoin-u-11--.hashtable
+2017-04-19 03:57:08     Upload 1 File to: file:/tmp/xiaosi/hive_2017-04-19_15-57-05_466_914191914066790595/-local-10002/HashTable-Stage-1/MapJoin-u-11--.hashtable File size: 876
 2017-04-19 03:57:08     End of local task; Time Taken: 0.705 sec.
 Execution completed successfully
 Mapred Local Task Succeeded . Convert the Join into MapJoin
@@ -57,18 +55,16 @@ Total MapReduce CPU Time Spent: 3 seconds 230 msec
 OK
 ```
 
-
 #### 2. 启用自动转换
 
-第二个语句不使用MAPJOIN提示。 在这种情况下，需要开启自动转选项：
+上面第二个语句不使用 MAPJOIN 提示，而是开启自动转选项：
 ```
 set hive.auto.convert.join=true。
 ```
-不同Hive版本，自动转换功能默认值是不同的，在0.11版本默认是关闭的，使用时需要开启，在2.1.0版本则是默认开启的．
+不同Hive版本，自动转换功能默认值是不同的，在0.11版本默认是关闭的，使用时需要开启，在2.1.0版本则是默认开启的。
 
-在此，所有查询将被视为MAPJOIN查询，而提示用于特定查询：
-
-```
+在此，所有查询将被视为 MAPJOIN 查询，而提示用于特定查询：
+```sql
 SELECT o.entrance, o.gid, o.orderTime, o.businessType
 FROM tmp_entrance_order o
 JOIN tmp_entrance_order_user u
@@ -78,8 +74,8 @@ ON u.gid = o.gid;
 ```
 2017-04-18 10:46:02     Starting to launch local task to process map join;      maximum memory = 514850816
 2017-04-18 10:46:11     Processing rows:        8       Hashtable size: 8       Memory usage:   149205136       rate:   0.29
-2017-04-18 10:46:11     Dump the hashtable into file: file:/tmp/wirelessdev/hive_2017-04-18_10-45-49_973_1790466181163205947/-local-10002/HashTable-Stage-3/MapJoin-mapfile11--.hashtable
-2017-04-18 10:46:11     Upload 1 File to: file:/tmp/wirelessdev/hive_2017-04-18_10-45-49_973_1790466181163205947/-local-10002/HashTable-Stage-3/MapJoin-mapfile11--.hashtable File size: 876
+2017-04-18 10:46:11     Dump the hashtable into file: file:/tmp/xiaosi/hive_2017-04-18_10-45-49_973_1790466181163205947/-local-10002/HashTable-Stage-3/MapJoin-mapfile11--.hashtable
+2017-04-18 10:46:11     Upload 1 File to: file:/tmp/xiaosi/hive_2017-04-18_10-45-49_973_1790466181163205947/-local-10002/HashTable-Stage-3/MapJoin-mapfile11--.hashtable File size: 876
 2017-04-18 10:46:11     End of local task; Time Taken: 9.905 sec.
 Execution completed successfully
 Mapred Local Task Succeeded . Convert the Join into MapJoin
@@ -100,8 +96,7 @@ Total MapReduce CPU Time Spent: 51 seconds 170 msec
 OK
 ```
 
-
-下面设置 **set hive.auto.convert.join=false** ,然后再运行上述语句，输出信息如下：
+下面设置 `set hive.auto.convert.join=false` ，然后再运行上述语句，输出信息如下：
 ```
 Hadoop job information for Stage-1: number of mappers: 9; number of reducers: 1
 2017-04-18 11:31:35,957 Stage-1 map = 0%,  reduce = 0%
@@ -116,40 +111,33 @@ Total MapReduce CPU Time Spent: 1 minutes 6 seconds 520 msec
 OK
 ```
 
-#### 3. MAPJOIN处理方式
+### 3. MAPJOIN运行过程
 
-将较小的表加载到内存中的哈希映射中，并与更大表的键进行匹配。分工如下：
+将较小的表加载到内存中的哈希映射中，与更大表的键进行匹配。运行过程如下：
 
-(1)Local work:
-```
-通过标准表扫描（包括过滤器和投影）从本地机器上的数据源读取记录
-在内存中构建哈希表(hashtable)
-将哈希表写入本地磁盘
-将哈希表上传到HDFS
-将哈希表添加到分布式缓存中
-```
-(2)Map task
-```
-从本地磁盘（分布式缓存）读取哈希表到内存
-根据记录的键与哈希表进行匹配
-组合匹配并输出
-```
-(3)No reduce task
+(1) Local work:
+- 通过标准表扫描（包括过滤器和投影）从本地机器上的数据源读取记录
+- 在内存中构建哈希表(hashtable)
+- 将哈希表写入本地磁盘
+- 将哈希表上传到HDFS
+- 将哈希表添加到分布式缓存中
 
-#### 4. MAPJOIN局限性
+(2) Map task
+- 从本地磁盘（分布式缓存）读取哈希表到内存
+- 根据记录的键与哈希表进行匹配
+- 组合匹配并输出
+
+(3) No reduce task
+
+### 4. MAPJOIN局限性
 
 Hive 0.11之前的MAPJOIN实现有以下局限性：
+- mapjoin操作符一次只能处理一个键; 也就是说，它可以执行多表连接，但只有在所有表在join时使用同一个键上（意思是说同一个表在不同join子句中使用同一一个key）。 （典型的星型模式连接不属于此类别。）
+- Hints are cumbersome for users to apply correctly and auto conversion doesn't have enough logic to consistently predict if a MAPJOIN will fit into memory or not.
+- 一个MAPJOIN链不会合并到一个只有Map的作业中，除非这个查询被写成一个mapjoin的级联序列（table，subquery（mapjoin（table，subquery ....））。自动转换不会产生一个只有Map的作业。
+- 必须为每次运行查询生成mapjoin操作符的哈希表，其中包括将所有数据下载到Hive客户端计算机上以及上传生成的哈希表文件。
 
-(1)mapjoin操作符一次只能处理一个键; 也就是说，它可以执行多表连接，但只有在所有表在join时使用同一个键上（意思是说同一个表在不同join子句中使用同一一个key）。 （典型的星型模式连接不属于此类别。）
-
-(2) Hints are cumbersome for users to apply correctly and auto conversion doesn't have enough logic to consistently predict if a MAPJOIN will fit into memory or not.
-
-(3) 一个MAPJOIN链不会合并到一个只有Map的作业中，除非这个查询被写成一个mapjoin的级联序列（table，subquery（mapjoin（table，subquery ....））。自动转换不会产生一个只有Map的作业。
-
-
-(4)必须为每次运行查询生成mapjoin操作符的哈希表，其中包括将所有数据下载到Hive客户端计算机上以及上传生成的哈希表文件。
-
-#### 5. 星型模式连接
+### 5. 星型模式连接
 
 Hive 0.11中的优化器增强侧重于在星型模式配置中JOIN的处理效率。
 
@@ -165,15 +153,16 @@ where t_hour = 8 and d_year = 2002
 ```
 
 ### Optimize Auto Join Conversion
-自动转换启用时，就没有必要在查询中提供Map JOIN注释（/*+ MAPJOIN(xxx) */）。 可以通过两个配置参数来启用自动转换选项：
+
+自动转换启用时，就没有必要在查询中提供Map JOIN注释（`/*+ MAPJOIN(xxx) */`）。 可以通过两个配置参数来启用自动转换选项：
 ```
 set hive.auto.convert.join.noconditionaltask = true;
 set hive.auto.convert.join.noconditionaltask.size = 10000000;
 ```
-**hive.auto.convert.join.noconditionaltask** 的默认值为true，表示启用自动转换。 （原来默认是false - 见HIVE-3784 - 但在Hive 0.11.0发布之前，被改为true，见HIVE-4146）
+`hive.auto.convert.join.noconditionaltask` 的默认值为true，表示启用自动转换。 （原来默认是false - 见HIVE-3784 - 但在Hive 0.11.0发布之前，被改为true，见HIVE-4146）
 
 
-```
+```sql
 select count(*) from
 store_sales
 join time_dim on (ss_sold_time_sk = t_time_sk)

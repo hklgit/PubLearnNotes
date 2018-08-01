@@ -16,7 +16,8 @@ Skewed Join 可以解决这个问题。在运行时，它会扫描数据并检�
 
 例如，假设我们A表和B表在id列上进行 Join：
 ```sql
-SELECT	A.*	FROM	A
+SELECT	A.*
+FROM	A
 JOIN B
 ON A.id	=	B.id;
 ```
