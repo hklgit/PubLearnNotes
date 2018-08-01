@@ -48,8 +48,6 @@ permalink: hadoop-use-combinefileinputformat-merge-small-files
 - `org.apache.hadoop.mapreduce.lib.input.CombineTextInputFormat`
 - `org.apache.hadoop.mapreduce.lib.input.CombineSequenceFileInputFormat`
 
-我们可以把这两个类理解是 `TextInputFormat` 和 `SequenceFileInputFormat`。
-
 ### 3. Example
 
 ```java
