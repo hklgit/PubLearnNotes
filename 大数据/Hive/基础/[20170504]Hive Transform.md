@@ -10,3 +10,7 @@ SELECT TRANSFORM(vid)
 USING 'transform_platform.py'
 AS platform
 LIMIT 10;
+
+EXPLAIN SELECT vid
+FROM adv_push_active
+LIMIT 10;
