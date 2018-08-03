@@ -29,49 +29,49 @@ local variables             |no
 ```Java
 public class SparkSample {
 
-      public int instanceVariable                =10 ;
-      public static int staticInstanceVariable   =20 ;
+  public int instanceVariable                =10 ;
+  public static int staticInstanceVariable   =20 ;
 
-      public int run(){
+  public int run(){
 
-         int localVariable                       =30;
+     int localVariable                       =30;
 
-         // create Spark conf
-         final SparkConf sparkConf = new SparkConf().setAppName(config.get(JOB_NAME).set("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
+     // create Spark conf
+     final SparkConf sparkConf = new SparkConf().setAppName(config.get(JOB_NAME).set("spark.serializer", "org.apache.spark.serializer.KryoSerializer");
 
-         // create spark context
-         final JavaSparkContext sparkContext = new JavaSparkContext(sparkConf);
+     // create spark context
+     final JavaSparkContext sparkContext = new JavaSparkContext(sparkConf);
 
-        // read DATA
-        JavaRDD<String> lines = spark.read().textFile(args[0]).javaRDD();
+    // read DATA
+    JavaRDD<String> lines = spark.read().textFile(args[0]).javaRDD();
 
 
-        // Anonymous class used for lambda implementation
-        JavaRDD<String> words = lines.flatMap(new FlatMapFunction<String, String>() {
-                @Override
-                public Iterator<String> call(String s) {
-                // How will the listed varibles be accessed in RDD across driver and Executors
-                System.out.println("Output :" + instanceVariable + " " + staticInstanceVariable + " " + localVariable);
-                return Arrays.asList(SPACE.split(s)).iterator();
-        });
+    // Anonymous class used for lambda implementation
+    JavaRDD<String> words = lines.flatMap(new FlatMapFunction<String, String>() {
+            @Override
+            public Iterator<String> call(String s) {
+            // How will the listed varibles be accessed in RDD across driver and Executors
+            System.out.println("Output :" + instanceVariable + " " + staticInstanceVariable + " " + localVariable);
+            return Arrays.asList(SPACE.split(s)).iterator();
+    });
 
-        // SAVE OUTPUT
-        words.saveAsTextFile(OUTPUT_PATH));
+    // SAVE OUTPUT
+    words.saveAsTextFile(OUTPUT_PATH));
 
-      }
+  }
 
-       // Inner Static class for the funactional interface which can replace the lambda implementation above
-       public static class MapClass extends FlatMapFunction<String, String>() {
-                @Override
-                public Iterator<String> call(String s) {
-                System.out.println("Output :" + instanceVariable + " " + staticInstanceVariable + " " + localVariable);
-                return Arrays.asList(SPACE.split(s)).iterator();
-        });
+   // Inner Static class for the funactional interface which can replace the lambda implementation above
+   public static class MapClass extends FlatMapFunction<String, String>() {
+            @Override
+            public Iterator<String> call(String s) {
+            System.out.println("Output :" + instanceVariable + " " + staticInstanceVariable + " " + localVariable);
+            return Arrays.asList(SPACE.split(s)).iterator();
+    });
 
-        public static void main(String[] args) throws Exception {
-            JavaWordCount count = new JavaWordCount();
-            count.run();
-        }
+    public static void main(String[] args) throws Exception {
+        JavaWordCount count = new JavaWordCount();
+        count.run();
+    }
 }
 ```
 
