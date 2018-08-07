@@ -7,7 +7,7 @@
 ##### 2.8.1 非类型安全的用户自定义聚合函数
 
 自定义聚合函数
-```
+```java
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.expressions.MutableAggregationBuffer;
 import org.apache.spark.sql.expressions.UserDefinedAggregateFunction;
