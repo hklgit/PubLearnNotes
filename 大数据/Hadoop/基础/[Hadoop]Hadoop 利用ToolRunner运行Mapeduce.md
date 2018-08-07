@@ -234,7 +234,7 @@ hadoop jar common-tool-jar-with-dependencies.jar com.sjf.open.example.WordCountW
 ```
 hadoop jar common-tool-jar-with-dependencies.jar com.sjf.open.example.WordCountNoTool -D mapred.reduce.tasks=1 ${inputPath} ${outputPath}
 ```
-`-D mapred.reduce.tasks=1` 也会被 main 方法认为是一个参数，位于索引[0]处，inputPath 和 outputPath 则分别位于索引[1]和[2]处。
+> `-D mapred.reduce.tasks=1` 也会被 main 方法认为是一个参数，位于索引[0]处，inputPath 和 outputPath 则分别位于索引[1]和[2]处。
 
 ### 2. 支持通用选项
 
