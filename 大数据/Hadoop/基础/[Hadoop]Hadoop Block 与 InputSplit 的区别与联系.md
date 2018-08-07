@@ -41,7 +41,6 @@ permalink: hadoop-base-block-and-inputsplit
 ![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hadoop/hadoop-base-block-and-inputsplit-1.png?raw=true)
 
 说明：
-
 - 图中的红色块代表一个文件
 - 中间的蓝色矩形块代表一个 HDFS 块，矩形里面的数字代表 HDFS 块的编号，读整个文件的时候是从编号为0的 HDFS 块开始读，然后依次是1,2,3...
 - 最下面的一行矩形代表文件里面存储的内容，每个小矩形代表一行数据，里面的数字代表数据的编号。红色的竖线代表 HDFS 块边界(block boundary)。
