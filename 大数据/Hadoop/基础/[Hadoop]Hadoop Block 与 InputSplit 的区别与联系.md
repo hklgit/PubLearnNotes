@@ -22,7 +22,7 @@ permalink: hadoop-base-block-and-inputsplit
 [iteblog@iteblog.com /home/iteblog]$ ll  iteblog.txt
 -rw-r--r-- 1 iteblog iteblog 454669963 May 15 12:07 iteblog.txt
 ```
-很明显，这个文件大于一个 HDFS 块大小，所有如果我们将这个文件存放到 HDFS 上会生成 4 个 HDFS 块，如下（注意下面的输出做了一些删除操作）：
+很明显，这个文件大于一个 HDFS 块大小，所以如果我们将这个文件存放到 HDFS 上会生成 4 个 HDFS 块，如下（注意下面的输出做了一些删除操作）：
 ```
 [iteblog@iteblog.com /home/iteblog]$ hadoop -put iteblog.txt /tmp
 [iteblog@iteblog.com /home/iteblog]$ hdfs fsck /tmp/iteblog.txt -files -blocks
