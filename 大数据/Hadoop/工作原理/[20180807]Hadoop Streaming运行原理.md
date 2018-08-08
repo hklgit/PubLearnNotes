@@ -23,17 +23,58 @@ Streaming 天生适合用于文本处理。Map 的输入数据通过标准输入
 import re
 import sys
 
-for vid in sys.stdin:
-  if vid.startswith("60") :
-    print "adr"
-  elif vid.startswith("80"):
-    print "ios"
-  else:
-    print "other"
+for line in sys.stdin:
+    params = line.strip().split(" ")
+    for word in params:
+        print "%s\t%s" % (word, 1)
 ```
-程序通过程序块读取 STDIN 中的每一行来迭代执行标准输入中的每一行。该程序块从输入的每一行中判断是否包含`60`和`80`，如果包含`60`表示平台为`adr`，如果包含`80`表示平台为`ios`，否则为`other`。
+程序通过程序块读取 STDIN 中的每一行来迭代执行标准输入中的每一行。该程序块将输入的每一行根据空格拆分为多个单词。将单词以及`1`以制表符隔开谢伟标准输出。
 
-> 值得一提的是 Streaming 和 Java MapReduce
+> 值得一提的是 Streaming 和 Java MapReduce API 之间的设计差异。Java MapReduce API 控制的 Map 函数一次只处理一条记录。针对输入数据中的每一条记录，该框架需要调用 Mapper 的 Map 方法来处理。然而在 Streaming 中，Map 程序可以自己决定如何处理输入数据，例如，它可以轻松读取并同时处理若干行，因为它受读操作的控制。
+
+这个脚本只能在标准输入和输出上运行，所以最简单的方式是通过 Unix 管道进行测试，而不使用 Hadoop：
+```
+[sjf0115@ying ~]$ cat word_count.txt | /home/sjf0115/tools/word_count_map.py
+I       1
+am      1
+a       1
+boy     1
+I       1
+come    1
+from    1
+China   1
+China   1
+is      1
+a       1
+very    1
+good    1
+country 1
+Welcome 1
+to      1
+China   1
+```
+下面看一下 Reduce 函数:
+```python
+#! /usr/bin/env python
+
+import re
+import sys
+
+result = 0
+word = ""
+for line in sys.stdin:
+    params = line.split("\t")
+    word = params[0]
+    count = int(params[1])
+    result+=count
+print "%s\t%s" % (word, result)
+```
+同样，程序遍历标准输入中的行，但在我们处理每个键值对时，我们要存储一个状态 `result`，记录每个单词对应的出现次数。
+
+Hadoop 命令不支持 Streaming，因此，我们需要在指定 Streaming JAR 文件流与 jar 选项时指定。Streaming 程序的选项指定了输入和输出路径以及 Map 和 Reduce 脚本，如下所示：
+```
+
+```
 
 ### 2. 运行机制
 
