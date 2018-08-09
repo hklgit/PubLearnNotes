@@ -26,7 +26,8 @@ import sys
 for line in sys.stdin:
     params = line.strip().split(" ")
     for word in params:
-        print "%s\t%s" % (word, 1)
+        value = 1
+        print( "%s\t%d" % (word, value) )
 ```
 程序通过程序块读取 STDIN 中的每一行来迭代执行标准输入中的每一行。该程序块将输入的每一行根据空格拆分为多个单词。将单词以及`1`以制表符隔开谢伟标准输出。
 
@@ -61,51 +62,59 @@ import re
 import sys
 
 result = 0
-word = ""
+last_key=None
 for line in sys.stdin:
-    params = line.split("\t")
-    word = params[0]
-    count = int(params[1])
-    result+=count
-print "%s\t%s" % (word, result)
+    (key, value) = line.strip().split("\t", 1)
+    count = int(value)
+    if last_key and last_key == key:
+        result += count
+    else:
+        if last_key:
+            print( "%s\t%d" % (last_key, result) )
+        result = count
+        last_key = key
+if last_key == key:
+    print( "%s\t%d" % (last_key, result) )
 ```
-同样，程序遍历标准输入中的行，但在我们处理每个键值对时，我们要存储一个状态 `result`，记录每个单词对应的出现次数。
+同样，程序遍历标准输入中的行，但在我们处理每个键值对时，我们要存储几个状态 （`result`, `last_key`），记录每个单词对应的出现次数。
 
 Hadoop 命令不支持 Streaming，因此，我们需要在指定 Streaming JAR 文件流与 jar 选项时指定。Streaming 程序的选项指定了输入和输出路径以及 Map 和 Reduce 脚本，如下所示：
 ```
+sudo -usjf0115 hadoop jar hadoop-streaming-2.2.0.jar \
+  -Dmapred.job.queue.name=wirelessdev \
+  -files word_count_map.py,word_count_reduce.py \
+  -input tmp/data_group/example/input/word_count \
+  -output tmp/data_group/example/output/word_count \
+  -mapper word_count_map.py \
+  -reducer word_count_reduce.py
+```
+
 
 ```
+China   3
+I       2
+Welcome 1
+a       2
+am      1
+boy     1
+come    1
+country 1
+from    1
+good    1
+is      1
+to      1
+very    1
+```
+
 
 ### 2. 运行机制
 
 Streaming 运行特殊的 Map 任务和 Reduce 任务，目的是运行用户提供的可执行程序，并与之通信，如下图所示：
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hadoop/hadoop-internal-anatomy-of-hadoop-streaming-1.png?raw=true)
 
 Streaming 任务使用标准输入和输出流与进程（可以使用任何语言编写）进行通信。在任务执行过程中，Java 进程都会把输入键值对传递给外部的进程，后者通过用户定义的 Map 函数和 Reduce 函数来执行它并把输出键值对传回 Java 进程。从节点管理器的角度看，就像其子进程自己在运行 Map 或 Reduce 代码一样。
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 原文：Hadoop权威指南
+
+http://www.glennklockwood.com/data-intensive/hadoop/streaming.html

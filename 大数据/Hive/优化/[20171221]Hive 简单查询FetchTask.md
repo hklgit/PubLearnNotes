@@ -1,3 +1,16 @@
+---
+layout: post
+author: sjf0115
+title: Hive 简单查询FetchTask
+date: 2017-12-21 20:16:01
+tags:
+  - Hive
+  - Hive 优化
+
+categories: Hive
+permalink: hive-tuning-fetch-task-conversion
+---
+
 ### 1. 简介
 Hive有很多任务，FetchTask是最有效率的任务之一。 它直接找到文件并给出结果，而不是启动MapReduce作业进行查询。对于简单的查询，如带有`LIMIT`语句的`SELECT * `查询，它非常快(单位数秒级)。在这种情况下，Hive可以通过执行hdfs操作来返回结果。
 

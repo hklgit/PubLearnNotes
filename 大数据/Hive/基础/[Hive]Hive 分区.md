@@ -54,6 +54,10 @@ LOCATION '/user/xiaosi/tmp/people';
 ALTER TABLE people add partition(dt='20180701',type='old') location 'day=20180701/type=old';
 ALTER TABLE people add partition(dt='20180701',type='new') location 'day=20180701/type=new';
 ```
+(6) 查看分区数据路径:
+```
+describe formatted people partition (dt=20180101);
+```
 
 ### 2. 动态分区
 
