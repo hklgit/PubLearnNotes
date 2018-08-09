@@ -12,7 +12,8 @@ permalink: hive-tuning-fetch-task-conversion
 ---
 
 ### 1. 简介
-Hive有很多任务，FetchTask是最有效率的任务之一。 它直接找到文件并给出结果，而不是启动MapReduce作业进行查询。对于简单的查询，如带有`LIMIT`语句的`SELECT * `查询，它非常快(单位数秒级)。在这种情况下，Hive可以通过执行hdfs操作来返回结果。
+
+某些 SELECT 查询可以转换为一个 FETCH 任务，从而最大限度地可以减少交互的延迟。在目前情况下，查询只能是单一数据源，不能有任何的子查询，不能有任何的聚合，去重（导致RS - `ReduceSinkOperator`，会产生 MapReduce 任务），`Lateral views` 以及 `Join`。Fetch 任务是 Hive 中执行效率比较高的任务之一。直接遍历文件并输出结果，而不是启动 MapReduce 作业进行查询。对于简单的查询，如带有 `LIMIT` 语句的 `SELECT * ` 查询，这会非常快(单位数秒级)。在这种情况下，Hive 可以通过执行 HDFS 操作来返回结果。
 
 Example:
 ```
@@ -43,14 +44,14 @@ OK
 ...
 
 ```
-从日志中我们可以看到MR任务已经启动，1个mapper和0个reducer。有没有方法可以让我们避免启动上面的MapReduce作业？这就需要设置`hive.fetch.task.conversion`配置：
+从日志中我们可以看到会启动 MapReduce 任务，只有1个 Mapper 但没有 Reducer。有没有方法可以让我们避免启动上面的 MapReduce 作业？这就需要设置 `hive.fetch.task.conversion` 配置：
 ```
 <property>
   <name>hive.fetch.task.conversion</name>
   <value>none|minimal|more</value>
 </property>
 ```
-Hive已经做过优化了，从Hive 0.10.0版本开始，对于简单的不需要聚合去重的查询语句，可以不需要运行MapReduce任务，直接通过FetchTask获取数据:
+Hive 已经做过优化了，从Hive 0.10.0 版本开始，对于简单的不需要聚合去重的查询语句，可以不需要运行 MapReduce 任务，直接通过查询 HDFS 获取数据:
 ```
 hive> select vid, gid, os from tmp_client_behavior limit 10;
 OK
@@ -62,32 +63,31 @@ OK
 
 #### 2.1 hive.fetch.task.conversion
 
-```hive
+```xml
 <property>
   <name>hive.fetch.task.conversion</name>
   <value>none|minimal|more</value>
 </property>
 ```
-可支持的选项为`none`,`minimal`和`more`，从Hive 0.10.0版本到Hive 0.13.1版本起，默认值为`minimal`，Hive0.14.0版本以及更高版本默认值改为`more`:
-(1) none: 禁用`hive.fetch.task.conversion`（在Hive 0.14.0版本中引入）
-(2) minimal: 这意味着当使用LIMIT执行`SELECT *`时，可以转换为FetchTask．
-(3) more: 如果我们查询某个具体的列，使用`more`也可以转换为FetchTask。.`more`可以应用在SELECT子句中任何表达式上，包括UDF。（UDTF和`lateral views`尚不支持）
+可支持的选项有 `none`,`minimal` 和 `more`，从Hive 0.10.0 版本到 Hive 0.13.1 版本起，默认值为 `minimal`，Hive 0.14.0版本以及更高版本默认值改为 `more`:
+- `none`: 禁用 `hive.fetch.task.conversion`（在Hive 0.14.0版本中引入）
+- `minimal`: 当使用 `LIMIT` 或在分区列上执行过滤（`WHERE` 和 `HAVING`子句），以及执行 `SELECT *` 时，可以转换为 Fetch 任务（SELECT `*`, FILTER on partition columns (WHERE and HAVING clauses), LIMIT only）。
+- `more`：当使用 `SELECT`，`LIMIT` 以及过滤时，`more` 选项下也可以转换为 Fetch 任务（SELECT, FILTER, LIMIT only (including TABLESAMPLE, virtual columns)）。`more` 可以在 `SELECT` 子句中使用任何表达式，包括UDF。（UDTF和 `Lateral views`尚不支持）。
 
-还有一些其他要求：单个数据源(意味着一个表或一个分区)，没有子查询，没有聚合或去重；不适用于视图或JOIN。这意味着如果我们执行下面的查询，仍然会使用FetchTask：
-```
-SELECT col1 as `alias1`, col2 FROM table WHERE partitionkey='somePartitionValue'
-```
+> 对具体使用条件有点疑问
 
 #### 2.2 hive.fetch.task.conversion.threshold
 
-```
+```xml
 <property>
   <name>hive.fetch.task.conversion.threshold</name>
   <value>1073741824</value>
 </property>
 ```
-从Hive 0.13.0版本到Hive 0.13.1版本起，默认值为`-1`，Hive 0.14.0版本以及更高版本默认值改为`1073741824`(1G)．
-此优化可获取指定分区中所有文件的长度，并与阈值进行比较，以确定是否应使用Fetch任务。在本例配置中，如果表大小大于1G，则使用Mapreduce而不是Fetch任务．
+
+从 Hive 0.13.0 版本到 Hive 0.13.1 版本起，默认值为`-1`（表示没有任何的限制），Hive 0.14.0 版本以及更高版本默认值改为 `1073741824`(1G)。
+
+使用 `hive.fetch.task.conversion` 的输入阈值（以字节为单位）。如果目标表在本机，则输入长度通过文件长度的总和来计算。如果不在本机，则表的存储处理程序可以选择实现 `org.apache.hadoop.hive.ql.metadata.InputEstimator` 接口。负阈值意味着使用 `hive.fetch.task.conversion` 没有任何的限制。
 
 Example:
 ```
@@ -110,7 +110,7 @@ OK
 root x 0 0 root /root /bin/bash
 Time taken: 6.698 seconds, Fetched: 1 row(s)
 ```
-Else, it will only use fetch task:
+调整阈值变大则会使用 Fetch 任务:
 ```
 hive> set hive.fetch.task.conversion.threshold=600000000;
 hive> select * from passwords limit 1;
@@ -119,20 +119,7 @@ root x 0 0 root /root /bin/bash
 Time taken: 0.325 seconds, Fetched: 1 row(s)
 ```
 
-**备注**
-```
-此参数根据表大小而不是结果集大小来计算或估计。
-```
-
-#### 2.3 hive.fetch.task.aggr
-
-```
-<property>
-  <name>hive.fetch.task.aggr</name>
-  <value>false</value>
-</property>  
-```
-没有group-by子句的聚合查询(例如, `select count(*) from src`)．在单个reduce任务中执行最终的聚合。如果设置为真，Hive将最终聚合阶段委托给Fetch任务，可能会减少查询时间。
+> 此参数根据表大小而不是结果集大小来计算或估计。
 
 ### 3. 设置Fetch任务
 
@@ -145,7 +132,7 @@ hive> set hive.fetch.task.conversion=more;
 bin/hive --hiveconf hive.fetch.task.conversion=more
 ```
 (3) 上面的两种方法都可以开启了Fetch Task，但是都是临时起作用的；如果你想一直启用这个功能，可以在${HIVE_HOME}/conf/hive-site.xml里面修改配置：
-```
+```xml
 <property>
   <name>hive.fetch.task.conversion</name>
   <value>more</value>
