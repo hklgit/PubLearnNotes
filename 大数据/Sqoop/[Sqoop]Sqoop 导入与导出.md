@@ -2,7 +2,7 @@
 
 ### 1.1 登陆数据库查看表
 ```
-xiaosi@Qunar:~$ mysql -u root -p
+xiaosi@ying:~$ mysql -u root -p
 Enter password:
 Welcome to the MySQL monitor.  Commands end with ; or \g.
 Your MySQL connection id is 8
@@ -33,8 +33,8 @@ mysql> select * from employee;
 +--------+---------+-----------------+
 | name   | company | depart          |
 +--------+---------+-----------------+
-| yoona  | qunar   | 创新事业部      |
-| xiaosi | qunar   | 创新事业部      |
+| yoona  | ying   | 创新事业部      |
+| xiaosi | ying   | 创新事业部      |
 | jim    | ali     | 淘宝            |
 | kom    | ali     | 淘宝            |
 ```
@@ -100,22 +100,22 @@ sqoop import --connect jdbc:mysql://localhost:3306/test --table employee --usern
 ```
 是不是很眼熟，这就是MapReduce作业的输出日志，说明Sqoop导入数据是通过MapReduce作业完成的，并且是没有Reduce任务的MapReduce。为了验证是否导入成功，查看HDFS的目录，执行如下命令：
 ```
-xiaosi@Qunar:/opt/hadoop-2.7.2/sbin$ hadoop fs -ls /user/xiaosi
+xiaosi@ying:/opt/hadoop-2.7.2/sbin$ hadoop fs -ls /user/xiaosi
 Found 2 items
 drwxr-xr-x   - xiaosi supergroup          0 2016-10-26 16:16 /user/xiaosi/data
 drwxr-xr-x   - xiaosi supergroup          0 2016-11-13 16:37 /user/xiaosi/employee
 ```
 我们发现多出了一个目录，目录名称正好是表名employee，继续查看目录，会发现有两个文件：
 ```
-xiaosi@Qunar:/opt/hadoop-2.7.2/sbin$ hadoop fs -ls /user/xiaosi/employee
+xiaosi@ying:/opt/hadoop-2.7.2/sbin$ hadoop fs -ls /user/xiaosi/employee
 Found 2 items
 -rw-r--r--   1 xiaosi supergroup          0 2016-11-13 16:37 /user/xiaosi/employee/_SUCCESS
 -rw-r--r--   1 xiaosi supergroup        120 2016-11-13 16:37 /user/xiaosi/employee/part-m-00000
 ```
 其中，`_SUCCESS` 是代表作业成功的标志文件，输出结果是part-m-00000文件（有可能会输出_logs文件，记录了作业日志）。查看输出文件内容：
 ```
-yoona,qunar,创新事业部
-xiaosi,qunar,创新事业部
+yoona,ying,创新事业部
+xiaosi,ying,创新事业部
 jim,ali,淘宝
 kom,ali,淘宝
 lucy,baidu,搜索
@@ -123,7 +123,7 @@ jim,ali,淘宝
 ```
 Sqoop导出的数据文件变成了CSV文件（逗号分割）。这时，如果查看执行Sqoop命令的当前文件夹，会发现多了一个employee.java文件，这是Sqoop自动生成的Java源文件。
 ```
-xiaosi@Qunar:/opt/sqoop-1.4.6/bin$ ll
+xiaosi@ying:/opt/sqoop-1.4.6/bin$ ll
 总用量 116
 drwxr-xr-x 2 root root  4096 11月 13 16:36 ./
 drwxr-xr-x 9 root root  4096  4月 27  2015 ../
