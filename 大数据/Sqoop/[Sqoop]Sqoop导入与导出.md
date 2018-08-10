@@ -3,7 +3,7 @@
 ### 1.1 登陆数据库查看表
 ```
 xiaosi@Qunar:~$ mysql -u root -p
-Enter password: 
+Enter password:
 Welcome to the MySQL monitor.  Commands end with ; or \g.
 Your MySQL connection id is 8
 Server version: 5.6.30-0ubuntu0.15.10.1-log (Ubuntu)
@@ -58,9 +58,9 @@ sqoop import --connect jdbc:mysql://localhost:3306/test --table employee --usern
 16/11/13 16:37:35 INFO db.DBRecordReader: Working on split: 1=1 AND 1=1
 16/11/13 16:37:35 INFO db.DBRecordReader: Executing query: SELECT `name`, `company`, `depart` FROM `employee` AS `employee` WHERE ( 1=1 ) AND ( 1=1 )
 16/11/13 16:37:35 INFO mapreduce.AutoProgressMapper: Auto-progress thread is finished. keepGoing=false
-16/11/13 16:37:35 INFO mapred.LocalJobRunner: 
+16/11/13 16:37:35 INFO mapred.LocalJobRunner:
 16/11/13 16:37:35 INFO mapred.Task: Task:attempt_local976138588_0001_m_000000_0 is done. And is in the process of committing
-16/11/13 16:37:35 INFO mapred.LocalJobRunner: 
+16/11/13 16:37:35 INFO mapred.LocalJobRunner:
 16/11/13 16:37:35 INFO mapred.Task: Task attempt_local976138588_0001_m_000000_0 is allowed to commit now
 16/11/13 16:37:35 INFO output.FileOutputCommitter: Saved output of task 'attempt_local976138588_0001_m_000000_0' to hdfs://localhost:9000/user/xiaosi/employee/_temporary/0/task_local976138588_0001_m_000000
 16/11/13 16:37:35 INFO mapred.LocalJobRunner: map
@@ -91,9 +91,9 @@ sqoop import --connect jdbc:mysql://localhost:3306/test --table employee --usern
 		Merged Map outputs=0
 		GC time elapsed (ms)=0
 		Total committed heap usage (bytes)=241696768
-	File Input Format Counters 
+	File Input Format Counters
 		Bytes Read=0
-	File Output Format Counters 
+	File Output Format Counters
 		Bytes Written=120
 16/11/13 16:37:36 INFO mapreduce.ImportJobBase: Transferred 120 bytes in 2.4312 seconds (49.3584 bytes/sec)
 16/11/13 16:37:36 INFO mapreduce.ImportJobBase: Retrieved 6 records.
@@ -112,7 +112,7 @@ Found 2 items
 -rw-r--r--   1 xiaosi supergroup          0 2016-11-13 16:37 /user/xiaosi/employee/_SUCCESS
 -rw-r--r--   1 xiaosi supergroup        120 2016-11-13 16:37 /user/xiaosi/employee/part-m-00000
 ```
-其中，_SUCCESS是代表作业成功的标志文件，输出结果是part-m-00000文件（有可能会输出_logs文件，记录了作业日志）。查看输出文件内容：
+其中，`_SUCCESS` 是代表作业成功的标志文件，输出结果是part-m-00000文件（有可能会输出_logs文件，记录了作业日志）。查看输出文件内容：
 ```
 yoona,qunar,创新事业部
 xiaosi,qunar,创新事业部
@@ -235,7 +235,7 @@ Sqoop可以对导入过程进行精细的控制，不用每次都导入一个表
 
 在开始的例子中，我们导入的数据存放到了HDFS中，将这份数据导入Hive之前，必须在Hive中创建该表，Sqoop提供了相应的命令：
 ```
-sqoop create-hive-table --connect jdbc:mysql://localhost:3306/test --table employee --username root -password root --fields-terminated-by ',' 
+sqoop create-hive-table --connect jdbc:mysql://localhost:3306/test --table employee --username root -password root --fields-terminated-by ','
 ```
 ## 3. 导出实例
 
@@ -277,7 +277,7 @@ sqoop export --connect jdbc:mysql://localhost:3306/test --table order_info --exp
 16/11/13 19:21:43 INFO Configuration.deprecation: map.input.start is deprecated. Instead, use mapreduce.map.input.start
 16/11/13 19:21:43 INFO Configuration.deprecation: map.input.length is deprecated. Instead, use mapreduce.map.input.length
 16/11/13 19:21:43 INFO mapreduce.AutoProgressMapper: Auto-progress thread is finished. keepGoing=false
-16/11/13 19:21:43 INFO mapred.LocalJobRunner: 
+16/11/13 19:21:43 INFO mapred.LocalJobRunner:
 16/11/13 19:21:43 INFO mapred.Task: Task:attempt_local1384135708_0001_m_000000_0 is done. And is in the process of committing
 16/11/13 19:21:43 INFO mapred.LocalJobRunner: map
 16/11/13 19:21:43 INFO mapred.Task: Task 'attempt_local1384135708_0001_m_000000_0' done.
@@ -307,9 +307,9 @@ sqoop export --connect jdbc:mysql://localhost:3306/test --table order_info --exp
 		Merged Map outputs=0
 		GC time elapsed (ms)=0
 		Total committed heap usage (bytes)=226492416
-	File Input Format Counters 
+	File Input Format Counters
 		Bytes Read=0
-	File Output Format Counters 
+	File Output Format Counters
 		Bytes Written=0
 16/11/13 19:21:44 INFO mapreduce.ExportJobBase: Transferred 3.7021 KB in 2.3262 seconds (1.5915 KB/sec)
 16/11/13 19:21:44 INFO mapreduce.ExportJobBase: Exported 110 records.
@@ -334,12 +334,3 @@ mysql> select * from order_info limit 5;
 
 ![image](http://img.blog.csdn.net/20161113195812626)
 同样，Sqoop根据目标表（数据库）的结构会生成一个Java类（第一步和第二步），该类的作用为序列化和反序列化。接着会启动一个MapReduce作业（第三步），在作业中会用生成的Java类从HDFS中读取数据（第四步），并生成一批INSERT语句，每条语句对会向mysql的目标表插入多条数据（第五步）,，这样读入的时候是并行的，写入的时候也是并行的，但是其写入性能会受限于目标数据库的写入性能。
-
-
-
-
-
- 
-
-
-
