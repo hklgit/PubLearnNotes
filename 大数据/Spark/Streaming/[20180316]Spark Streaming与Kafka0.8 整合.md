@@ -62,7 +62,7 @@ kafkaStream = KafkaUtils.createStream(streamingContext, \
 默认情况下，Python API会将 Kafka 数据解码为 UTF8 编码的字符串。你可以指定自定义解码函数，将 Kafka 记录中的字节数组解码为任意任意数据类型。 查看[API文档](http://spark.apache.org/docs/2.3.0/api/python/pyspark.streaming.html#pyspark.streaming.kafka.KafkaUtils)。
 
 请记住:
-- Kafka 中的 topic partition 区与 Spark Streaming 中生成的 RDD partition 没有相关性。因此增加 KafkaUtils.createStream() 中特定 topic partition 的数量仅仅增加了在单个接收器中消费 topic 使用的线程数。但是这并没有增加 Spark 在处理数据的并行度。
+- Kafka 中的 topic partition 区与 Spark Streaming 中生成的 RDD partition 没有关系。因此增加 KafkaUtils.createStream() 中特定 topic partition 的数量仅仅增加了在单个接收器中消费 topic 使用的线程数。但是这并没有增加 Spark 在处理数据的并行度。
 - 可以用不同的 groups 和 topics 来创建多个 Kafka 输入 DStream，用于使用多个接收器并行接收数据。之后可以利用 union 来合并成一个 Dstream。
 - 如果你使用 HDFS 等副本文件系统去启用 `Write Ahead Logs`，那么接收到的数据已经在日志中备份。因此，输入流的存储级别为 StorageLevel.MEMORY_AND_DISK_SER（即使用KafkaUtils.createStream（...，StorageLevel.MEMORY_AND_DISK_SER））。
 
