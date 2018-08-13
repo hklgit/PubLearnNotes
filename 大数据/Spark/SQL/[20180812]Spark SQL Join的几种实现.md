@@ -35,7 +35,7 @@ Broadcast Join 的条件有以下几个：
 
 ### 2. Shuffle Hash Join
 
-当一侧的表比较小时，我们选择将其广播出去以避免 shuffle，提高性能。但因为被广播的表首先被 collect 到 driver 段，然后被冗余分发到每个 Executor 上，所以当表比较大时，采用 broadcast join 会对 driver 端和 Executor 端造成较大的压力。
+当一侧的表比较小时，我们选择将其广播出去以避免 shuffle，提高性能。但因为被广播的表首先被 collect 到 driver 端，然后被冗余分发到每个 Executor 上，所以当表比较大时，采用 broadcast join 会对 driver 端和 Executor 端造成较大的压力。
 
 但由于 Spark 是一个分布式的计算引擎，可以通过分区的形式将大批量的数据划分成n份较小的数据集进行并行计算。这种思想应用到 Join 上便是 Shuffle Hash Join 了。利用 key 相同必然分区相同的这个原理，Spark SQL 将较大表的 join 分而治之，先将表划分成n个分区，再对两个表中相对应分区的数据分别进行 Hash Join，这样即在一定程度上减少了driver广播一侧表的压力，也减少了 Executor 端取整张被广播表的内存消耗。其原理如下图：
 
