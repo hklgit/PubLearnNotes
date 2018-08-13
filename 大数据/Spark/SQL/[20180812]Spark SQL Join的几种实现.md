@@ -23,7 +23,7 @@ Spark SQL 作为大数据领域的 SQL 实现，自然也对 Join 操作做了�
 
 当维度表和事实表进行 Join 操作时，为了避免 shuffle，我们可以将大小有限的维度表的全部数据分发到每个节点上，供事实表使用。Executor 存储维度表的全部数据，一定程度上牺牲了空间，换取 shuffle 操作大量的耗时，这在 Spark SQL 中称作 Broadcast Join，如下图所示：
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-sql-implementation-of-join-1.png?raw=true)
 
 Table B 是较小的表，黑色表示将其广播到每个 Executor 节点上，Table A 的每个 partition 会通过 block manager 取到 Table A 的数据。根据每条记录的 Join Key 取到 Table B 中相对应的记录，根据 Join Type 进行操作。这个过程比较简单，不做赘述。
 
@@ -39,7 +39,7 @@ Broadcast Join 的条件有以下几个：
 
 但由于 Spark 是一个分布式的计算引擎，可以通过分区的形式将大批量的数据划分成n份较小的数据集进行并行计算。这种思想应用到 Join 上便是 Shuffle Hash Join 了。利用 key 相同必然分区相同的这个原理，Spark SQL 将较大表的 join 分而治之，先将表划分成n个分区，再对两个表中相对应分区的数据分别进行 Hash Join，这样即在一定程度上减少了driver广播一侧表的压力，也减少了 Executor 端取整张被广播表的内存消耗。其原理如下图：
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-sql-implementation-of-join-2.png?raw=true)
 
 Shuffle Hash Join分为两步：
 - 对两张表分别按照 join keys 进行重分区，即 shuffle，目的是为了让有相同 join keys 值的记录分到对应的分区中
@@ -57,18 +57,15 @@ Shuffle Hash Join的条件有以下几个：
 
 当两个表都非常大时，Spark SQL 采用了一种全新的方案来对表进行 Join，即 Sort Merge Join。这种实现方式不用将一侧数据全部加载后再进行 hash join，但需要在　join　前将数据排序，如下图所示：
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-sql-implementation-of-join-3.png?raw=true)
 
 可以看到，首先将两张表按照 join keys 进行了重新 shuffle，保证 join keys 值相同的记录会被分在相应的分区。分区后对每个分区内的数据进行排序，排序后再对相应的分区内的记录进行连接，如下图示：
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Spark/spark-sql-implementation-of-join-4.png?raw=true)
 
 看着很眼熟吧？也很简单，因为两个序列都是有序的，从头遍历，碰到key相同的就输出；如果不同，左边小就继续取左边，反之取右边。
 
 可以看出，无论分区有多大，Sort Merge Join都不用把某一侧的数据全部加载到内存中，而是即用即取即丢，从而大大提升了大数据量下sql join的稳定性。
-
-
-
 
 
 
