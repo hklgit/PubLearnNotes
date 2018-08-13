@@ -1,7 +1,7 @@
 ---
 layout: post
 author: sjf0115
-title: Hadoop中的全排序
+title: Hadoop TotalOrderSorting 全排序
 date: 2018-03-21 19:15:17
 tags:
   - Hadoop
@@ -10,41 +10,36 @@ categories: Hadoop
 permalink: hadoop-basics-total-order-sorting-mapreduce
 ---
 
-在前面的部分中我们看到，当使用多个 reducer 时，每个 reducer 都接收分配给它们的 (key、value) 键值对。当一个 reducer 接收到这些键值对时，它们按键进行排序，因此一般来说，reducer 的输出也按键进行排序的。然而，不同的 reducer 的输出之间并没有顺序排列，因此它们不能按顺序排列或顺序读取。
+在前面的部分中我们看到，当使用多个 Reducer 时，每个 Reducer 都接收分配给它们的 (key、value) 键值对。当一个 Reducer 接收到这些键值对时，它们按 key 进行排序，因此一般来说，Reducer 的输出也按 key 进行排序的。然而，不同的 Reducer 的输出之间并没有顺序排列，因此它们不能按顺序排列或顺序读取。
 
-例如，有两个 reducer，对简单的文本键进行排序，你可以有:
+例如，有两个 Reducer，对简单的文本键进行排序，你可以有:
 - Reducer 1 中输出: (a,5)， (d,6)， (w,5)
 - Reducer 2 中输出: (b,2)， (c,5)， (e,7)
-如果你单独看每一个输出，键都是有序的，但是如果你一个接一个地读，顺序就会被打破。
+如果你单独看每一个输出，key 都是有序的，但是如果你一个一个地读取，顺序就会被打破。
 
-`Total Order Sorting` 的目标是将不同 reducer 之间的所有输出都排好序:
+`Total Order Sorting` 的目标是将不同 Reducer 之间的所有输出都排好序:
 - Reducer 1 中输出: (a,5)， (b,2)， (c,5)
 - Reducer 2 中输出: (d,6)， (e,7)， (w,5)
-这种方式输出按顺序读读取/搜索/连接。
 
-在这篇文章中，我们将首先看到如何使用自定义分区器手动创建全量排序。然后我们将学习如何使用 Hadoop 的 TotalOrderPartitioner 在简单类型的 key 上自动创建分区。最后，我们将看到一种更高级的技术，使用我们的 Secondary Sort 的 Composite Key（来自[上一篇文章]()）与此分区器实现 "Total Secondary Sorting"。
+在这篇文章中，我们将首先看到如何使用自定义分区器手动创建全局排序。然后我们将学习如何使用 Hadoop 的 `TotalOrderPartitioner` 在简单类型的 key 上自动创建分区。最后，我们将看到一种更高级的技术，使用我们的 Secondary Sort 的 Composite Key（来自[上一篇文章](http://smartsi.club/2018/03/21/hadoop-basics-secondary-sort-in-mapreduce/)）与此分区器实现 "Total Secondary Sorting"。
 
 ### 1. 手动分区
 
-在前面的部分中，我们的[二次排序作业](http://smartsi.club/2018/03/21/hadoop-basics-secondary-sort-in-mapreduce/)使用了 naturalkeypartiator，根据自然 key ( "state" 字段)的 hashcode 将 map 输出键值对分配给 reducers。
+在前面文章中，[Hadoop Secondary　Sort](http://smartsi.club/2018/03/21/hadoop-basics-secondary-sort-in-mapreduce/)使用了 `NaturalKeyPartiator`，根据自然 key ("state" 字段)的 hashcode 将 map 输出键值对分配给 Reducers。
 
-实现全量排序的一种方法是实现 Partitioner 的 getPartition() 方法，以手动间隔地分配 key 给每一个 reducer。例如，如果我们使用3个 reducer，我们可以试着用这样的方法来均匀分配:
-- Reducer 0:从 A 到 I 的 state 名称(包括9个字母)
-- Reducer 1:从 J 到 Q 的 state 名称(包括8个字母)
-- Reducer 2:从 R 到 Z 的 state 名称(包括9个字母)
+实现全局排序的一种方法是实现 Partitioner 的 getPartition() 方法，以手动间隔地分配 key 给每一个 Reducer。例如，如果我们使用3个 Reducer，我们可以试着用这样的方法来均匀分配:
+- Reducer 0：从 A 到 I 的 state 名称(包括9个字母)
+- Reducer 1：从 J 到 Q 的 state 名称(包括8个字母)
+- Reducer 2：从 R 到 Z 的 state 名称(包括9个字母)
 
-要做到这一点，你可以简单地用以下方法来代替自然键盘:
-
-如果这样过，可以简单地用以下方法来代替自然 key:
+如果这样做，可以简单地用以下方法来代替自然 key:
 ```java
 import org.apache.hadoop.mapreduce.Partitioner;
 import data.writable.DonationWritable;
 
 public class CustomPartitioner extends Partitioner<CompositeKey, DonationWritable> {
-
     @Override
     public int getPartition(CompositeKey key, DonationWritable value, int numPartitions) {
-
         if (key.state.compareTo("J") < 0) {
             return 0;
         } else if (key.state.compareTo("R") < 0) {
@@ -55,7 +50,7 @@ public class CustomPartitioner extends Partitioner<CompositeKey, DonationWritabl
     }
 }
 ```
-让我们再次执行这个任务，使用3个 reducer 和我们的新自定义的分区器:
+让我们再次执行这个任务，使用3个 Reducer 和我们的新自定义的分区器:
 ```
 $ hadoop jar donors.jar mapreduce.donation.secondarysort.OrderByCompositeKey donors/donations.seqfile donors/output_secondarysort
 
@@ -96,21 +91,20 @@ f0a9489e53a203e0f7f47e6a350bb19a        WY Wilson 1.68
 8aed3aba4473c0f9579927d0940c540f        WY Worland 75.00
 1a497106ff2e2038f41897248314e6c6        WY Worland 50.00
 ```
-这样就产生了一个正确的完全排序的3个文件结果。如果我们查看每个输出文件的开头和结尾，我们可以看到每个 state 只属于一个 reducer。我们还可以看到在所有输出文件上的 state 排序的延续。这是一个成功的全量排序。
+这样就产生了一个正确的完全排序的3个文件结果。如果我们查看每个输出文件的开头和结尾，我们可以看到每个 state 都只属于一个 Reducer。我们还可以看到在所有输出文件上的 state 排序的延续。
 
-然而，使用这种技术会带来一些问题:
-- 这需要手动编码。如果我们想要使用4个 reducer，我们需要编写一个新的分区器。
-- reducer 之间的负载分配不均匀。第一个输出文件比最后一个输出文件大3倍。我们尽力把字母表中的26个字母分开，但现实是，state 名称并不是均匀分布在字母表上的。
-
-为了解决这些问题，Hadoop 引入了一个强大但复杂的分区器，称为 `TotalOrderPartitioner`。
+然而，使用这种方法会有一些问题:
+- 这需要手动编码。如果我们想要使用4个 Reducer，我们需要重新编写一个分区器。
+- Reducer 之间的负载不均衡。第一个输出文件比最后一个输出文件大3倍。我们尽力把字母表中的26个字母分开，但现实是，state 名称并不是均匀分布在字母表上的。
+为了解决这些问题，Hadoop 引入了一个强大但复杂的分区器 `TotalOrderPartitioner`。
 
 ### 2. TotalOrderPartitioner
 
-基本上,`TotalOrderOrderPartitioner` 与我们的自定义类一样，但能动态并在各 reducer 之间的均衡负载。为此，它需要对输入数据进行采样，来预计算在 Map 阶段开始之前如何将输入数据 "分隔" 成相等的部分。然后在 mapper 的分区阶段使用这些 "分割" 作为分区边界。
+`TotalOrderOrderPartitioner` 与我们的自定义类一样，但能动态的在各 Reducer 之间的均衡负载。为此，它需要对输入数据进行采样，来预计算在 Map 阶段开始之前如何将输入数据 "分隔" 成相等的部分。然后在 mapper 的分区阶段使用这些 "分割" 作为分区边界。
 
 #### 2.1 对数据集采样
 
-让我们首先创建一个比较简单的数据集来解释和测试 Total Order Partitioner 是如何工作的。[GenerateListOfStateCity.java](https://github.com/nicomak/blog/blob/master/donors/src/main/java/mapreduce/donation/totalorderpartitioner/GenerateListOfStateCity.java) MapReduce 作业简单地从 "捐赠" 序列文件中打印出文本键值对(state，city):
+让我们首先创建一个比较简单的数据集来解释和测试 `TotalOrderPartitioner` 是如何工作的。[GenerateListOfStateCity.java](https://github.com/nicomak/blog/blob/master/donors/src/main/java/mapreduce/donation/totalorderpartitioner/GenerateListOfStateCity.java) MapReduce 作业简单地从 "捐赠" 序列文件中打印出文本键值对(state，city):
 ```java
 package mapreduce.donation.totalorderpartitioner;
 
@@ -217,13 +211,13 @@ ID      Blackfoot
 
 #### 2.2 TotalOrderPartitioner 工作流程
 
-使用我们刚刚生成的简单数据集，这里有一个关于 TotalOrderPartiationer 如何帮助我们在多个 reducer 中对输入进行排序的说明:
+使用我们刚刚生成的简单数据集，这里有一个关于 `TotalOrderPartiationer` 如何帮助我们在多个 reducer 中对输入进行排序的说明:
 
 ![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hadoop/hadoop-basics-total-order-sorting-mapreduce-1.png?raw=true)
 
-以下是关于整个程序的一些重要细节:
+以下是整个过程的一些重要细节:
 
-(1) 一个 InputSampler 在所有的 input splits 中对 key 采样，并使用作业的 Sort Comparator 对它们进行排序。Hadoop 库中有不同的输入采样器实现:
+(1) `InputSampler` 在所有的 InputSplits 上对 key 进行采样，并使用作业的 SortComparator 对它们进行排序。Hadoop 库中有不同的输入采样器实现:
 - `RandomSampler`:根据给定频率随机采样。这是我们在这个例子中使用的。
 - `IntervalSampler`:定期取样(例如每5条记录)。
 - `SplitSampler`:从每个 splits 中获取前 n 个样本。
@@ -375,7 +369,7 @@ Exception in thread "main" java.io.IOException: wrong key class: org.apache.hado
 (2) 为什么要指定 map 键类？采样器的泛型类型已经反映了输入类型…
 - 我不是很确定。我相信如果这些类型是独立的就更好了。这与下一个问题有关。
 
-(3) 
+(3)
 
 
 ### 3. Using a different input for sampling
@@ -389,55 +383,6 @@ Exception in thread "main" java.io.IOException: wrong key class: org.apache.hado
 ##### 4.3.1 The Custom InputFormat
 ##### 4.3.2 The Custom RecordReader
 #### 4.4 Execution and Analysis
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
