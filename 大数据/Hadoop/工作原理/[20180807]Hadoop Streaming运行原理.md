@@ -29,7 +29,7 @@ for line in sys.stdin:
         value = 1
         print( "%s\t%d" % (word, value) )
 ```
-程序通过程序块读取 STDIN 中的每一行来迭代执行标准输入中的每一行。该程序块将输入的每一行根据空格拆分为多个单词。将单词以及`1`以制表符隔开谢伟标准输出。
+程序通过程序块读取 STDIN 中的每一行来迭代执行标准输入中的每一行。该程序块将输入的每一行根据空格拆分为多个单词。将单词以及`1`以制表符隔开标准输出。
 
 > 值得一提的是 Streaming 和 Java MapReduce API 之间的设计差异。Java MapReduce API 控制的 Map 函数一次只处理一条记录。针对输入数据中的每一条记录，该框架需要调用 Mapper 的 Map 方法来处理。然而在 Streaming 中，Map 程序可以自己决定如何处理输入数据，例如，它可以轻松读取并同时处理若干行，因为它受读操作的控制。
 
@@ -81,7 +81,7 @@ if last_key == key:
 Hadoop 命令不支持 Streaming，因此，我们需要在指定 Streaming JAR 文件流与 jar 选项时指定。Streaming 程序的选项指定了输入和输出路径以及 Map 和 Reduce 脚本，如下所示：
 ```
 sudo -usjf0115 hadoop jar hadoop-streaming-2.2.0.jar \
-  -Dmapred.job.queue.name=wirelessdev \
+  -Dmapred.job.queue.name=sjf0115 \
   -files word_count_map.py,word_count_reduce.py \
   -input tmp/data_group/example/input/word_count \
   -output tmp/data_group/example/output/word_count \

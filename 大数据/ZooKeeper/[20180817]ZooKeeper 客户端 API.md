@@ -42,4 +42,4 @@ ZooKeeper 类的构造函数一共有三个参数：第一个参数是 ZooKeeper
 
 
 
-...
+原文：https://segmentfault.com/a/1190000012262940
