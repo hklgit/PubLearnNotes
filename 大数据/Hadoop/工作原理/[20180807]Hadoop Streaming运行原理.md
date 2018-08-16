@@ -88,8 +88,7 @@ sudo -usjf0115 hadoop jar hadoop-streaming-2.2.0.jar \
   -mapper word_count_map.py \
   -reducer word_count_reduce.py
 ```
-
-
+输出结果如下：
 ```
 China   3
 I       2
