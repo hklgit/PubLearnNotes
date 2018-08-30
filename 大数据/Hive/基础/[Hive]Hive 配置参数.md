@@ -19,3 +19,11 @@ set mapreduce.output.fileoutputformat.compress=true;
 set mapreduce.output.fileoutputformat.compress.codec=org.apache.hadoop.io.compress.GzipCodec;
 set mapreduce.output.fileoutputformat.compress.type=BLOCK;
 ```
+### 4. 避免本地Task
+
+```
+# 禁止启动本地模式运行
+set hive.exec.mode.local.auto=false;
+# 禁止启动 FetchTask
+set hive.fetch.task.conversion=none;
+```
