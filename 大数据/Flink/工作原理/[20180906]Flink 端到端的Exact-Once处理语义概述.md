@@ -52,7 +52,7 @@ Flink以固定的可配置时间间隔生成检查点，然后将检查点写入
 
 Flink对端到端Exactly-Once语义的支持不仅限于Kafka，它可以与任何提供必要协调机制的数据源/接收器一起使用。例如，来自Dell/EMC的开源流处理存储系统Pravega也可以通过 TwoPhaseCommitSinkFunction 支持Flink的端到端Exactly-Once语义。
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Flink/end-to-end-exactly-once-processing-apache-flink-apache-kafka-1.png?raw=true)
 
 在我们今天要讨论的Flink应用程序示例中，我们有：
 - 从Kafka读取的数据源（在Flink为KafkaConsumer）
@@ -67,19 +67,19 @@ Flink对端到端Exactly-Once语义的支持不仅限于Kafka，它可以与任�
 
 `Barrier` 在算子之间传递。对于每个算子，它会触发算子的状态后端来生成状态的快照。
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Flink/end-to-end-exactly-once-processing-apache-flink-apache-kafka-2.png?raw=true)
 
 数据源存储Kafka的偏移量，完成此操作后，它将检查点 `Barrier` 传递给下一个算子。
 
 如果算子只有内部状态，这种方法是有效的。内部状态是Flink状态可以存储和管理的所有东西 - 例如，第二个算子中的窗口总和。当进程只有内部状态时，除了写入到已定义的状态变量之外，不需要在预提交阶段执行任何其他操作。Flink负责在检查点成功的情况下正确提交这些写入，或者在出现故障时中止这些写入。
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Flink/end-to-end-exactly-once-processing-apache-flink-apache-kafka-3.png?raw=true)
 
 但是，当进程具有外部状态时，必须稍微处理此状态。外部状态通常以写入外部系统（如Kafka）的形式出现。在这种情况下，为了提供Exact-Once语义保证，外部系统必须为与两阶段提交协议集成的事务提供支持。
 
 我们知道我们示例中的数据接收器具有这样的外部状态，因为它正在向Kafka写入数据。 在这种情况下，在预提交阶段，除了将其状态写入状态后端之外，数据接收器还必须预先提交其外部事务。
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Flink/end-to-end-exactly-once-processing-apache-flink-apache-kafka-4.png?raw=true)
 
 当检查点 `Barrier` 通过所有算子并且触发的快照回调成功完成时，预提交阶段结束。所有触发的状态快照都被视为该检查点的一部分。检查点是整个应用程序状态的快照，包括预先提交的外部状态。如果发生故障，我们可以回滚到上次成功完成快照的时间点。
 
@@ -87,7 +87,7 @@ Flink对端到端Exactly-Once语义的支持不仅限于Kafka，它可以与任�
 
 数据源和窗口算子没有外部状态，因此在提交阶段，这些算子不必执行任何操作。但是，数据接收器有外部状态，并且此时应该提交外部事务：
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Flink/end-to-end-exactly-once-processing-apache-flink-apache-kafka-5.png?raw=true)
 
 所以让我们将所有这些不同的部分组合在一起：
 - 一旦所有算子完成预提交，他们就会提出提交。
