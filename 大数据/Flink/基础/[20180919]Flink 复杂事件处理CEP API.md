@@ -91,7 +91,7 @@ Pattern API 允许你定义要从输入流中提取的复杂模式序列。
 
 在下面的内容中，我们将介绍如何定义单模式，然后如何将各个模式组合到复杂模式中。
 
-#### 2.1 单模式
+#### 2.1 单独模式
 
 `Pattern` 可以是单例也可以是循环模式。单例模式接受单个事件，而循环模式可以接受多个事件。在模式匹配符中，模式 `a b + c？d`（可以理解为：`a` 后跟一个或多个 `b`，`b` 后可选地跟一个 `c`，最后跟一个 `d`），`a`，`c？`，和 `d` 是单例模式，而 `b+` 是循环模式。默认情况下，模式是单例模式，你可以使用 `Quantifiers`（量词） 将其转换为循环模式。每个模式可以有一个或多个条件。
 
@@ -431,9 +431,243 @@ Scala版本:
 
 #### 2.2 组合模式
 
+现在你已经看到了单模式的样子，现在是时候看看如何将它们组合成一个完整的模式序列。
+
+每个模式序列必须以初始模式开始且必须指定唯一的名称来标识被匹配的事件，如下所示：
+
+Java版本：
+```java
+Pattern<Event, ?> start = Pattern.<Event>begin("start");
+```
+Scala版本：
+```
+val start : Pattern[Event, _] = Pattern.begin("start")
+```
+
+> Pattern在外部无法通过构造器进行实例化，构造器的访问限定符是protected的，因此Pattern对象只能通过begin和next以及followedBy等创建，在创建时需要指定其名称。
+
+接下来，你可以通过指定它们之间所需的连续条件（contiguity conditions），为模式序列添加更多模式。FlinkCEP 事件之间支持一下几种形式的连续性：
+- 严格连续（`Strict Contiguity`）：所有匹配的事件严格一个接一个地出现，中间没有其他任何不匹配的事件，即两个匹配的事件必须是前后紧邻的。
+- 宽松连续（`Relaxed Contiguity`）：忽略匹配事件之间出现的不匹配事件（译者注：所匹配的事件不必严格紧邻，其他不匹配的事件可以出现在匹配的两个事件之间）。
+- 非确定性宽松连续（`Non-Deterministic Relaxed Contiguity`）：进一步放宽连续性，允许忽略一些匹配事件的其他匹配。
+
+要在连续模式之间应用，可以如下使用：
+- `next()`：严格连续下使用。
+- `followedBy()`：宽松连续下使用。
+- `followedByAny()`：非确定性宽松连续下使用。
+或者：
+- `notNext()`：如果你不希望某事件类型直接跟随另一个事件类型后。
+- `notFollowedBy()`：如果你不希望某事件类型在两个其他事件类型之间的任何位置。
+
+> 模式序列不能以notFollowedBy()结尾。NOT模式前面不能有可选模式。
+
+Java版本：
+```java
+// strict contiguity
+Pattern<Event, ?> strict = start.next("middle").where(...);
+
+// relaxed contiguity
+Pattern<Event, ?> relaxed = start.followedBy("middle").where(...);
+
+// non-deterministic relaxed contiguity
+Pattern<Event, ?> nonDetermin = start.followedByAny("middle").where(...);
+
+// NOT pattern with strict contiguity
+Pattern<Event, ?> strictNot = start.notNext("not").where(...);
+
+// NOT pattern with relaxed contiguity
+Pattern<Event, ?> relaxedNot = start.notFollowedBy("not").where(...);
+```
+Scala版本：
+```
+// strict contiguity
+val strict: Pattern[Event, _] = start.next("middle").where(...)
+
+// relaxed contiguity
+val relaxed: Pattern[Event, _] = start.followedBy("middle").where(...)
+
+// non-deterministic relaxed contiguity
+val nonDetermin: Pattern[Event, _] = start.followedByAny("middle").where(...)
+
+// NOT pattern with strict contiguity
+val strictNot: Pattern[Event, _] = start.notNext("not").where(...)
+
+// NOT pattern with relaxed contiguity
+val relaxedNot: Pattern[Event, _] = start.notFollowedBy("not").where(...)
+```
+宽松的连续性意味着仅匹配第一个匹配事件，而具有非确定性的松弛连续性，将针对同一开始发出多个匹配。例如，给定事件序列`a`，`c`，`b1`，`b2`，将会给出以下结果：
+- `a` 和 `b` 之间严格连续性，将会返回 `{}`,即没有匹配到。因为 `c` 出现在 `a` 之后导致 `a` 被抛弃了。
+- `a` 和 `b` 之间宽松连续性，将会返回 `{a，b1}`，因为宽松连续性会跳过不匹配的事件直到成功匹配到一个事件。
+- `a` 和 `b` 之间非确定性宽松连续性，将会返回 `{a,b1}`，`{a,b2}`，因为这是最一般形式。
+
+也可以为模式定义时间约束。例如，你可以通过 `pattern.within()` 方法定义模式应在10秒内发生。支持处理时间和事件时间两种时间模式。
+
+> 模式序列只能有一个时间约束。如果在不同的单独模式上定义了多个这样的约束，则应用最小的约束。
+
+```java
+next.within(Time.seconds(10))
+```
+
+##### 2.2.1 循环模式中的连续性
+
+你可以在循环模式中应用与上一节中讨论的相同的连续条件。连续性可以应用到模式中的元素之间。举例来说明上述情况，模式序列为 `a b+ c`（`a`后跟一个或多个`b`的任何序列（非确定性宽松），最后跟一个`c`），输入 `a`，`b1`，`d1`，`b2`，`d2`，`b3`，`c` 将产生以下结果：
+- 严格连续将会输出 `{a b3 c}`。`b1` 之后有 `d1` 导致 `b1` 被丢弃，`b2` 因 `d2` 被丢弃。
+- 宽松连续：`{a b1 c}, {a b1 b2 c}, {a b1 b2 b3 c}, {a b2 c}, {a b2 b3 c}, {a b3 c}`。`d` 被忽略。
+- 非确定性宽松连续：`{a b1 c}, {a b1 b2 c}, {a b1 b3 c}, {a b1 b2 b3 c}, {a b2 c}, {a b2 b3 c}, {a b3 c}`。注意，`{a b1 b3 c}`，这是宽松 `b` 之间连续性的结果。
+
+对于循环模式（例如`oneOrMore()`和 `times()`），默认是宽松的连续性。如果你想要严格的连续性，你必须使用 `continuous()` 显式指定它，如果你想要非确定性的宽松连续性，你可以使用 `allowCombinations()` 显示指定。
+
+##### 2.2.2 API
+
+(1) consecutive()
+
+与 `oneOrMore()` 和 `times()` 一起使用，将匹配事件之间的连续性改变为严格的连续性，即任何不匹配的元素都会中断匹配（如 `next()`）。如果不使用这个API，则使用宽松的连续性（如`followBy()`）。
+
+Java版本：
+```java
+Pattern.<Event>begin("start").where(new SimpleCondition<Event>() {
+  @Override
+  public boolean filter(Event value) throws Exception {
+    return value.getName().equals("c");
+  }
+})
+.followedBy("middle").where(new SimpleCondition<Event>() {
+  @Override
+  public boolean filter(Event value) throws Exception {
+    return value.getName().equals("a");
+  }
+})
+.oneOrMore().consecutive()
+.followedBy("end1").where(new SimpleCondition<Event>() {
+  @Override
+  public boolean filter(Event value) throws Exception {
+    return value.getName().equals("b");
+  }
+});
+```
+Scala版本：
+```scala
+Pattern.begin("start").where(_.getName().equals("c"))
+  .followedBy("middle").where(_.getName().equals("a"))
+                       .oneOrMore().consecutive()
+  .followedBy("end1").where(_.getName().equals("b"))
+```
+对于输入序列：`C D A1 A2 A3 D A4 B`，产生如下输出：
+- 启用`consecutive`：`{C A1 B}, {C A1 A2 B}, {C A1 A2 A3 B}`
+- 不启用`consecutive`：`{C A1 B}, {C A1 A2 B}, {C A1 A2 A3 B}, {C A1 A2 A3 A4 B}`
+
+(2) allowCombinations()
+
+与 `oneOrMore()` 和 `times()` 一起使用，将匹配事件之间的连续性改变为非确定性宽松连续性（如`followAyAny()`）。如果使用这个API，则默认使用宽松连续性（如`followBy()`）。
+
+Java版本：
+```java
+Pattern.<Event>begin("start").where(new SimpleCondition<Event>() {
+  @Override
+  public boolean filter(Event value) throws Exception {
+    return value.getName().equals("c");
+  }
+})
+.followedBy("middle").where(new SimpleCondition<Event>() {
+  @Override
+  public boolean filter(Event value) throws Exception {
+    return value.getName().equals("a");
+  }
+}).oneOrMore().allowCombinations()
+.followedBy("end1").where(new SimpleCondition<Event>() {
+  @Override
+  public boolean filter(Event value) throws Exception {
+    return value.getName().equals("b");
+  }
+});
+```
+Scala版本：
+```scala
+Pattern.begin("start").where(_.getName().equals("c"))
+  .followedBy("middle").where(_.getName().equals("a"))
+                       .oneOrMore().allowCombinations()
+  .followedBy("end1").where(_.getName().equals("b"))
+```
+对于输入序列：`C D A1 A2 A3 D A4 B`，产生如下输出：
+- 启用`combinations`：`{C A1 B}, {C A1 A2 B}, {C A1 A3 B}, {C A1 A4 B}, {C A1 A2 A3 B}, {C A1 A2 A4 B}, {C A1 A3 A4 B}, {C A1 A2 A3 A4 B}`。
+- 不启用`combinations`：`{C A1 B}, {C A1 A2 B}, {C A1 A2 A3 B}, {C A1 A2 A3 A4 B}`。
+
 #### 2.3 模式组
 
-#### 2.4 匹配跳过策略
+也可以为`begin`，`followBy`，`followByAny`和 `next` 定义模式序列的条件。模式序列将被逻辑地视为匹配条件，并且返回一个 `GroupPattern` 并且可以在 GroupPattern 上应用 `oneOrMore()`，`times(#ofTimes)`，`times(＃fromTimes，＃toTimes)`，`optional()`，`consecutive()`， `allowCombinations()`。
+
+Java版本：
+```java
+Pattern<Event, ?> start = Pattern.begin(
+    Pattern.<Event>begin("start").where(...).followedBy("start_middle").where(...)
+);
+
+// strict contiguity
+Pattern<Event, ?> strict = start.next(
+    Pattern.<Event>begin("next_start").where(...).followedBy("next_middle").where(...)
+).times(3);
+
+// relaxed contiguity
+Pattern<Event, ?> relaxed = start.followedBy(
+    Pattern.<Event>begin("followedby_start").where(...).followedBy("followedby_middle").where(...)
+).oneOrMore();
+
+// non-deterministic relaxed contiguity
+Pattern<Event, ?> nonDetermin = start.followedByAny(
+    Pattern.<Event>begin("followedbyany_start").where(...).followedBy("followedbyany_middle").where(...)
+).optional();
+```
+Scala版本：
+```
+val start: Pattern[Event, _] = Pattern.begin(
+    Pattern.begin[Event]("start").where(...).followedBy("start_middle").where(...)
+)
+
+// strict contiguity
+val strict: Pattern[Event, _] = start.next(
+    Pattern.begin[Event]("next_start").where(...).followedBy("next_middle").where(...)
+).times(3)
+
+// relaxed contiguity
+val relaxed: Pattern[Event, _] = start.followedBy(
+    Pattern.begin[Event]("followedby_start").where(...).followedBy("followedby_middle").where(...)
+).oneOrMore()
+
+// non-deterministic relaxed contiguity
+val nonDetermin: Pattern[Event, _] = start.followedByAny(
+    Pattern.begin[Event]("followedbyany_start").where(...).followedBy("followedbyany_middle").where(...)
+).optional()
+```
+
+##### 2.3.1 API
+
+(1) begin(#name)
+
+(2) begin(#pattern_sequence)
+
+(3) next(#name)
+
+(4) next(#pattern_sequence)
+
+(5) followedBy(#name)
+
+(6) followedBy(#pattern_sequence)
+
+(7) followedByAny(#name)
+
+(8) followedByAny(#pattern_sequence)
+
+(9) notNext()
+
+(10) notFollowedBy()
+
+(11) within(time)
+
+
+#### 2.4 匹配后的跳过策略
+
+对于给定模式，可以将同一事件分配给多个成功匹配。 要控制将分配事件的匹配数，您需要指定名为AfterMatchSkipStrategy的跳过策略。 跳过策略有四种类型，如下所示：
+
 
 ### 3. 检测模式
 
