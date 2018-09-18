@@ -666,12 +666,105 @@ val nonDetermin: Pattern[Event, _] = start.followedByAny(
 
 #### 2.4 匹配后的跳过策略
 
-对于给定模式，可以将同一事件分配给多个成功匹配。 要控制将分配事件的匹配数，您需要指定名为AfterMatchSkipStrategy的跳过策略。 跳过策略有四种类型，如下所示：
+对于给定模式，可以将同一事件分配给多个成功匹配。如果要控制将同一事件分配给成功匹配的个数，你需要指定名为 `AfterMatchSkipStrategy` 的跳过策略。跳过策略有四种类型，如下所示：
+- `NO_SKIP`：发出每个可能的匹配。
+- `SKIP_PAST_LAST_EVENT`：丢弃包含匹配事件的每个部分匹配。
+- `SKIP_TO_FIRST`：丢弃在PatternName第一个事件出现之前，匹配开始之后的每个部分匹配。
+- `SKIP_TO_LAST`：丢弃在PatternName最后一个事件之前，匹配开始之后的每个部分匹配。
 
+例如，对于给定模式 `b+ c` 和数据流 `b1 b2 b3 c`，这四种跳过策略之间的差异如下：
+跳过策略|结果|描述
+---|---|---
+`NO_SKIP`|`b1 b2 b3 c`，`b2 b3 c`，`b3 c`|找到匹配 `b1 b2 b3 c` 后，匹配过程不会丢弃任何结果。
+`SKIP_PAST_LAST_EVENT`|`b1 b2 b3 c`|找到匹配 `b1 b2 b3 c` 后，匹配过程将丢弃所有已开始的部分匹配。
+`SKIP_TO_FIRST[b*]`|`b1 b2 b3 c`，`b2 b3 c`，`b3 c`|找到匹配 `b1 b2 b3 c` 后，匹配过程将尝试丢弃在 `b1` 之前开始的所有部分匹配，但是没有这样的匹配。因此，不会丢弃任何东西。
+`SKIP_TO_LAST[b]`|`b1 b2 b3 c`，`b3 c`|找到匹配 `b1 b2 b3 c` 后，匹配过程将尝试丢弃在 `b3` 之前开始的所有部分匹配。有一个这样的匹配 `b2 b3 c`。
+
+来看另一个例子，以便更好地了解 `NO_SKIP` 和 `SKIP_TO_FIRST` 之间的区别：模式：`（a|c）（b|c）c+.greedy d`和序列：`a b c1 c2 c3 d`，输出结果如下：
+
+跳过策略|结果|描述
+---|---|---
+`NO_SKIP`| `a b c1 c2 c3 d`，`b c1 c2 c3 d`，`c1 c2 c3 d`，`c2 c3 d`|
+找到匹配 `b c1 c2 c3 d` 后，匹配过程不会丢弃任何结果。
+`SKIP_TO_FIRST[b*]`| `a b c1 c2 c3 d`，`c1 c2 c3 d`|找到匹配 `b c1 c2 c3 d` 后，匹配过程将尝试丢弃在 `c1` 之前开始的所有部分匹配。有一个这样的匹配 `b c1 c2 c3 d`。
+
+要指定要使用的跳过策略，只需调用以下命令创建 `AfterMatchSkipStrategy`：
+
+函数|描述
+---|---
+`AfterMatchSkipStrategy.noSkip()`|创建`NO_SKIP`跳过策略。
+`AfterMatchSkipStrategy.skipPastLastEvent()`|创建`SKIP_PAST_LAST_EVENT`跳过策略。
+`AfterMatchSkipStrategy.skipToFirst(patternName)`|创建引用`patternName`模式的`SKIP_TO_FIRST`跳过策略。
+`AfterMatchSkipStrategy.skipToLast(patternName)`|创建引用`patternName`模式的`SKIP_TO_LAST`跳过策略。
+
+然后通过如下调用将跳过策略应用于模式中：
+
+Java版本：
+```java
+AfterMatchSkipStrategy skipStrategy = ...
+Pattern.begin("patternName", skipStrategy);
+```
+Scala版本：
+```
+val skipStrategy = ...
+Pattern.begin("patternName", skipStrategy)
+```
 
 ### 3. 检测模式
 
+指定要查找的模式序列后，然后可以将其应用到输入流以检测潜在匹配。要针对模式序列运行事件流，你必须创建 `PatternStream`。给定输入流 `input`，模式 `pattern` 和用于在 EventTime 的情况下或在同一时刻到达的对具有相同时间戳的事件进行排序的可选的比较器 `comparator`，通过调用如下命令创建 `PatternStream`：
+
+Java版本：
+```java
+DataStream<Event> input = ...
+Pattern<Event, ?> pattern = ...
+EventComparator<Event> comparator = ... // optional
+
+PatternStream<Event> patternStream = CEP.pattern(input, pattern, comparator);
+```
+Scala版本：
+```
+val input : DataStream[Event] = ...
+val pattern : Pattern[Event, _] = ...
+var comparator : EventComparator[Event] = ... // optional
+
+val patternStream: PatternStream[Event] = CEP.pattern(input, pattern, comparator)
+```
+根据你的使用情况，输入流可以是根据键分区的或没有根据键分区的。
+
+> 在非键控流上应用模式会导致作业并行度等于1。
+
 #### 3.1 从模式中选择
+
+获得 `PatternStream` 后，你可以通过 `select` 或 `flatSelect` 方法从检测到的事件序列中进行选择。
+
+`select()` 方法需要实现 `PatternSelectFunction`。`PatternSelectFunction` 具有一个 `select` 方法，每个匹配的事件序列都会调用这个方法。它以 `Map <String，List <IN >>` 的形式接收匹配，其中键是模式序列中每个模式的名称，值是该模式已接受的所有事件列表（`IN` 是输入元素类型）。给定模式的事件按时间戳进行排序。为每个模式返回一个接受事件列表的原因是当使用循环模式（例如，`oneToMany()` 和 `times()`）时，对于给定模式可以接受多个事件。选择函数只返回一个结果。
+
+```java
+class MyPatternSelectFunction<IN, OUT> implements PatternSelectFunction<IN, OUT> {
+    @Override
+    public OUT select(Map<String, List<IN>> pattern) {
+        IN startEvent = pattern.get("start").get(0);
+        IN endEvent = pattern.get("end").get(0);
+        return new OUT(startEvent, endEvent);
+    }
+}
+```
+`PatternFlatSelectFunction` 类似于 `PatternSelectFunction`，唯一的区别是它可以返回任意数量的结果。为此，`select` 方法有一个额外的 `Collector` 参数，用于将输出元素向下游转发。
+
+```java
+class MyPatternFlatSelectFunction<IN, OUT> implements PatternFlatSelectFunction<IN, OUT> {
+    @Override
+    public void flatSelect(Map<String, List<IN>> pattern, Collector<OUT> collector) {
+        IN startEvent = pattern.get("start").get(0);
+        IN endEvent = pattern.get("end").get(0);
+
+        for (int i = 0; i < startEvent.getValue(); i++ ) {
+            collector.collect(new OUT(startEvent, endEvent));
+        }
+    }
+}
+```
 
 #### 3.2 处理部分超时模式
 
