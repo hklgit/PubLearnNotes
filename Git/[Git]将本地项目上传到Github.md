@@ -29,7 +29,10 @@ xiaosi@yoona:~/code/PubLearnNotes$ git remote add origin git@github.com:sjf0115/
 ```
 fatal: 远程 origin 已经存在。
 ```
-
+此时只需要将远程配置删除，重新添加即可；
+```
+git remote rm origin
+```
 
 推送到远程仓库
 ```
