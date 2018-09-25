@@ -770,6 +770,12 @@ class MyPatternFlatSelectFunction<IN, OUT> implements PatternFlatSelectFunction<
 
 ### 4. 处理基于事件时间的延迟
 
+在CEP中，元素处理的顺序比较重要。为了保证元素基于事件时间按正确的顺序处理，达到的元素放在缓冲区中，根据元素的时间戳按升序排序，当 `WaterMark` 到达时，缓冲区中所有小于 `WaterMark` 的元素会被处理。这意味着 `WaterMark` 之间的元素按事件时间顺序处理。
+
+> 基于事件时间时，假定 `WaterMark` 是正确的。
+
+为了保证跨越 `WaterMark` 的元素按事件时间顺序处理，Flink 的 CEP 库假定 `WaterMark` 是正确的，并假定延迟元素的时间戳小于上次看到的 `WaterMark`。延迟元素不会被进一步处理。此外，您可以指定sideOutput标记来收集最后看到的水印之后的后期元素，您可以像这样使用它。
+
 ### 5. Example
 
 
