@@ -48,9 +48,11 @@ permalink: what-is-clickhouse
 面向列的数据库更适合于OLAP场景：对于大多数查询，处理速度至少提高了100倍。原因在下面详细解释，但事实上更容易在视觉上展示：
 
 面向行的数据库：
+
 ![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ClickHouse/what-is-clickhouse-3.gif?raw=true)
 
 面向列的数据库：
+
 ![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ClickHouse/what-is-clickhouse-4.gif?raw=true)
 
 看到不同了？
