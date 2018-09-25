@@ -14,23 +14,11 @@ permalink: what-is-clickhouse
 
 在`正常`的面向行的DBMS中，数据按以下顺序存储：
 
-![]()
-
-
-
-
-
-
-
-
-
-
-
-
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ClickHouse/what-is-clickhouse-1.png?raw=true)
 
 换句话说，与一行相关的所有值都物理存储在相邻的位置。面向行的 DBMS 的示例是 MySQL，Postgres 和 MS SQL Server。在面向列的DBMS中，数据存储如下：
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ClickHouse/what-is-clickhouse-2.png?raw=true)
 
 这些示例仅显示数据的排列顺序。不同列的值分别存储，同一列的数据一起存储。面向列的 DBMS 的示例有：`Vertica`，`Paraccel`（Actian Matrix和Amazon Redshift），`Sybase IQ`，`Exasol`，`Infobright`，`InfiniDB`，`MonetDB`（VectorWise和Actian Vector），`LucidDB`，`SAP HANA`，`Google Dremel`，`Google PowerDrill`，`Druid`和`KDB+`。
 
@@ -60,10 +48,10 @@ permalink: what-is-clickhouse
 面向列的数据库更适合于OLAP场景：对于大多数查询，处理速度至少提高了100倍。原因在下面详细解释，但事实上更容易在视觉上展示：
 
 面向行的数据库：
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ClickHouse/what-is-clickhouse-3.gif?raw=true)
 
 面向列的数据库：
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ClickHouse/what-is-clickhouse-4.gif?raw=true)
 
 看到不同了？
 
@@ -88,26 +76,26 @@ Connected to ClickHouse server version 0.0.52053.
 
 CounterID|count()
 ---|---
-114208 │ 56057344
-115080 │ 51619590
-3228 │ 44658301
-38230 │ 42045932
-145263 │ 42042158
-91244 │ 38297270
-154139 │ 26647572
-150748 │ 24112755
-242232 │ 21302571
-338158 │ 13507087
-62180 │ 12229491
-82264 │ 12187441
-232261 │ 12148031
-146272 │ 11438516
-168777 │ 11403636
-4120072 │ 11227824
-10938808 │ 10519739
-74088 │  9047015
-115079 │  8837972
-337234 │  8205961
+114208|56057344
+115080 | 51619590
+3228 | 44658301
+38230 | 42045932
+145263 | 42042158
+91244 | 38297270
+154139 | 26647572
+150748 | 24112755
+242232 | 21302571
+338158 | 13507087
+62180 | 12229491
+82264 | 12187441
+232261 | 12148031
+146272 | 11438516
+168777 | 11403636
+4120072 | 11227824
+10938808 | 10519739
+74088 |  9047015
+115079 |  8837972
+337234 |  8205961
 
 看一下花费的时间：
 ```
