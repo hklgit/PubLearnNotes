@@ -22,7 +22,7 @@ $ tar -zxf zookeeper-3.4.12.tar.gz
 ```
 创建软连接，便于升级：
 ```
-$ sudo ln -s zookeeper-3.4.12.tar.gz zookeeper
+$ sudo ln -s zookeeper-3.4.12/ zookeeper
 ```
 创建数据目录：
 ```
