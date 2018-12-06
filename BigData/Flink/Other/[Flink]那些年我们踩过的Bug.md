@@ -54,3 +54,34 @@ Caused by: java.net.SocketException: Connection reset
 	at org.apache.flink.runtime.blob.BlobClient.putInputStream(BlobClient.java:498)
 	... 14 more
 ```
+### 2. ResultTypeQueryable
+```
+The return type of function 'MQSource' could not be determined automatically, due to type erasure. You can give type information hints by using the returns(...) method on the result of the transformation call, or by letting your function implement the 'ResultTypeQueryable' interface.
+        org.apache.flink.streaming.api.transformations.StreamTransformation.getOutputType(StreamTransformation.java:382)
+        org.apache.flink.streaming.api.datastream.DataStream.getType(DataStream.java:174)
+        org.apache.flink.streaming.api.datastream.DataStream.map(DataStream.java:528)
+        com.xxqg.flink.main.TestStream.main(TestStream.java:57)
+```
+### 3. No buffer
+
+```
+java.lang.Exception: Error while triggering checkpoint 51 for Source: MQSource (1/1)
+        at org.apache.flink.runtime.taskmanager.Task$2.run(Task.java:1210)
+        at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)
+        at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+        at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+        at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+        at java.lang.Thread.run(Thread.java:748)
+Caused by: java.lang.Exception: Could not perform checkpoint 51 for operator Source: MQSource (1/1).
+        at org.apache.flink.streaming.runtime.tasks.StreamTask.triggerCheckpoint(StreamTask.java:544)
+        at org.apache.flink.streaming.runtime.tasks.SourceStreamTask.triggerCheckpoint(SourceStreamTask.java:111)
+        at org.apache.flink.runtime.taskmanager.Task$2.run(Task.java:1199)
+        ... 5 more
+Caused by: java.lang.IllegalStateException: No buffer, but serializer has buffered data.
+        at org.apache.flink.runtime.io.network.api.writer.RecordWriter.broadcastEvent(RecordWriter.java:152)
+        at org.apache.flink.streaming.runtime.io.RecordWriterOutput.broadcastEvent(RecordWriterOutput.java:146)
+        at org.apache.flink.streaming.runtime.tasks.OperatorChain.broadcastCheckpointBarrier(OperatorChain.java:182)
+        at org.apache.flink.streaming.runtime.tasks.StreamTask.performCheckpoint(StreamTask.java:602)
+        at org.apache.flink.streaming.runtime.tasks.StreamTask.triggerCheckpoint(StreamTask.java:538)
+        ... 7 more
+```
