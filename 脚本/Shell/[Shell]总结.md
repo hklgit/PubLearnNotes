@@ -93,3 +93,9 @@ find $location -mtime +30 -type f |xargs rm -f
 ```
 awk '{sum += $1};END {print sum}'
 ```
+
+### 9. 平均值
+
+```
+awk '{sum+=$1} END {print sum/NR}'
+```

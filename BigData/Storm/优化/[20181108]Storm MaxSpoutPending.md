@@ -26,6 +26,7 @@ StormSubmitter.submitTopology("mytopology", conf, topology);
 
 
 
+http://www.voidcn.com/article/p-kotimlfd-kw.html
 
 https://stackoverflow.com/questions/32547935/why-should-i-not-loop-or-block-in-spout-nexttuple
 

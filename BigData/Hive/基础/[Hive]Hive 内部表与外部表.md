@@ -26,7 +26,8 @@ CREATE  TABLE IF NOT EXISTS tb_station_coordinate(
   lat string
 )
 ROW FORMAT DELIMITED
-FIELDS TERMINATED BY ',';
+FIELDS TERMINATED BY ','
+LINES TERMINATED BY '\n';
 ```
 我们已经成功创建了表并使用如下命令检查表的详细信息：
 ```

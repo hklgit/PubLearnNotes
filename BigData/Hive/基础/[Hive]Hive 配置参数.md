@@ -22,8 +22,7 @@ set mapreduce.output.fileoutputformat.compress.type=BLOCK;
 ### 4. 避免本地Task
 
 ```
-# 禁止启动本地模式运行
+# 禁止启动本地模式运行和禁止启动 FetchTask
 set hive.exec.mode.local.auto=false;
-# 禁止启动 FetchTask
 set hive.fetch.task.conversion=none;
 ```

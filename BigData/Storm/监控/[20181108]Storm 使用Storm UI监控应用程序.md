@@ -8,5 +8,5 @@ Cluster Home
 
 
 
-
+原文：http://www.malinga.me/reading-and-understanding-the-storm-ui-storm-ui-explained/
 。。。
