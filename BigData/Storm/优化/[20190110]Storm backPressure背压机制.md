@@ -4,11 +4,9 @@
 ### 2. 自动背压机制
 
 [Storm 1.0.0](http://storm.apache.org/2016/04/12/storm100-released.html)
-版本引入了自动背压(automatic back pressure)。在该版本之前，对 Spout 限流的唯一方法是开启 Ack 以及设置 `topology.max.spout.pending` 参数，但这个参数比较难调整，因为它取决于 Bolt 的数量，并且可能不适用于带有共用 Bolt 的并发 Spout。同时对于不需要 At-Least-Once 处理语义的用户，这种方法也会显着降低性能。
+版本引入了自动背压(automatic back pressure)。在该版本之前，对 Spout 限流的唯一方法是开启 Ack 以及设置 `topology.max.spout.pending` 参数。不建议使用这个参数进行限流的原因是这个参数比较难调整，具体取决于 Bolt 的数量。另一方面使用这个参数必须要开启 ACK ，对于不需要 At-Least-Once 处理语义的用户，这种方法也会显着降低性能。因此，非常需要自动背压机制。
 
-> would probably not work for concurrent spouts with shared bolts.
-
-Storm 1.0 版本引入了一个新的自动背压机制，该机制基于可配置的高/低水位(watermarks)，由 Task 缓冲区大小的百分比表示。如果达到高水位线，Storm 会降 Spout 发送速度，在达到低水位线时停止限流。
+Storm 1.0 版本引入了一个新的自动背压机制，该机制不再依赖于 ACK 和 `topology.max.spout.pending`，而是基于可配置的高/低水位(watermarks)进行节流，高低水位由 Task 缓冲区大小的百分比表示。如果达到高水位线，Storm 会对 Spout 进行节流，在达到低水位线时解除节流。
 
 Storm 的背压机制独立于 Spout API 实现，因此支持现在所有的 Spout。
 
