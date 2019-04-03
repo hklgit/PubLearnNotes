@@ -66,9 +66,9 @@ Flink 中的 Kafka 消费者是一个有状态的算子(operator)并且集成了
 Kafka Source 分别从偏移量 2 和 1 重新开始读取消息（因为这是最近一次成功的 checkpoint 中的偏移量）。当作业重启后，我们可以期待正常的系统操作，就好像之前没有发生故障一样。
 
 备注：
-> 偏移量 Offset
-> 算子 operator
-> 分区 partition
-> 消费者 consumer
+- 偏移量 Offset
+- 算子 operator
+- 分区 partition
+- 消费者 consumer
 
 原文:[How Apache Flink manages Kafka consumer offsets](https://www.ververica.com/blog/how-apache-flink-manages-kafka-consumer-offsets)
