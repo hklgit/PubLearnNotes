@@ -26,9 +26,9 @@ permalink: end-to-end-exactly-once-processing-apache-flink-apache-kafka
 
 ### 1. Flink应用程序的Exactly-Once语义
 
-当我们说`Exactly-Once语义`时，我们的意思是每个传入的事件只会对最终结果影响一次。即使机器或软件出现故障，也没有重复数据，也没有丢失数据。
+当我们说`Exactly-Once语义`时，我们的意思是每个传入的事件只会影响最终结果一次。即使机器或软件出现故障，也没有重复数据，也没有丢失数据。
 
-Flink 在很久之前就提供了 Exactly-Once 语义。在过去几年中，我们已经深入探讨了 Flink 的[检查点](http://smartsi.club/high-throughput-low-latency-and-exactly-once-stream-processing-with-apache-flink.html)，这是 Flink 提供 Exactly-Once 语义的核心。[Flink文档](https://ci.apache.org/projects/flink/flink-docs-release-1.4/ops/state/checkpoints.html)还提供了该功能的全面概述。
+Flink 在很久之前就提供了 Exactly-Once 语义。在过去几年中，我们已经深入探讨过 Flink 的[检查点](http://smartsi.club/high-throughput-low-latency-and-exactly-once-stream-processing-with-apache-flink.html)，这是 Flink 提供 Exactly-Once 语义的核心。[Flink文档](https://ci.apache.org/projects/flink/flink-docs-release-1.4/ops/state/checkpoints.html)提供了这个功能的全面概述。
 
 在继续之前，我们先对检查点机制进行简要概述，这对我们理解检查点是有必要的。Flink 中的检查点是以下内容的一致快照：
 - 应用程序的当前状态
@@ -46,7 +46,7 @@ Flink 以固定的时间间隔（可配置）生成检查点，然后将检查�
 
 ### 2. Flink的端到端Exactly-Once语义应用程序
 
-下面我们将介绍[两阶段提交协议](http://smartsi.club/two-phase-commit-of-distributed-transaction.html)以及它如何在一个读取和写入Kafka的Flink应用程序示例中实现端到端的Exactly-Once语义。Kafka是一个流行的消息中间件系统，经常与 Flink 一起使用。Kafka 在 0.11 版本中添加了对事务的支持。这意味着当你通过 Flink 读写 Kafka时，有必要提供端到端的 Exactly-Once 语义的支持。
+下面我们将介绍[两阶段提交协议](http://smartsi.club/two-phase-commit-of-distributed-transaction.html)以及它如何在一个读取和写入 Kafka 的 Flink 应用程序示例中实现端到端的 Exactly-Once 语义。Kafka 是一个流行的消息中间件系统，经常与 Flink 一起使用。Kafka 在 0.11 版本中添加了对事务的支持。这意味着当你通过 Flink 读写 Kafka时，有必要提供端到端的 Exactly-Once 语义的支持。
 
 Flink 对端到端 Exactly-Once 语义的支持不仅限于 Kafka，可以与任何提供协调机制的数据源/接收器一起使用。例如，来自Dell/EMC的开源流处理存储系统 Pravega 也可以通过 `TwoPhaseCommitSinkFunction` 提供 Flink 端到端 Exactly-Once 语义。
 
