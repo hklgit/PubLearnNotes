@@ -31,12 +31,15 @@ stream.keyBy(...).process(new MyProcessFunction())
 
 ### 3. Example
 
-在以下示例中，KeyedProcessFunction 维护每个键的计数，并每经过一分钟（事件时间）发送 key/count 的键值对，而不更新该键：
-- count，key 和 last-modification-timestamp 存储在 ValueState 中，ValueState 由 key 隐式定义。
-- 对于每条记录，KeyedProcessFunction 增加计数器并设置最后修改的时间戳。
+在以下示例中，KeyedProcessFunction 为每个 key 维护一个计数，每当 key 在一分钟（事件时间）内没有更新时就会发送 key/count 键值对：
+- count，key 和 last-modification-timestamp 存储在 ValueState 中，ValueState 由 key 隐含定义。
+- 对于每条记录，KeyedProcessFunction 增加计数器并修改最后的时间戳。
 - 该函数还会在未来一分钟内调用回调（事件时间）。
-- 在每次回调时，它会根据存储计数的最后修改时间检查回调的事件时间时间戳，如果匹配则发送键/计数（即，在该分钟内没有进一步更新）
+- 在每次回调时，都会检查存储计数的最后修改时间与回调的事件时间时间戳，如果匹配则发送 key/count（即在一分钟内没有更新）
 
+> 这个简单的例子可以用会话窗口实现。在这里使用 KeyedProcessFunction 只是用来说明它提供的基本模式。
+
+Java版本：
 ```java
 import org.apache.flink.api.common.state.ValueState;
 import org.apache.flink.api.common.state.ValueStateDescriptor;
@@ -190,9 +193,12 @@ class CountWithTimeoutFunction extends KeyedProcessFunction[Tuple, (String, Stri
   }
 }
 ```
+
+> 在 Flink 1.4.0 版本之前，当调用处理时间 Timers 时，`ProcessFunction.onTimer（）` 方法会将当前处理时间设置为事件时间时间戳。此行为非常微小，用户可能会注意不到。但是这是有问题的，因为处理时间时间戳是不确定的，不与 Watermark 对齐。此外，用户实现的逻辑依赖于这个错误的时间戳，很可能是出乎意料的错误。所以我们决定解决它。 升级到1.4.0后，使用不正确的事件时间戳的作业会失败，用户应将作业调整为正确的逻辑。
+
 ### 4. KeyedProcessFunction
 
-KeyedProcessFunction 作为 ProcessFunction 的扩展，可以在 `onTimer（...）` 方法中访问 Timers 的键。
+KeyedProcessFunction 作为 ProcessFunction 的扩展，可以在 `onTimer（...）` 方法中访问 Timers 的 key。
 
 Java版本:
 ```java
@@ -213,7 +219,7 @@ override def onTimer(timestamp: Long, ctx: OnTimerContext, out: Collector[OUT]):
 
 两种类型的 Timers（处理时间和事件时间）由 TimerService 在内部维护并排队执行。
 
-TimerService 删除每个键和时间戳的重复 Timers，即每个键和时间戳最多有一个 Timers。如果为同一时间戳注册了多个 Timers，则只会调用一次 `onTimer（）` 方法。
+TimerService 删除每个 key 和时间戳重复的 Timers，即每个 key 和时间戳最多有一个 Timers。如果为同一时间戳注册了多个 Timers，则只会调用一次 `onTimer（）` 方法。
 
 > Flink同步调用 `onTimer（）`和 `processElement（）`。 因此，用户不必担心并发修改状态。
 
@@ -223,9 +229,9 @@ Timers 具有容错能力，并且与应用程序的状态一起 checkpoint。�
 
 > 在恢复之前应该点火的检查点处理时间计时器将立即触发。 当应用程序从故障中恢复或从保存点启动时，可能会发生这种情况。
 
->  除了RocksDB后端/增量快照/基于堆的定时器的组合（将使用FLINK-10026解析）之外，定时器始终是异步检查点。 请注意，大量的计时器可以增加检查点时间，因为计时器是检查点状态的一部分。 有关如何减少定时器数量的建议，请参阅“定时器合并”部分。
+>  除了 RocksDB后端/增量快照/基于堆的定时器的组合（将使用FLINK-10026解析）之外，定时器始终是异步检查点。 请注意，大量的计时器可以增加检查点时间，因为计时器是检查点状态的一部分。
 
-#### 5.2 定时器合并
+#### 5.2 Timers合并
 
 由于 Flink 每个键每个时间戳只保留一个 Timers，因此可以通过降低 Timers 的分辨率来合并它们并减少 Timers 的数量。
 

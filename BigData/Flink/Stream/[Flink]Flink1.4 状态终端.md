@@ -1,7 +1,7 @@
 ---
 layout: post
 author: sjf0115
-title: Flink1.4 状态终端
+title: Flink 如何选择状态后端
 date: 2018-01-17 12:30:17
 tags:
   - Flink
@@ -13,26 +13,26 @@ permalink: flink-stream-state-backends
 
 ### 1. 概述
 
-`Flink` 提供了不同的状态终端，可以指定状态的存储方式和位置。
+`Flink` 提供了不同的状态后端，可以指定状态的存储方式和位置。
 
-状态可以存储在`Java`的堆内或堆外。根据你的状态终端，`Flink` 也可以管理应用程序的状态，这意味着 `Flink` 可以处理内存管理（可能会溢出到磁盘，如果有必要），以允许应用程序存储非常大的状态。默认情况下，配置文件 `flink-conf.yaml` 为所有`Flink`作业决定其状态终端。
+状态可以存储在`Java`的堆内或堆外。根据你的状态后端，`Flink` 也可以管理应用程序的状态，这意味着 `Flink` 可以处理内存管理（可能会溢出到磁盘，如果有必要），以允许应用程序存储非常大的状态。默认情况下，配置文件 `flink-conf.yaml` 为所有`Flink`作业决定其状态后端。
 
-但是，默认的状态终端配置也可以被每个作业的配置覆盖，如下所示。
+但是，默认的状态后端配置也可以被每个作业的配置覆盖，如下所示。
 
 Java版本:
-```
+```java
 StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 env.setStateBackend(...);
 ```
 Scala版本:
-```
+```Scala
 val env = StreamExecutionEnvironment.getExecutionEnvironment()
 env.setStateBackend(...)
 ```
 
-### 2. 可用的状态终端
+### 2. 可用的状态后端
 
-开箱即用，`Flink` 内置了如下状态终端：
+开箱即用，`Flink` 内置了如下状态后端：
 - `MemoryStateBackend`
 - `FsStateBackend`
 - `RocksDBStateBackend`
@@ -43,7 +43,7 @@ env.setStateBackend(...)
 
 `MemoryStateBackend` 将数据以对象的形式保存在 `Java` 堆上。键值对状态和窗口算子拥有保存值，触发器等的哈希表。
 
-在进行检查点操作时，状态终端对状态进行快照，并将其作为检查点确认消息的一部分发送给 `JobManager`（master），并将存储在其堆上。
+在进行检查点操作时，状态后端对状态进行快照，并将其作为检查点确认消息的一部分发送给 `JobManager`（master），并将存储在其堆上。
 
 `MemoryStateBackend`  可以配置为使用异步快照。尽管我们强烈建议使用异步快照来避免阻塞管道，但请注意，这是一项新功能，目前默认情况下不会启用。要启用此功能，用户可以在实例化 `MemoryStateBackend`的构造函数中设置相应的布尔值 `true`，例如：
 ```java
@@ -89,17 +89,17 @@ new FsStateBackend（path，false）;
 - 具有非常大的状态，长时间窗口，大键/值状态的作业。
 - 所有高可用配置。
 
-请注意，你可以保存的状态数量仅受可用磁盘空间的限制。与保存状态到内存的 `FsStateBackend` 相比，这可以保存非常大的状态。但是，这也意味着在这个状态终端下可以达到的最大吞吐量将会降低。
+请注意，你可以保存的状态数量仅受可用磁盘空间的限制。与保存状态到内存的 `FsStateBackend` 相比，这可以保存非常大的状态。但是，这也意味着在这个状态后端下可以达到的最大吞吐量将会降低。
 
-`RocksDBStateBackend` 是目前唯一个提供增量检查点的终端（见[这里](https://ci.apache.org/projects/flink/flink-docs-release-1.4/ops/state/large_state_tuning.html)）。
+`RocksDBStateBackend` 是目前唯一个提供增量检查点的后端（见[这里](https://ci.apache.org/projects/flink/flink-docs-release-1.4/ops/state/large_state_tuning.html)）。
 
-### 3. 配置状态终端
+### 3. 配置状态后端
 
-如果你不指定，默认的状态终端是 `jobmanager`。如果你希望为集群中的所有作业建立不同的默认值，可以在 `flink-conf.yaml` 中定义一个新的默认状态终端来完成。默认的状态终端可以被每个作业的配置覆盖，如下所示。
+如果你不指定，默认的状态后端是 `jobmanager`。如果你希望为集群中的所有作业建立不同的默认值，可以在 `flink-conf.yaml` 中定义一个新的默认状态后端来完成。默认的状态后端可以被每个作业的配置覆盖，如下所示。
 
-#### 3.1 设置每个作业的状态终端
+#### 3.1 设置每个作业的状态后端
 
-作业状态终端在作业的 `StreamExecutionEnvironment` 上设置，如下例所示：
+作业状态后端在作业的 `StreamExecutionEnvironment` 上设置，如下例所示：
 
 Java版本:
 ```java
@@ -112,13 +112,13 @@ val env = StreamExecutionEnvironment.getExecutionEnvironment()
 env.setStateBackend(new FsStateBackend("hdfs://namenode:40010/flink/checkpoints"))
 ```
 
-#### 3.2 设置默认状态终端
+#### 3.2 设置默认状态后端
 
-可以使用配置键 `state.backend` 在 `flink-conf.yaml` 配置文件中配置默认状态终端。
+可以使用配置键 `state.backend` 在 `flink-conf.yaml` 配置文件中配置默认状态后端。
 
-配置的值可以是 `jobmanager`（`MemoryStateBackend`），`filesystem`（`FsStateBackend`），`rocksdb`（`RocksDBStateBackend`），或实现状态终端工厂 `FsStateBackendFactory` 类的全限定类名，例如 `RocksDBStateBackend` 的 `org.apache.flink.contrib.streaming.state.RocksDBStateBackendFactory`。
+配置的值可以是 `jobmanager`（`MemoryStateBackend`），`filesystem`（`FsStateBackend`），`rocksdb`（`RocksDBStateBackend`），或实现状态后端工厂 `FsStateBackendFactory` 类的全限定类名，例如 `RocksDBStateBackend` 的 `org.apache.flink.contrib.streaming.state.RocksDBStateBackendFactory`。
 
-如果默认状态终端设置为 `filesystem`，`state.backend.fs.checkpointdir` 定义了检查点数据存储目录。
+如果默认状态后端设置为 `filesystem`，`state.backend.fs.checkpointdir` 定义了检查点数据存储目录。
 
 配置文件中的示例部分可能如下所示：
 ```
