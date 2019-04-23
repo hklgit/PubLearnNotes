@@ -1,7 +1,7 @@
 
 ### 1. ProcessFunction
 
-ProcessFunction 函数是低层次的流处理算子，可访问所有（非循环）流应用程序的基本构建块(basic building blocks)：
+ProcessFunction 函数是低层次的流处理算子，可访问所有（非循环）流应用程序的基本构建块：
 - Events (数据流元素)
 - State (容错和一致性)
 - Timers (事件时间和处理时间)
