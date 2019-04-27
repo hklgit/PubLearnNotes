@@ -49,6 +49,8 @@ input.addSink(sink)
 
 > 批量编码格式只能与 `OnCheckpointRollingPolicy` 结合使用，它会在每个检查点上滚动正在进行的部分文件。
 
+https://issues.apache.org/jira/browse/FLINK-9749
+
 英译对照
 - 分桶：buckets
 - 部分文件：part file
