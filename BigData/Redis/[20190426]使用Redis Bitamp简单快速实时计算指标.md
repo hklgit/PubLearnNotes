@@ -10,33 +10,39 @@ categories: Redis
 permalink: fast-easy-realtime-metrics-using-redis-bitmaps
 ---
 
-传统上，度量指标由批处理作业执行（每小时运行，每天运行等）。Redis 支持的位图允许我们可以实时计算，并且非常节省空间。在1.28亿用户场景中，经典度量指标（如'日活'）在 MacBook Pro上 只需不到50毫秒，而且只需要16 MB内存。
+传统上，度量指标一般由批处理作业执行（每小时运行，每天运行等）。Redis 中的 Bitmap 可以允许我们实时计算指标，并且非常节省空间。在1.28亿用户场景中，经典度量指标（如'日活'）在 MacBook Pro上只需不到50毫秒，而且只需要16 MB内存。
 
 ### 1. Bitmap
 
 > 又可以称之为 Bitset。
 
-Bitmap 或 Bitset 是一个由 0 和 1 构成的数组。在 Bitset 中每一个 bit 被设置为 0 或 1，数组中的每个位置被称为 offset。AND，OR，XOR等操作符，以及其他位操作都是 Bitmaps 的公平游戏。
+Bitmap 或 Bitset 是一个由 0 和 1 构成的数组。在 Bitmap 中每一个 bit 被设置为 0 或 1，数组中的每个位置被称为 offset。AND，OR，XOR等操作符，以及其他位操作都是 Bitmaps 的常用操作。
+
+比如一个公司有 8 个员工，现在需要记录公司的考勤记录，传统的方案是记录下每天正常考勤的员工的 ID 列表，比如 2012-01-01:[1,2,3,4,5,6,7,8]。假如员工 ID 采用 byte 数据类型，则保存每天的考勤记录需要 N 个 byte，其中 N 是当天考勤的总人数。另一种方案则是构造一个 8bit（01110011）的数组，将这 8 个员工跟员工号分别映射到这 8 个位置，如果当天正常考勤了，则将对应的这个位置置为 1，否则置为 0；这样可以每天采用恒定的 1 个 byte 即可保存当天的考勤记录。
 
 ### 2. 基数
 
-Bitmap 的基数为 1 的个数。有一种有效算法来计算基数。例如，在 MacBook Pro 上，在包含10亿位90％填充的 Bitset 上计算基数耗时 21.1 ms。
+Bitmap 中 1 的个数称之为基数。我们有一种有效算法来计算基数，例如，在 MacBook Pro 上，在包含10亿位填充90％的 Bitmap 上计算基数耗时 21.1 ms。
 
 ![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Redis/fast-easy-realtime-metrics-using-redis-bitmaps-1.png?raw=true)
 
 ### 3. Redis中的Bitmap
 
-Redis 允许二进制key和二进制value。Bitmap 只不过是二进制值。`setbit（key，offset，value）` 操作占用 `O(1)` 时间，在给定 key 的指定 offset 处将位的 value 设置为0或1。
+Redis 允许二进制键和二进制值。Bitmap 也是二进制值。将键指定 offset 设置为 0 或 1，`setbit（key，offset，value）` 操作需要用 `O(1)` 时间复杂度。
 
 ### 4. 一个简单的例子：每日活跃用户
 
-为了统计今天登录的不同用户，我们设置了一个 Bitmap，其中每个用户都由一个 offset 标识。当用户访问页面或执行操作（需要计数的）时，会在表示用户ID的 offset 处设置为1。Bitmap 的关键是用户执行操作的名称和时间戳的函数。
+为了统计今天登录的不同用户，我们创建了一个 Bitmap，其中每个用户都由一个 offset 标识。当用户访问页面或执行操作时，会将表示用户ID的 offset 设置为 1。
 
 ![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Redis/fast-easy-realtime-metrics-using-redis-bitmaps-2.png?raw=true)
 
-在这个简单的例子中，每次用户登录时，我们都会执行 `redis.setbit（daily_active_users，user_id，1）`。这会将 daily_active_users Bitmap 中对应偏移量置为1。这是一个 O(1) 时间复杂度操作。对此 Bitmap 进行基数统计会统计出今天一共登录了 9 个用户。键是 daily_active_users，值为 1011110100100101。
+在这个简单的例子中，每次用户登录时，我们都会执行：
+```java
+redis.setbit(daily_active_users，user_id，1)
+```
+这会将 daily_active_users Bitmap 键对应 offset 设置为1。这是一个 O(1) 时间复杂度操作。对此 Bitmap 进行基数统计会统计出今天一共登录了 9 个用户。键是 daily_active_users，值为 1011110100100101。
 
-当然，由于每天活跃用户每天都会在改变，我们需要一种方法每天创建一个新的 Bitmap。我们只需将日期追加到 Bitmap 键上即可。例如，如果我们想要计算在给定日期内在音乐应用中播放至少1首歌曲的每日用户，我们可以将键名称设置为 `play:yyyy-mm-dd`。如果我们想要计算每小时播放一首歌曲的不同用户数量，我们可以将键名称设置为 `play:yyyy-mm-dd-hh`。为了收集每日指标，只要用户播放歌曲，我们就会在 `play：yyyy-mm-dd` 键中将用户对应的 bit 设置为1。
+当然，由于每天活跃用户每天都会在改变，我们需要一种方法每天创建一个新的 Bitmap。我们只需在 Bitmap 键后面追加一个日期即可。例如，如果我们想要计算某天在音乐应用中播放至少1首歌曲的不同用户，我们可以将键名称设置为 `play:yyyy-mm-dd`。如果我们想要计算每小时播放至少一首歌曲的用户数量，我们可以将键名称设置为 `play:yyyy-mm-dd-hh`。为了计算每日指标，只要用户播放歌曲，我们就会在 `play：yyyy-mm-dd` 键中将用户对应的 bit 设置为1。
 ```java
 redis.setbit(play:yyyy-mm-dd, user_id, 1)
 ```
@@ -51,7 +57,7 @@ redis.setbit(play:yyyy-mm-dd, user_id, 1)
 
 ### 5. 使用1.28亿用户进行性能比较
 
-下表显示了针对1.28亿用户在1天，7天和30天内计算每日独特操作计算的比较。通过组合每日 Bitmap 计算7日和30日指标：
+下表显示了针对1.28亿用户在1天，7天和30天计算的比较。通过组合每日 Bitmap 计算7日和30日指标：
 
 | 周期 | 耗时 (MS)|
 |---|---|
