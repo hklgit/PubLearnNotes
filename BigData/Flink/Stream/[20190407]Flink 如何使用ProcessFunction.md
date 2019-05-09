@@ -1,43 +1,54 @@
+---
+layout: post
+author: sjf0115
+title: Flink 如何使用ProcessFunction
+date: 2019-04-07 20:17:21
+tags:
+  - Flink
+
+categories: Flink
+permalink: how-to-user-process-function-of-flink
+---
 
 ### 1. ProcessFunction
 
-ProcessFunction 函数是低层次的流处理算子，可访问所有（非循环）流应用程序的基本构建块：
-- Events (数据流元素)
-- State (容错和一致性)
-- Timers (事件时间和处理时间)
+ProcessFunction 函数是低阶流处理算子，可以访问流应用程序所有（非循环）基本构建块：
+- 事件 (数据流元素)
+- 状态 (容错和一致性)
+- 定时器 (事件时间和处理时间)
 
-ProcessFunction 可以被认为是一个 FlatMapFunction，可以访问 KeyedState 和 Timers。为输入流中接收的每个事件调用来此函数来处理事件。
+可以认为 ProcessFunction 是一个 FlatMapFunction，可以访问 KeyedState 和定时器。为输入流中接收的每个事件调用来此函数来处理事件。
 
 对于容错状态，ProcessFunction 可以通过 RuntimeContext 访问 KeyedState，类似于其他有状态函数访问 KeyedState。
 
-Timers 允许应用程序对处理时间和事件时间的变化作出反应。每次调用函数 `processElement（...）` 都会获得一个 Context 对象，通过该对象可以访问元素的事件时间戳和 TimerService。TimerService 可以为将来的事件时间/处理时间实例注册回调。当到达 Timers 的某个特定时刻时，会调用 `onTimer（...）` 方法。在调用期间，所有状态再次限定为 Timers 创建的键，允许 Timers 操纵 KeyedState。
+定时器可以对处理时间和事件时间的变化做一些处理。每次调用 `processElement()` 都可以获得一个 Context 对象，通过该对象可以访问元素的事件时间戳以及 TimerService。TimerService 可以为事件时间/处理时间实例注册回调。当定时器到达某个时刻时，会调用 `onTimer()` 方法。在调用期间，所有状态再次限定为定时器创建的键，允许定时器操作 KeyedState。
 
-> 如果要访问 KeyedState 和 Timers，则必须在 KeyedStream 上使用 ProcessFunction。
+> 如果要访问 KeyedState 和定时器，那必须在 KeyedStream 上使用 ProcessFunction。
 
 ```java
 stream.keyBy(...).process(new MyProcessFunction())
 ```
 
-### 2. 低层次Join
+### 2. 低阶Join
 
-要在两个输入上实现低层次操作，应用程序可以使用 CoProcessFunction。此函数绑定到两个不同的输入，并为来自两个不同输入的记录分别调用 `processElement1（...）` 和 `processElement2（...）`。
+要在两个输入上实现低阶操作，应用程序可以使用 CoProcessFunction。这个函数绑定了两个不同的输入，并为来自两个不同输入的记录分别调用 `processElement1()` 和 `processElement2()`。
 
-实现低层次 Join 通常遵循以下模式：
+实现低阶 Join 通常遵循以下模式：
 - 为一个输入（或两者）创建状态对象。
-- 从输入接收元素时更新状态。
-- 从其他输入接收元素后，探测状态并生成 Join 结果。
+- 一旦从输入中接收到元素就更新状态。
+- 一旦从其他输入接收到元素时，查看状态并生成 Join 结果。
 
-例如，你可能会将客户数据与金融交易数据进行 Join，同时保存客户数据的状态。如果你比较关心无序事件 Join 的完整性和确定性，那么当客户数据流的 Watermark 已经超过交易时间时，你可以使用 Timers 来评估和发出交易的 Join。
+例如，你可能会将客户数据与金融交易数据进行 Join，同时保存客户数据的状态。如果你比较关心无序事件 Join 的完整性和确定性，那么当客户数据流的 Watermark 已经超过交易时间时，你可以使用定时器来计算和发出交易的 Join。
 
 ### 3. Example
 
-在以下示例中，KeyedProcessFunction 为每个 key 维护一个计数，每当 key 在一分钟（事件时间）内没有更新时就会发送 key/count 键值对：
-- count，key 和 last-modification-timestamp 存储在 ValueState 中，ValueState 由 key 隐含定义。
+在以下示例中，KeyedProcessFunction 为每个键维护一个计数，每当键在一分钟（事件时间）内没有更新时就会发送`键/计数`的键值对：
+- 计数，键以及最后更新的时间戳会存储在 ValueState 中，ValueState 由 key 隐含定义。
 - 对于每条记录，KeyedProcessFunction 增加计数器并修改最后的时间戳。
-- 该函数还会在未来一分钟内调用回调（事件时间）。
-- 在每次回调时，都会检查存储计数的最后修改时间与回调的事件时间时间戳，如果匹配则发送 key/count（即在一分钟内没有更新）
+- 该函数还会在一分钟后调用回调（事件时间）。
+- 每次调用回调时，都会检查存储计数的最后修改时间与回调的事件时间时间戳，如果匹配则发送`键/计数`键值对（即在一分钟内没有更新）
 
-> 这个简单的例子可以用会话窗口实现。在这里使用 KeyedProcessFunction 只是用来说明它提供的基本模式。
+> 这个简单的例子可以用会话窗口实现。在这里使用 KeyedProcessFunction 只是用来说明它的基本模式。
 
 Java版本：
 ```java
@@ -50,7 +61,6 @@ import org.apache.flink.streaming.api.functions.ProcessFunction;
 import org.apache.flink.streaming.api.functions.ProcessFunction.Context;
 import org.apache.flink.streaming.api.functions.ProcessFunction.OnTimerContext;
 import org.apache.flink.util.Collector;
-
 
 // the source data stream
 DataStream<Tuple2<String, String>> stream = ...;
@@ -284,5 +294,14 @@ ctx.timerService.deleteEventTimeTimer(timestampOfTimerToStop)
 > 如果没有注册给定时间戳的 Timers，那么停止 Timers 没有任何效果。                               
 
 > Flink版本:1.8
+
+英译对照:
+- 事件: Events
+- 状态: State
+- 定时器: Timers
+
+欢迎关注我的公众号和博客：
+
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Other/smartsi.jpg?raw=true)
 
 原文:[Process Function (Low-level Operations)](https://ci.apache.org/projects/flink/flink-docs-stable/dev/stream/operators/process_function.html)
