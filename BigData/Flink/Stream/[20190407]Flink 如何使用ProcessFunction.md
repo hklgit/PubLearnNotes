@@ -17,11 +17,11 @@ ProcessFunction 函数是低阶流处理算子，可以访问流应用程序所�
 - 状态 (容错和一致性)
 - 定时器 (事件时间和处理时间)
 
-可以认为 ProcessFunction 是一个 FlatMapFunction，可以访问 KeyedState 和定时器。为输入流中接收的每个事件调用来此函数来处理事件。
+ProcessFunction 可以被认为是一种提供了对 KeyedState 和定时器访问的 FlatMapFunction。每在输入流中接收到一个事件，就会调用来此函数来处理。
 
-对于容错状态，ProcessFunction 可以通过 RuntimeContext 访问 KeyedState，类似于其他有状态函数访问 KeyedState。
+对于容错的状态，ProcessFunction 可以通过 RuntimeContext 访问 KeyedState，类似于其他有状态函数访问 KeyedState。
 
-定时器可以对处理时间和事件时间的变化做一些处理。每次调用 `processElement()` 都可以获得一个 Context 对象，通过该对象可以访问元素的事件时间戳以及 TimerService。TimerService 可以为事件时间/处理时间实例注册回调。当定时器到达某个时刻时，会调用 `onTimer()` 方法。在调用期间，所有状态再次限定为定时器创建的键，允许定时器操作 KeyedState。
+定时器可以对处理时间和事件时间的变化做一些处理。每次调用 `processElement()` 都可以获得一个 Context 对象，通过该对象可以访问元素的事件时间戳以及 TimerService。TimerService 可以为尚未发生的事件时间/处理时间实例注册回调。当定时器到达某个时刻时，会调用 `onTimer()` 方法。在调用期间，所有状态再次限定为定时器创建的键，允许定时器操作 KeyedState。
 
 > 如果要访问 KeyedState 和定时器，那必须在 KeyedStream 上使用 ProcessFunction。
 
@@ -34,15 +34,15 @@ stream.keyBy(...).process(new MyProcessFunction())
 要在两个输入上实现低阶操作，应用程序可以使用 CoProcessFunction。这个函数绑定了两个不同的输入，并为来自两个不同输入的记录分别调用 `processElement1()` 和 `processElement2()`。
 
 实现低阶 Join 通常遵循以下模式：
-- 为一个输入（或两者）创建状态对象。
-- 一旦从输入中接收到元素就更新状态。
-- 一旦从其他输入接收到元素时，查看状态并生成 Join 结果。
+- 为一个输入（或两个）创建状态对象。
+- 在从输入中收到元素时更新状态。
+- 在从其他输入收到元素时扫描状态对象并生成 Join 结果。
 
-例如，你可能会将客户数据与金融交易数据进行 Join，同时保存客户数据的状态。如果你比较关心无序事件 Join 的完整性和确定性，那么当客户数据流的 Watermark 已经超过交易时间时，你可以使用定时器来计算和发出交易的 Join。
+例如，你可能会将客户数据与金融交易数据进行 Join，并将客户数据存储在状态中。如果你比较关心无序事件 Join 的完整性和确定性，那么当客户数据流的 Watermark 已经超过交易时间时，你可以使用定时器来计算和发出交易的 Join。
 
 ### 3. Example
 
-在以下示例中，KeyedProcessFunction 为每个键维护一个计数，每当键在一分钟（事件时间）内没有更新时就会发送`键/计数`的键值对：
+在以下示例中，KeyedProcessFunction 为每个键维护一个计数，并且会把一分钟(事件时间)内没有更新的键/值对输出：
 - 计数，键以及最后更新的时间戳会存储在 ValueState 中，ValueState 由 key 隐含定义。
 - 对于每条记录，KeyedProcessFunction 增加计数器并修改最后的时间戳。
 - 该函数还会在一分钟后调用回调（事件时间）。
@@ -62,31 +62,28 @@ import org.apache.flink.streaming.api.functions.ProcessFunction.Context;
 import org.apache.flink.streaming.api.functions.ProcessFunction.OnTimerContext;
 import org.apache.flink.util.Collector;
 
-// the source data stream
+// 数据源
 DataStream<Tuple2<String, String>> stream = ...;
 
-// apply the process function onto a keyed stream
+// 对KeyedStream应用ProcessFunction
 DataStream<Tuple2<String, Long>> result = stream
     .keyBy(0)
     .process(new CountWithTimeoutFunction());
 
 /**
- * The data type stored in the state
+ * 存储在state中的数据类型
  */
 public class CountWithTimestamp {
-
     public String key;
     public long count;
     public long lastModified;
 }
 
 /**
- * The implementation of the ProcessFunction that maintains the count and timeouts
+ * 维护了计数和超时间隔的ProcessFunction实现
  */
-public class CountWithTimeoutFunction
-        extends KeyedProcessFunction<Tuple, Tuple2<String, String>, Tuple2<String, Long>> {
-
-    /** The state that is maintained by this process function */
+public class CountWithTimeoutFunction extends KeyedProcessFunction<Tuple, Tuple2<String, String>, Tuple2<String, Long>> {
+    /** 这个状态是通过 ProcessFunction 维护*/
     private ValueState<CountWithTimestamp> state;
 
     @Override
@@ -100,23 +97,23 @@ public class CountWithTimeoutFunction
             Context ctx,
             Collector<Tuple2<String, Long>> out) throws Exception {
 
-        // retrieve the current count
+        // 查看当前计数
         CountWithTimestamp current = state.value();
         if (current == null) {
             current = new CountWithTimestamp();
             current.key = value.f0;
         }
 
-        // update the state's count
+        // 更新状态中的计数
         current.count++;
 
-        // set the state's timestamp to the record's assigned event time timestamp
+        // 设置状态的时间戳为记录的事件时间时间戳
         current.lastModified = ctx.timestamp();
 
-        // write the state back
+        // 状态回写
         state.update(current);
 
-        // schedule the next timer 60 seconds from the current event time
+        // 从当前事件时间开始注册一个60s的定时器
         ctx.timerService().registerEventTimeTimer(current.lastModified + 60000);
     }
 
@@ -126,10 +123,10 @@ public class CountWithTimeoutFunction
             OnTimerContext ctx,
             Collector<Tuple2<String, Long>> out) throws Exception {
 
-        // get the state for the key that scheduled the timer
+        // 得到设置这个定时器的键对应的状态
         CountWithTimestamp result = state.value();
 
-        // check if this is an outdated timer or the latest timer
+        // 检查定时器是过时定时器还是最新定时器
         if (timestamp == result.lastModified + 60000) {
             // emit the state on timeout
             out.collect(new Tuple2<String, Long>(result.key, result.count));
@@ -169,7 +166,6 @@ class CountWithTimeoutFunction extends KeyedProcessFunction[Tuple, (String, Stri
   lazy val state: ValueState[CountWithTimestamp] = getRuntimeContext
     .getState(new ValueStateDescriptor[CountWithTimestamp]("myState", classOf[CountWithTimestamp]))
 
-
   override def processElement(
       value: (String, String),
       ctx: KeyedProcessFunction[Tuple, (String, String), (String, Long)]#Context,
@@ -204,11 +200,11 @@ class CountWithTimeoutFunction extends KeyedProcessFunction[Tuple, (String, Stri
 }
 ```
 
-> 在 Flink 1.4.0 版本之前，当调用处理时间 Timers 时，`ProcessFunction.onTimer（）` 方法会将当前处理时间设置为事件时间时间戳。此行为非常微小，用户可能会注意不到。但是这是有问题的，因为处理时间时间戳是不确定的，不与 Watermark 对齐。此外，用户实现的逻辑依赖于这个错误的时间戳，很可能是出乎意料的错误。所以我们决定解决它。 升级到1.4.0后，使用不正确的事件时间戳的作业会失败，用户应将作业调整为正确的逻辑。
+> 在 Flink 1.4.0 版本之前，当调用处理时间定时器时，`ProcessFunction.onTimer()` 方法会将当前处理时间设置为事件时间时间戳。用户可能会注意不到，但是这是有问题的，因为处理时间时间戳是不确定的，不与 Watermark 对齐。此外，如果用户实现的逻辑依赖于这个错误的时间戳，很可能会出现出乎意料的错误。升级到 1.4.0 版本后，使用不正确的事件时间戳的作业会失败，用户必须将作业调整为正确的逻辑。
 
 ### 4. KeyedProcessFunction
 
-KeyedProcessFunction 作为 ProcessFunction 的扩展，可以在 `onTimer（...）` 方法中访问 Timers 的 key。
+KeyedProcessFunction 作为 ProcessFunction 的扩展，可以在 `onTimer()` 方法中访问定时器的键：
 
 Java版本:
 ```java
@@ -225,27 +221,25 @@ override def onTimer(timestamp: Long, ctx: OnTimerContext, out: Collector[OUT]):
   // ...
 }
 ```
-### 5. Timers
+### 5. 定时器
 
-两种类型的 Timers（处理时间和事件时间）由 TimerService 在内部维护并排队执行。
+TimerService 在内部维护两种类型的定时器（处理时间和事件时间定时器）并排队执行。
 
-TimerService 删除每个 key 和时间戳重复的 Timers，即每个 key 和时间戳最多有一个 Timers。如果为同一时间戳注册了多个 Timers，则只会调用一次 `onTimer（）` 方法。
+TimerService 会删除每个键和时间戳重复的定时器，即每个键在每个时间戳上最多有一个定时器。如果为同一时间戳注册了多个定时器，则只会调用一次 `onTimer（）` 方法。
 
-> Flink同步调用 `onTimer（）`和 `processElement（）`。 因此，用户不必担心并发修改状态。
+> Flink同步调用 `onTimer()` 和 `processElement()` 方法。因此，用户不必担心状态的并发修改。
 
 #### 5.1 容错
 
-Timers 具有容错能力，并且与应用程序的状态一起 checkpoint。如果故障恢复或从保存点启动应用程序，则会恢复 Timers。
+定时器具有容错能力，并且与应用程序的状态一起进行快照。如果故障恢复或从保存点启动应用程序，就会恢复定时器。
 
-> 在恢复之前应该点火的检查点处理时间计时器将立即触发。 当应用程序从故障中恢复或从保存点启动时，可能会发生这种情况。
+> 在故障恢复之前应该触发的处理时间定时器会被立即触发。当应用程序从故障中恢复或从保存点启动时，可能会发生这种情况。
 
->  除了 RocksDB后端/增量快照/基于堆的定时器的组合（将使用FLINK-10026解析）之外，定时器始终是异步检查点。 请注意，大量的计时器可以增加检查点时间，因为计时器是检查点状态的一部分。
+#### 5.2 定时器合并
 
-#### 5.2 Timers合并
+由于 Flink 仅为每个键和时间戳维护一个定时器，因此可以通过降低定时器的频率来进行合并以减少定时器的数量。
 
-由于 Flink 每个键每个时间戳只保留一个 Timers，因此可以通过降低 Timers 的分辨率来合并它们并减少 Timers 的数量。
-
-对于分辨率1秒的 Timers（事件时间或处理时间），我们可以将目标时间向下舍入为整秒数。Timers 最多提前1秒触发，但不会迟于我们的要求，精确到毫秒。结果，每个键每秒最多有一个 Timers。
+对于频率为1秒的定时器（事件时间或处理时间），我们可以将目标时间向下舍入为整秒数。定时器最多提前1秒触发，但不会迟于我们的要求，精确到毫秒。因此，每个键每秒最多有一个定时器。
 
 Java版本:
 ```java
@@ -257,7 +251,7 @@ Scala版本:
 val coalescedTime = ((ctx.timestamp + timeout) / 1000) * 1000
 ctx.timerService.registerProcessingTimeTimer(coalescedTime)
 ```
-由于事件时间  Timers 仅当 Watermark 到达时触发，因此我们可以将当前的 Timers 与下一个 Watermark 的那些 Timers 调度以及合并。
+由于事件时间定时器仅当 Watermark 到达时才会触发，因此我们可以将当前 Watermark 与下一个 Watermark 的定时器一起调度和合并：
 
 Java版本:
 ```java
@@ -269,7 +263,7 @@ Scala版本:
 val coalescedTime = ctx.timerService.currentWatermark + 1
 ctx.timerService.registerEventTimeTimer(coalescedTime)
 ```
-可以使用下方式停止和删除 Timers：
+可以使用一下方式停止一个处理时间定时器：
 Java版本:
 ```java
 long timestampOfTimerToStop = ...
@@ -280,7 +274,7 @@ Scala版本:
 val timestampOfTimerToStop = ...
 ctx.timerService.deleteProcessingTimeTimer(timestampOfTimerToStop)
 ```
-停止处理时间 Timers：
+可以使用一下方式停止一个事件时间定时器：
              Java版本：
 ```java
 long timestampOfTimerToStop = ...
@@ -291,7 +285,7 @@ Scala版本：
 val timestampOfTimerToStop = ...
 ctx.timerService.deleteEventTimeTimer(timestampOfTimerToStop)
 ```
-> 如果没有注册给定时间戳的 Timers，那么停止 Timers 没有任何效果。                               
+> 如果没有给指定时间戳注册定时器，那么停止定时器没有任何效果。                               
 
 > Flink版本:1.8
 
