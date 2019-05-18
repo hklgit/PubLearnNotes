@@ -29,11 +29,23 @@ Storm-redis 使用 Jedis 作为 Redis 客户端。
 
 Storm-redis 提供了基本的 Bolt 实现：RedisLookupBolt，RedisStoreBolt 以及 RedisFilterBolt。
 
-根据名字我们就可以知道其功能，RedisLookupBolt 根据指定键键从 Redis 中检索值，RedisStoreBolt 将键/值存储到 Redis。RedisFilterBolt 过滤键或字段不在 Redis 上的元组。
+根据名字我们就可以知道其功能，RedisLookupBolt 从 Redis 中检索指定键的值，RedisStoreBolt 将键/值存储到 Redis 上。RedisFilterBolt 过滤键或字段不在 Redis 上的元组。
 
-一个元组匹配一个键/值对，你可以在 TupleMapper 中定义匹配模式。你还可以从 RedisDataTypeDescription 中选择你需要的数据类型。通过  RedisDataTypeDescription.RedisDataType 来查看支持哪些数据类型。在一些数据类型（散列，有序集，集合）中，还需要额外的键以及将元组中的键转换为元素。
+一个元组匹配一个键/值对，你可以在 TupleMapper 中定义匹配模式。你还可以从 RedisDataTypeDescription 中选择你需要的数据类型。通过  RedisDataTypeDescription.RedisDataType 来查看支持哪些数据类型。一些数据类型，例如散列，有序集，还需要指定额外的键来将元组转换为元素：
+```java
+public RedisDataTypeDescription(RedisDataType dataType, String additionalKey) {
+    this.dataType = dataType;
+    this.additionalKey = additionalKey;
+    if (dataType == RedisDataType.HASH ||
+            dataType == RedisDataType.SORTED_SET || dataType == RedisDataType.GEO) {
+        if (additionalKey == null) {
+            throw new IllegalArgumentException("Hash, Sorted Set and GEO should have additional key");
+        }
+    }
+}
+```
 
-这些接口与 RedisLookupMapper，RedisStoreMapper 以及 RedisFilterMapper 组合使用，分别适合 RedisLookupBolt，RedisStoreBolt 以及 RedisFilterBolt。当你实现 RedisFilterMapper 时，请确保在 declareOutputFields() 中声明与输入流相同的字段，因为 FilterBolt 只是转发存在 Redis 上输入元组。
+这些接口与 RedisLookupMapper，RedisStoreMapper 以及 RedisFilterMapper 组合使用，分别适用于 RedisLookupBolt，RedisStoreBolt 以及 RedisFilterBolt。当你实现 RedisFilterMapper 时，请确保在 declareOutputFields() 中声明与输入流相同的字段，因为 FilterBolt 只是转发存在 Redis 上输入元组。
 
 #### 2.1 RedisLookupBolt
 
@@ -77,6 +89,7 @@ class WordCountRedisLookupMapper implements RedisLookupMapper {
     }
 }
 ```
+
 根据如下方式使用：
 ```java
 JedisPoolConfig poolConfig = new JedisPoolConfig.Builder()
