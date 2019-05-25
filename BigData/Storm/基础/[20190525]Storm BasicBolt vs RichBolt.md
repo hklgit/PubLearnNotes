@@ -13,7 +13,7 @@ permalink: how-to-choose-basicbolt-and-richbolt-of-storm
 
 IComponent 是所有组件的接口，例如 IBasicBolt、IRichBolt、IBatchBolt 都继承自 IComponent，为拓扑中所有组件提供共同的方法。BaseComponent 是 Storm 提供的一个比较方便的抽象类，这个抽象类及其子类都或多或少实现了其接口定义的部分方法。IBolt 接口是 IRichBolt 要继承的接口。还有一些以 Base 开头的 Bolt 类，如 BaseBasicBolt，BaseRichBolt 等，在这些类中所实现的方法都为空，或者返回值为 NULL。从下图中，可以从整体上看到这些类的关系图，从而理清这些类之间的关系及结构。
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Storm/how-to-choose-basicbolt-and-richbolt-of-storm.png?raw=true)
 
 ### 1. IComponent 与 BaseComponent
 
@@ -133,7 +133,6 @@ public class SplitSentence extends BaseRichBolt {
         for(String word: sentence.split(" ")) {
             collector.emit(new Values(word));
         }
-        //手动 ack，如果不建立 anchor 树，是否 ack 是没有区别的
         collector.ack(tuple);
     }
 
