@@ -127,7 +127,8 @@ public class SplitSentence extends BaseRichBolt {
         for(String word: sentence.split(" ")) {
             collector.emit(new Values(word));
         }
-        collector.ack(tuple);
+        // 在这即使Ack也是没有用处的
+        // collector.ack(tuple);
     }
 
     public void declareOutputFields(OutputFieldsDeclarer declarer) {
@@ -135,7 +136,7 @@ public class SplitSentence extends BaseRichBolt {
     }      
 }
 ```
-由于这种方式我们没有手动的建立 Anchor 树以及手动的 Ack 或者 Fail，所以这是一种不可靠的消息传递方式。
+这种方式我们没有手动建立 Anchor 树以及手动 Ack 或者 Fail，所以这是一种不可靠的消息传递方式。
 
 (2) 使用 BaseRichBolt 实现可靠的Bolt
 ```java
@@ -175,7 +176,7 @@ public class SplitSentence extends BaseBasicBolt {
     }      
 }
 ```
-这种方式由 Storm 自动帮助我们建立 Anchor 树以及发送 Ack 或者 Fail。我们只需要关心业务逻辑即可。
+这种方式由 Storm 自动帮助我们建立 Anchor 树以及发送 Ack 或者 Fail。这是一种可靠的消息传递方式。我们只需要关心业务逻辑即可。
 
 
 英译对照:
