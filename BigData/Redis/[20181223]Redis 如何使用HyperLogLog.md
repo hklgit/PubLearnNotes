@@ -10,13 +10,20 @@ Redis 在 2.8.9 版本添加了 HyperLogLog 结构。HyperLogLog 是用来做基
 
 ### 3. 命令
 
-HyperLogLog目前只支持3个命令，PFADD、PFCOUNT、PFMERGE。我们先来逐一介绍一下。
+HyperLogLog目前只支持3个命令，`PFADD`、`PFCOUNT`、`PFMERGE`。我们先来逐一介绍一下。
 
 #### 3.1 PFADD
 
 > 最早可用版本：2.8.9。时间复杂度：O(1)。
 
 将参数中的元素都加入指定的 HyperLogLog 数据结构中，这个命令会影响基数的计算。如果执行命令之后，基数估计改变了，就返回1；否则返回0。如果指定的key不存在，那么就创建一个空的 HyperLogLog 数据结构。该命令也支持不指定元素而只指定键值，如果不存在，则会创建一个新的 HyperLogLog 数据结构，并且返回1；否则返回0。
+```
+redis> PFADD hll a b c d e f g
+(integer) 1
+redis> PFCOUNT hll
+(integer) 7
+redis>
+```
 
 #### 3.2 PFCOUNT
 
