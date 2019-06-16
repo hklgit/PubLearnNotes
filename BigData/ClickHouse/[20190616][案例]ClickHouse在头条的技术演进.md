@@ -36,7 +36,7 @@ ClickHouse 是由号称“俄罗斯 Google”的 Yandex 开发而来，在 2016 
 
 下图是一个 API 的框架图，相当于一个统一的指标出口，也提供服务。围绕着 ClickHouse 集群，它可以支撑不同的数据源，包括离线的数据、实时的消息中间件数据，也有些业务的数据，还有少量高级用户会直接从 Flink 上消费一些 Databus 数据，然后批量写入，之后在它外围提供一个数据 ETL 的 Service，定期把数据迁移到 ClickHouse local storage 上，之后他们在这之上架了一个用户使用分析系统，也有自研的 BI 系统做一些多维分析和数据可视化的工作，也提供 SQL 的网关，做一些统一指标出口之类的工作，上面的用户可能是多样的。
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ClickHouse/technology-evolution-of-clickHouse-in-toutiao-1.png?raw=true)
 
 综合来说，我们希望在头条内部把 ClickHouse 打造成为支持数据中台的查询引擎，满足交互式行为的需求分析，能够支持多种数据源，整个数据链路对业务做到透明。在工作过程中，我们也碰到了很多的问题。
 
@@ -53,15 +53,17 @@ ClickHouse 是由号称“俄罗斯 Google”的 Yandex 开发而来，在 2016 
 
 我们针对这些问题做了一些改动。第一，从 HAWQ 上移植过来 HDFS client，让 ClickHouse 能够直接访问数据，我们的 ETL 服务实际上维护了一套外部事务的逻辑，然后做数据一致性的保证；为了保证就绪时间，我们充分利用各个节点的计算能力和数据的分布式能力，实际上最终都会在外围服务把数据作一些 Repartition，直接写入各个节点本地表。另外，我们还有一些国际化的场景，像 TikTok、Musical.ly 等，数据就绪和分析师分析的时间是有重叠的，数据写和查询交互的影响还是有一些。我们最近也在尝试把数据构建和查询分离出来，并开发相应的 Feature，但是还没有上线，从 Demo 来看，这条路是行得通的。
 
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ClickHouse/technology-evolution-of-clickHouse-in-toutiao-2.png?raw=true)
+
 #### 3.2 Map 数据类型：动态 Schema
 
 我们在做整个框架的过程中发现，有时候产品存在动态 Schema 的需求。我们当时增加了 Map 的数据类型，主要解决的问题是产品支持的 APP 很多，上报的 Model 也是多变的，它跟用户的日志定义有关，有很多用户自定义参数，就相当于动态的 Schema。从数据产品设计的角度来看又需要相对固定的 Schema，二者之间就会存在一定的鸿沟。最终我们是通过 Map 类型来解决的。
 
 实现 Map 的方式比较多，最简单的就是像 LOB 的方式，或者像 Two-implicit column 的方式。当时产品要求访问 Map 单键的速度与普通的 column 速度保持一致，那么比较通用的解决方案不一定能够满足我们的要求。当时做的时候，从数据的特征来看，我们发现虽然叫 Map，但是它的 keys 总量是有限的，因为依赖于用户自定义的参数不会特别多，在一定的时间范围内，Keys 数量会是比较固定的。而 ClickHouse 有一个好处：它的数据在局部是自描述的，Part 之间的数据差异自动能够 Cover 住。
 
-最后我们采用了一个比较简单的展平模型，在我们数据写入过程中，它会做一个局部打平。以图 3 为例，表格中两行总共只有三个 key，我们就会在存储层展开这三列。这三列的描述是在局部描述的，有值的用值填充，没有值就直接用 N 填充。现在 Map 类型在头条 ClickHouse 集群的各种服务上都在使用，基本能满足大多数的需求。
+最后我们采用了一个比较简单的展平模型，在我们数据写入过程中，它会做一个局部打平。以下图为例，表格中两行总共只有三个 key，我们就会在存储层展开这三列。这三列的描述是在局部描述的，有值的用值填充，没有值就直接用 N 填充。现在 Map 类型在头条 ClickHouse 集群的各种服务上都在使用，基本能满足大多数的需求。
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ClickHouse/technology-evolution-of-clickHouse-in-toutiao-3.png?raw=true)
 
 另外，为了满足访问 key 的高效性，我们在执行层做自动改写，key 的访问会直接改写成对隐私列的访问:
 ```sql
@@ -90,13 +92,13 @@ select c_map from table
 
 我们分析后得出结论，实际上 ClickHouse 把 ZK 当成了三种服务的结合，而不仅把它当作一个 Coordinate service，可能这也是大家使用 ZK 的常用用法。ClickHouse 还会把它当作 Log  Service，很多行为日志等数字的信息也会存在 ZK 上；还会作为表的 catalog service，像表的一些 schema 信息也会在 ZK 上做校验，这就会导致 ZK 上接入的数量与数据总量会成线性关系。按照这样的数据增长预估，ClickHouse 可能就根本无法支撑头条抖音的全量需求。
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ClickHouse/technology-evolution-of-clickHouse-in-toutiao-4.png?raw=true)
 
 社区肯定也意识到了这个问题，他们提出了一个 mini checksum 方案，但是这并没有彻底解决 znode 与数据量成线性关系的问题。所以我们就基于 MergeTree 存储引擎开发了一套自己的高可用方案。我们的想法很简单，就是把更多 ZK 上的信息卸载下来，ZK 只作为 coordinate Service。只让它做三件简单的事情：行为日志的 Sequence Number 分配、Block ID 的分配和数据的元信息，这样就能保证数据和行为在全局内是唯一的。
 
 关于节点，它维护自身的数据信息和行为日志信息，Log 和数据的信息在一个 shard 内部的副本之间，通过 Gossip 协议进行交互。我们保留了原生的 multi-master 写入特性，这样多个副本都是可以写的，好处就是能够简化数据导入。下图是一个简单的框架图。
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ClickHouse/technology-evolution-of-clickHouse-in-toutiao-5.png?raw=true)
 
 以这个图为例，如果往 Replica 1 上写，它会从 ZK 上获得一个 ID，就是 Log ID，然后把这些行为和 Log Push 到集群内部 shard 内部活着的副本上去，然后当其他副本收到这些信息之后，它会主动去 Pull 数据，实现数据的最终一致性。我们现在所有集群加起来 znode 数不超过三百万，服务的高可用基本上得到了保障，压力也不会随着数据增加而增加。
 
@@ -112,11 +114,13 @@ select c_map from table
 
 第一，全局字典会把 coordinate 协议搞得特别复杂，我以前做数据库的时候有个项目，采用了集群级别 Global Dictionary，碰到了比较多的挑战。字典压缩只支持了 MergeTree 相关的存储引擎。压缩的行为发生主要有三种操作，像数据的插入或者数据的后台合并，都会触发 compression，还有很多数据的批量 roll in 或 roll out，也会做一些字典的异步构建。
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ClickHouse/technology-evolution-of-clickHouse-in-toutiao-6.png?raw=true)
 
 刚才也提到，我们的主要出发点就是想在执行层去做非解压的计算，主要是做 Select query，每一个 Select 来的时候，我们都会在分析阶段做一些合法性的校验，评估其在压缩域上直接执行是否可行，如果满足标准，就会改写语法树。如果压缩的 column 会出现在输出的列表中，会显式地加一个 Decompress Stream 这样可选的算子，然后后续执行就不太需要改动，而是可以直接支持。当 equality 的比较以及 group by 操作直接在压缩上执行，最后整体的收益大概提高 20% 到 30%。
 
 刚才提到，我们的字典不是一个集群水平的，那大家可能会有所疑问，比如对分布式表的 query 怎么在压缩域上做评估？我们稍微做了一些限制，很多时候使用压缩场景的是用户行为分析系统，它是按用户 ID 去做 shard，然后节点之间基本做到没有交互。我们也引入了一个执行模式，稍微在它的现有计算上改了一下，我们叫做完美分布加智能合并的模式。在这个模式下，分布式表的 query 也是能够在字典上做评估。收益也还可以，满足当时设计时候的要求。
+
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ClickHouse/technology-evolution-of-clickHouse-in-toutiao-7.png?raw=true)
 
 #### 3.5 特定场景内存 OOM
 
@@ -132,7 +136,7 @@ select c_map from table
 
 这些优化工作完成以后有了很明显的收益，与默认没有开启的时候相比，系统的内存使用可能会下降 5 倍左右。现在应用场景主要在两个指标的计算上，像漏斗之类的和计算用户行为路径会使用。
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ClickHouse/technology-evolution-of-clickHouse-in-toutiao-8.png?raw=true)
 
 #### 3.6 Array 类型处理
 
