@@ -130,6 +130,10 @@ Hadoop早期版本采用一个配置文件hadoop-site.xml来配置Common，HDFS�
       <name>dfs.datanode.data.dir</name>
       <value>file:/home/xiaosi/tmp/hadoop/dfs/data</value>
    </property>
+   <property>
+      <name>dfs.namenode.http-address</name>
+      <value>localhost:50070</value>
+   </property>
 </configuration>
 ```
 
