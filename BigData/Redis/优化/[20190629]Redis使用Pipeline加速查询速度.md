@@ -54,8 +54,9 @@ public void mdel(List<String> keys){
 ### 4. 性能测试
 
 下表给出了不同网络环境下非 Pipeline 和 Pipeline 执行 10000 次 set 操作的效果：
-| 网络     | 延迟     | 非Pipeline     | Pipeline     |
-| :------------- | :------------- | :------------- | :------------- |
+
+| 网络 | 延迟 |非Pipeline | Pipeline |
+| ---- | ---- | ---- | ---- |
 | 本机 | 0.17ms | 573ms | 134ms |
 | 内网服务器 | 0.41ms | 1610ms | 240ms |
 | 异地机房 | 7ms | 78499ms | 1104ms |
