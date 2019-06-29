@@ -84,5 +84,5 @@ public void mdel(List<String> keys){
 ![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Other/smartsi.jpg?raw=true)
 
 参考:
--  [](https://redis.io/topics/pipelining#using-pipelining-to-speedup-redis-queries)
+-  [Using pipelining to speedup Redis queries](https://redis.io/topics/pipelining#using-pipelining-to-speedup-redis-queries)
 - Redis开发与运维
