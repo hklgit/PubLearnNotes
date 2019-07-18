@@ -10,13 +10,21 @@ categories: Algorithm
 permalink: better-bitmap-performance-with-roaring-bitmaps
 ---
 
-在本文中，我们介绍了一种名为 Roaring 的新位图压缩方案。它将位图集条目存储为节省空间的两级索引中的32位整数。与两种竞争性位图压缩方案 WAH 和 Concise 相比，Roaring 通常使用更少的内存并且速度更快。
+### 1. 概述
 
-> WAH, EWAH, Concise 等是基于RLE(Run-Length Encode，运行长度编码)来压缩的。
+Bitsets（也称为Bitmaps）通常用作快速数据结构。不幸的是，他们可能会占用太多内存。为了降低内存的使用，我们经常会使用压缩的位图。
 
-位图是一个二进制数组，我们可以将其视为一个高效且压缩的整数集合 S。给定一个 N 位的位图，如果在[0, N-1]范围内的第 i 个整数存在集合中，则将第 i 位设置为1。例如，集合 {3,4,7} 和 {4,5,7} 可以以二进制形式存储为 10011000 和 10110000。我们可以在位图上使用位运算来计算两个这样列表之间的并集或交集（OR，AND）。
+Roaring Bitmaps 是一种压缩的位图，要优于常规的压缩位图，例如 WAH，EWAH 或者 Concise。在某些情况下，可以比它们快几百倍，并且通常提供更好的压缩。
 
-> 10011000 从右数第4个表示3，下标从0开始。
+Roaring Bitmaps 已经被很多重要系统使用：
+- [Apache Lucene](http://lucene.apache.org/core/)
+- [Apache Druid](http://druid.io/)
+- [Apache Spark](http://spark.apache.org/)
+- [Apache CarbonData](https://github.com/Netflix/atlas)
+- [LinkedIn Pinot](https://github.com/linkedin/pinot/wiki)
+- [Apache Kylin](http://kylin.io/)
+
+几乎所有流行的编程语言（Java，C，C ++，Go，C＃，Rust，Python ......）都提供了 Roaring Bitmaps。
 
 ### 2. 主要思想
 
