@@ -221,7 +221,8 @@ Example:
 ```
 # 根据Host查询Supervisor
 http://<ui-host>:<ui-port>/api/v1/supervisor?host=xxx
-# 根据Id查询Supervisor http://<ui-host>:<ui-port>/api/v1/supervisor?id=3d175f35-e427-4ede-be4a-0bccec80ea36
+# 根据Id查询Supervisor
+http://<ui-host>:<ui-port>/api/v1/supervisor?id=3d175f35-e427-4ede-be4a-0bccec80ea36
 ```
 请求参数:
 
