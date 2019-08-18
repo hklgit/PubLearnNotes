@@ -13,7 +13,7 @@ permalink: storm-ui-rest-api
 
 ### 1. 简介
 
-Storm UI 守护进程提供了 REST API, 允许我们与 Storm 集群进行交互, 其中包括检索指标数据，配置信息以及启动或停止拓扑的管理操作。REST API 结果以 JSON 形式返回。
+Storm UI 守护进程提供了 REST API, 允许我们与 Storm 集群进行交互, 其中包括查看指标数据，配置信息以及启动或停止拓扑的管理操作。REST API 结果以 JSON 形式返回。
 
 ### 2. 用法
 
@@ -21,7 +21,7 @@ REST API 是 Storm UI 守护进程（由 storm ui 启动）的一部分，因此
 
 > UI 守护进程通常与 Nimbus 守护进程在同一主机上运行。
 
-API 基本 URL 为:
+API 基本 URL 形式如下:
 ```
 http://<ui-host>:<ui-port>/api/v1/...
 ```
@@ -36,7 +36,7 @@ $ curl http://<ui-host>:8080/api/v1/cluster/configuration
 
 #### 3.1 GET 操作
 
-##### 3.1.1 集群配置
+##### 3.1.1 /api/v1/cluster/configuration
 
 使用如下 API 返回集群配置：
 ```
@@ -65,7 +65,7 @@ $ curl http://<ui-host>:8080/api/v1/cluster/configuration
   ...
 }
 ```
-##### 3.1.2 集群摘要信息
+##### 3.1.2 /api/v1/cluster/summary
 
 使用如下 API 返回集群摘要信息，例如 nimbus 正常运行时间或 Supervisors 数量:
 ```
@@ -110,7 +110,7 @@ $ curl http://<ui-host>:8080/api/v1/cluster/configuration
  "cpuAssignedPercentUtil": 37.5
 }
 ```
-##### 3.1.3 Supervisor摘要信息
+##### 3.1.3 /api/v1/supervisor/summary
 
 使用如下 API 返回所有 Supervisor 的摘要信息:
 ```
@@ -154,7 +154,7 @@ $ curl http://<ui-host>:8080/api/v1/cluster/configuration
   "logviewerPort": 8000
 }
 ```
-##### 3.1.4 Nimbus摘要信息
+##### 3.1.4 /api/v1/nimbus/summary
 
 使用如下 API 返回所有 Nimbus 主机的摘要信息:
 ```
@@ -188,7 +188,7 @@ $ curl http://<ui-host>:8080/api/v1/cluster/configuration
   ]
 }
 ```
-##### 3.1.5 运行拓扑信息
+##### 3.1.5 /api/v1/history/summary
 
 使用如下 API 返回当前用户提交运行过的拓扑ID列表:
 ```
@@ -211,7 +211,7 @@ $ curl http://<ui-host>:8080/api/v1/cluster/configuration
   ]
 }
 ```
-##### 3.1.6 特定Supervisor摘要信息
+##### 3.1.6 /api/v1/supervisor
 
 使用如下 API 查询特定ID的 Supervisor 或某一台主机上运行的所有 Supervisor 的摘要信息：
 ```
@@ -331,7 +331,7 @@ http://<ui-host>:<ui-port>/api/v1/supervisor?id=3d175f35-e427-4ede-be4a-0bccec80
     }]
 }
 ```
-##### 3.1.7 拓扑摘要信息
+##### 3.1.7 /api/v1/topology/summary
 
 使用如下 API 返回所有拓扑的信息：
 ```
@@ -388,7 +388,7 @@ http://<ui-host>:<ui-port>/api/v1/supervisor?id=3d175f35-e427-4ede-be4a-0bccec80
     "schedulerDisplayResource": true
 }
 ```
-##### 3.1.8 指定拓扑Worker信息
+##### 3.1.8 /api/v1/topology-workers/<id>
 
 使用如下 API 返回 Id 指定拓扑的 Worker 信息：
 ```
@@ -422,7 +422,7 @@ http://<ui-host>:<ui-port>/api/v1/supervisor?id=3d175f35-e427-4ede-be4a-0bccec80
   "logviewerPort": 8000
 }
 ```
-##### 3.1.9 指定拓扑信息与统计指标
+##### 3.1.9 /api/v1/topology/<id>
 
 使用如下 API 返回 Id 指定拓扑信息与统计指标：
 ```
@@ -703,7 +703,7 @@ Example:
   "replicationCount": 1
 }
 ```
-##### 3.1.10 指定拓扑度量指标
+##### 3.1.10 /api/v1/topology/<id>/metrics
 
 使用如下 API 返回 Id 指定拓扑每个组件的详细度量指标：
 ```
@@ -980,7 +980,7 @@ Example：
   ]
 }
 ```
-##### 3.1.11 指定拓扑特定组件度量指标
+##### 3.1.11 /api/v1/topology/<id>/component/<component>
 
 使用如下 API 返回 Id 指定拓扑特定组件的详细度量指标以及Executor信息：
 ```
@@ -1224,12 +1224,187 @@ Examples:
 }
 ```
 
-##### 3.1.12 指定拓扑特定组件度量指标
+#### 3.2 分析和调试GET操作
 
+##### 3.2.1 /api/v1/topology/<id>/profiling/start/<host-port>/<timeout>
 
-#### 3.2 POST 操作
+使用如下 API 请求在 Worker 上启动的分析器（带有超时时间）。 返回状态以及 worker 上分析器组件的链接：
+```
+.../api/v1/topology/<id>/profiling/start/<host-port>/<timeout>
+```
 
-##### 3.2.1 激活指定拓扑
+请求字段如下：
+
+|Parameter |Value   |Description  |
+|----------|--------|-------------|
+|id   	   |String (required)| Topology Id  |
+|host-port |String (required)| Worker Id |
+|timeout |String (required)| Time out for profiler to stop in minutes |
+
+返回字段如下:
+
+|Field  |Value |Description|
+|-----	|----- |-----------|
+|id   | String | Worker id|
+|status | String | Response Status |
+|timeout | String | Requested timeout
+|dumplink | String | Link to logviewer URL for worker profiler documents.|
+
+Examples:
+
+```no-highlight
+1. http://ui-daemon-host-name:8080/api/v1/topology/wordcount-1-1446614150/profiling/start/10.11.1.7:6701/10
+2. http://ui-daemon-host-name:8080/api/v1/topology/wordcount-1-1446614150/profiling/start/10.11.1.7:6701/5
+3. http://ui-daemon-host-name:8080/api/v1/topology/wordcount-1-1446614150/profiling/start/10.11.1.7:6701/20
+```
+返回结果如下:
+```json
+{
+   "status": "ok",
+   "id": "10.11.1.7:6701",
+   "timeout": "10",
+   "dumplink": "http:\/\/10.11.1.7:8000\/dumps\/wordcount-1-1446614150\/10.11.1.7%3A6701"
+}
+```
+
+##### 3.2.2 /api/v1/topology/<id>/profiling/dumpprofile/<host-port>
+
+使用如下 API 请求在 Worker 上 dump 分析器记录。返回请求的状态和 Worker ID:
+```
+.../api/v1/topology/<id>/profiling/dumpprofile/<host-port>
+```
+
+请求字段如下：
+
+|Parameter |Value   |Description  |
+|----------|--------|-------------|
+|id   	   |String (required)| Topology Id  |
+|host-port |String (required)| Worker Id |
+
+返回字段如下:
+
+|Field  |Value |Description|
+|-----	|----- |-----------|
+|id   | String | Worker id|
+|status | String | Response Status |
+
+Examples:
+```no-highlight
+1. http://ui-daemon-host-name:8080/api/v1/topology/wordcount-1-1446614150/profiling/dumpprofile/10.11.1.7:6701
+```
+
+返回结果如下:
+```json
+{
+   "status": "ok",
+   "id": "10.11.1.7:6701",
+}
+```
+##### 3.2.3 /api/v1/topology/<id>/profiling/stop/<host-port>
+
+使用如下 API 请求停止在 Worker 上的分析器。返回状态以及请求的 Worker Id:
+```
+/api/v1/topology/<id>/profiling/stop/<host-port>
+```
+
+请求字段如下:
+
+|Parameter |Value   |Description  |
+|----------|--------|-------------|
+|id   	   |String (required)| Topology Id  |
+|host-port |String (required)| Worker Id |
+
+返回字段如下:
+
+|Field  |Value |Description|
+|-----	|----- |-----------|
+|id   | String | Worker id|
+|status | String | Response Status |
+
+Examples:
+
+```no-highlight
+1. http://ui-daemon-host-name:8080/api/v1/topology/wordcount-1-1446614150/profiling/stop/10.11.1.7:6701
+```
+
+返回结果:
+```json
+{
+   "status": "ok",
+   "id": "10.11.1.7:6701",
+}
+```
+
+##### 3.2.4 /api/v1/topology/<id>/profiling/dumpjstack/<host-port>
+
+使用如下 API 请求在 Worker 上 dump jstack。返回请求的状态和 Worker Id:
+```
+.../api/v1/topology/<id>/profiling/dumpjstack/<host-port>
+```
+
+请求字段如下：
+
+|Parameter |Value   |Description  |
+|----------|--------|-------------|
+|id   	   |String (required)| Topology Id  |
+|host-port |String (required)| Worker Id |
+
+返回字段如下:
+
+|Field  |Value |Description|
+|-----	|----- |-----------|
+|id   | String | Worker id|
+|status | String | Response Status |
+
+Examples:
+```no-highlight
+1. http://ui-daemon-host-name:8080/api/v1/topology/wordcount-1-1446614150/profiling/dumpjstack/10.11.1.7:6701
+```
+
+返回结果如下:
+```json
+{
+   "status": "ok",
+   "id": "10.11.1.7:6701",
+}
+```
+##### 3.2.5 /api/v1/topology/<id>/profiling/dumpheap/<host-port>
+
+使用如下 API 请求在 Worker 上 dump heap。返回请求的状态和 Worker Id:
+```
+.../api/v1/topology/<id>/profiling/dumpheap/<host-port>
+```
+
+请求字段如下：
+
+|Parameter |Value   |Description  |
+|----------|--------|-------------|
+|id   	   |String (required)| Topology Id  |
+|host-port |String (required)| Worker Id |
+
+返回字段如下:
+
+|Field  |Value |Description|
+|-----	|----- |-----------|
+|id   | String | Worker id|
+|status | String | Response Status |
+
+Examples:
+```no-highlight
+1. http://ui-daemon-host-name:8080/api/v1/topology/wordcount-1-1446614150/profiling/dumpheap/10.11.1.7:6701
+```
+
+返回结果如下:
+```json
+{
+   "status": "ok",
+   "id": "10.11.1.7:6701",
+}
+```
+
+#### 3.3 POST 操作
+
+##### 3.3.1 /api/v1/topology/<id>/activate
 
 使用如下 API 激活指定拓扑：
 ```
@@ -1251,11 +1426,11 @@ Examples:
 }
 ```
 
-##### 3.2.2 停用指定拓扑
+##### 3.3.2 /api/v1/topology/<id>/deactivate
 
 使用如下 API 停用指定拓扑：
 ```
-.../api/v1/topology/\<id\>/deactivate
+.../api/v1/topology/<id>/deactivate
 ```
 
 请求参数如下：
@@ -1272,7 +1447,7 @@ Examples:
   "status": "success"
 }
 ```
-##### 3.2.3 重平衡指定拓扑
+##### 3.3.3 /api/v1/topology/<id>/rebalance/<wait-time>
 
 使用如下 API 重平衡指定拓扑：
 ```
@@ -1316,7 +1491,7 @@ http://localhost:8080/api/v1/topology/wordcount-1-1420308665/rebalance/0
 }
 ```
 
-##### 3.2.4 杀死指定拓扑
+##### 3.3.4 /api/v1/topology/<id>/kill/<wait-time>
 
 使用如下 API 杀死指定拓扑：
 ```
