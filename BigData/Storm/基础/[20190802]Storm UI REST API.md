@@ -388,7 +388,7 @@ http://<ui-host>:<ui-port>/api/v1/supervisor?id=3d175f35-e427-4ede-be4a-0bccec80
     "schedulerDisplayResource": true
 }
 ```
-##### 3.1.8 /api/v1/topology-workers/<id>
+##### 3.1.8 /api/v1/topology-workers/\<id\>
 
 使用如下 API 返回 Id 指定拓扑的 Worker 信息：
 ```
@@ -422,7 +422,7 @@ http://<ui-host>:<ui-port>/api/v1/supervisor?id=3d175f35-e427-4ede-be4a-0bccec80
   "logviewerPort": 8000
 }
 ```
-##### 3.1.9 /api/v1/topology/<id>
+##### 3.1.9 /api/v1/topology/\<id\>
 
 使用如下 API 返回 Id 指定拓扑信息与统计指标：
 ```
@@ -703,7 +703,7 @@ Example:
   "replicationCount": 1
 }
 ```
-##### 3.1.10 /api/v1/topology/<id>/metrics
+##### 3.1.10 /api/v1/topology/\<id\>/metrics
 
 使用如下 API 返回 Id 指定拓扑每个组件的详细度量指标：
 ```
@@ -980,7 +980,7 @@ Example：
   ]
 }
 ```
-##### 3.1.11 /api/v1/topology/<id>/component/<component>
+##### 3.1.11 /api/v1/topology/\<id\>/component/\<component\>
 
 使用如下 API 返回 Id 指定拓扑特定组件的详细度量指标以及Executor信息：
 ```
@@ -1226,7 +1226,7 @@ Examples:
 
 #### 3.2 分析和调试GET操作
 
-##### 3.2.1 /api/v1/topology/<id>/profiling/start/<host-port>/<timeout>
+##### 3.2.1 /api/v1/topology/\<id\>/profiling/start/\<host-port\>/\<timeout\>
 
 使用如下 API 请求在 Worker 上启动的分析器（带有超时时间）。 返回状态以及 worker 上分析器组件的链接：
 ```
@@ -1267,7 +1267,7 @@ Examples:
 }
 ```
 
-##### 3.2.2 /api/v1/topology/<id>/profiling/dumpprofile/<host-port>
+##### 3.2.2 /api/v1/topology/\<id\>/profiling/dumpprofile/\<host-port\>
 
 使用如下 API 请求在 Worker 上 dump 分析器记录。返回请求的状态和 Worker ID:
 ```
@@ -1300,7 +1300,7 @@ Examples:
    "id": "10.11.1.7:6701",
 }
 ```
-##### 3.2.3 /api/v1/topology/<id>/profiling/stop/<host-port>
+##### 3.2.3 /api/v1/topology/\<id\>/profiling/stop/\<host-port\>
 
 使用如下 API 请求停止在 Worker 上的分析器。返回状态以及请求的 Worker Id:
 ```
@@ -1335,7 +1335,7 @@ Examples:
 }
 ```
 
-##### 3.2.4 /api/v1/topology/<id>/profiling/dumpjstack/<host-port>
+##### 3.2.4 /api/v1/topology/\<id\>/profiling/dumpjstack/\<host-port\>
 
 使用如下 API 请求在 Worker 上 dump jstack。返回请求的状态和 Worker Id:
 ```
@@ -1368,7 +1368,7 @@ Examples:
    "id": "10.11.1.7:6701",
 }
 ```
-##### 3.2.5 /api/v1/topology/<id>/profiling/dumpheap/<host-port>
+##### 3.2.5 /api/v1/topology/\<id\>/profiling/dumpheap/\<host-port\>
 
 使用如下 API 请求在 Worker 上 dump heap。返回请求的状态和 Worker Id:
 ```
@@ -1404,7 +1404,7 @@ Examples:
 
 #### 3.3 POST 操作
 
-##### 3.3.1 /api/v1/topology/<id>/activate
+##### 3.3.1 /api/v1/topology/\<id\>/activate
 
 使用如下 API 激活指定拓扑：
 ```
@@ -1426,7 +1426,7 @@ Examples:
 }
 ```
 
-##### 3.3.2 /api/v1/topology/<id>/deactivate
+##### 3.3.2 /api/v1/topology/\<id\>/deactivate
 
 使用如下 API 停用指定拓扑：
 ```
@@ -1447,7 +1447,7 @@ Examples:
   "status": "success"
 }
 ```
-##### 3.3.3 /api/v1/topology/<id>/rebalance/<wait-time>
+##### 3.3.3 /api/v1/topology/\<id\>/rebalance/\<wait-time\>
 
 使用如下 API 重平衡指定拓扑：
 ```
@@ -1491,7 +1491,7 @@ http://localhost:8080/api/v1/topology/wordcount-1-1420308665/rebalance/0
 }
 ```
 
-##### 3.3.4 /api/v1/topology/<id>/kill/<wait-time>
+##### 3.3.4 /api/v1/topology/\<id\>/kill/\<wait-time\>
 
 使用如下 API 杀死指定拓扑：
 ```
