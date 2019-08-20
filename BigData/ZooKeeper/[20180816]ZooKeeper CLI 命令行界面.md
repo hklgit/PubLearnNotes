@@ -1,13 +1,13 @@
 ---
 layout: post
-author: sjf0115
-title: ZooKeeper CLI 命令行界面
-date: 2018-08-16 20:30:01
+author: xpproen
+title: ZooKeeper CLI
+date: 2019-08-16 13:21:45
 tags:
   - ZooKeeper
 
 categories: ZooKeeper
-permalink: zookeeper-setup-and-run
+permalink: how-to-use-cki-in-zookeeper
 ---
 
 ZooKeeper 命令行界面（CLI）用于与 ZooKeeper 集合进行交互以进行开发。它有助于调试和解决不同的选项。要执行 ZooKeeper CLI 操作，首先打开 ZooKeeper 服务器（`bin/zkServer.sh start`），然后打开 ZooKeeper 客户端（`bin/zkCli.sh`）。一旦客户端启动，你可以执行以下操作：
@@ -298,6 +298,8 @@ Node does not exist: /third_znode
 ```
 删除(delete/path)命令类似于 remove 命令，除了它只适用于没有子节点的znode。
 
+欢迎关注我的公众号和博客：
 
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Other/smartsi.jpg?raw=true)
 
-原文：https://www.w3cschool.cn/zookeeper/zookeeper_cli.html
+原文：[ZooKeeper CLI](https://www.w3cschool.cn/zookeeper/zookeeper_cli.html)

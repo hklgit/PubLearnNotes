@@ -23,16 +23,17 @@ Lateral View一般与用户自定义表生成函数（如explode()）结合使�
 
 考虑以下名为pageAds的基表。 它有两列：pageid（网页名称）和adid_list（网页上显示的广告数组）：
 
-名称 | 类型
---- | ---
-pageid | STRING
-adid_list | Array<int>
+| 名称 | 类型 |
+| --- | --- |
+| pageid | STRING |
+| adid_list | Array<int> |
 
 具有两行数据的示例表：
-pageid | adid_list
---- | ---
-contact_page | [3, 4, 5]
-front_page | [1, 2, 3]
+
+| pageid | adid_list |
+| --- | --- |
+| contact_page | [3, 4, 5] |
+| front_page | [1, 2, 3] |
 
 而且用户希望统计广告在所有网页上展示的总次数。
 
@@ -80,10 +81,10 @@ LATERAL VIEW explode(col2) myTable2 AS myCol2;
 ```
 LATERAL VIEW子句按照它们出现的顺序应用。 例如使用以下基表：
 
-Array<int> pageid_list  |  Array<string> adid_list
---- | ---
-[1, 2, 3] | ["a", "b", "c"]
-[3, 4] | ["c", "d"]
+| Array<int> pageid_list  |  Array<string> adid_list |
+| --- | --- |
+| [1, 2, 3] | ["a", "b", "c"] |
+| [3, 4] | ["c", "d"] |
 
 
 单个Lateral View查询
@@ -143,4 +144,4 @@ OK
 Time taken: 0.053 seconds, Fetched: 2 row(s)
 ```
 
-原文：https://cwiki.apache.org/confluence/display/Hive/LanguageManual+LateralView
+原文：[LanguageManual LateralView](https://cwiki.apache.org/confluence/display/Hive/LanguageManual+LateralView)
