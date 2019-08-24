@@ -26,7 +26,7 @@ ZooKeeper 是一种用于分布式应用程序的分布式开源协调服务。�
 
 与它协调的分布式进程一样，`ZooKeeper` 本身也可以在一组主机上进行复制，称之为集成。
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ZooKeeper/a-distributed-coordination-service-for-distributed-applications-of-zookeeper-1.jpg?raw=true)
 
 组成 `ZooKeeper` 服务的服务器必须彼此之间能够了解。它们维护状态内存镜像，事务日志以及持久化存储中的快照。只要大多数服务器可用，`ZooKeeper` 服务就可用。
 
@@ -44,7 +44,7 @@ ZooKeeper 是一种用于分布式应用程序的分布式开源协调服务。�
 
 `ZooKeeper` 的命名空间非常类似于标准文件系统。名称是由斜杠 `/` 分隔的路径元素序列。`ZooKeeper` 命名空间中的每个节点都由路径标识。
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ZooKeeper/a-distributed-coordination-service-for-distributed-applications-of-zookeeper-2.jpg?raw=true)
 
 ### 4. 节点与临时节点
 
@@ -85,7 +85,7 @@ ZooKeeper 是一种用于分布式应用程序的分布式开源协调服务。�
 
 `ZooKeeper Components` 展示了 `ZooKeeper` 服务的高层次组件。除请 `Request Processor` 外，构成 `ZooKeeper` 服务的每个服务器都会对自己的每个组件构建副本。
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ZooKeeper/a-distributed-coordination-service-for-distributed-applications-of-zookeeper-3.jpg?raw=true)
 
 ### 9. 使用
 
