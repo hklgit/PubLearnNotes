@@ -22,7 +22,9 @@ log4j:WARN See http://logging.apache.org/log4j/1.2/faq.html#noconfig for more in
 ```
 如果看到上述日志，那么后续所有的日志消息会被丢弃。通常 `log4j.properties` 文件会保存在 `classpath` 中的 conf 目录下。
 
-### 2. 组成部分
+### 2. 配置文件
+
+#### 2.1 组成部分
 
 来看看 `ZooKeeper` 中 `log4j.properties` 的主要组成部分:
 ```
@@ -53,7 +55,7 @@ log4j.appender.ROLLINGFILE.layout.ConversionPattern=%d{ISO8601} [myid:%X{myid}] 
 ...
 ```
 
-### 3. 详解
+#### 2.2 详解
 
 ```
 zookeeper.root.logger=INFO, CONSOLE
@@ -109,6 +111,52 @@ log4j.appender.ROLLINGFILE.layout.ConversionPattern=%d{ISO8601} [myid:%X{myid}] 
 
 日志记录功能会影响到进程的性能，尤其是在开启 `DEBUG` 级别时。同时 `DEBUG` 日志会提供大量有价值的信息，可以帮助我们诊断问题。
 
+### 3. 修改日志输出路径
+
+当执行 `zkServer.sh` 时，会在执行命令的文件夹下会产生 `zookeeper.out` 日志文件来记录 `ZooKeeper` 的运行日志。这种方式会让日志文件不便于查找，对输出路径和大小不能进行控制，所以需要修改日志输出方式。
+
+#### 3.1 修改zkEnv.sh
+
+修改 `$ZOOKEEPER_HOME/bin` 目录下的 `zkEnv.sh` 文件，`ZOO_LOG_DIR` 指定日志输出的目录，`ZOO_LOG4J_PROP`，指定日志输出级别 `INFO,ROLLINGFILE`:
+```shell
+# 以下是原配置
+if [ "x${ZOO_LOG_DIR}" = "x" ]
+then
+    ZOO_LOG_DIR="."
+fi
+
+if [ "x${ZOO_LOG4J_PROP}" = "x" ]
+then
+    ZOO_LOG4J_PROP="INFO,CONSOLE"
+fi
+
+# 以下是修改后配置
+if [ "x${ZOO_LOG_DIR}" = "x" ]
+then
+    ZOO_LOG_DIR="../logs"
+fi
+
+if [ "x${ZOO_LOG4J_PROP}" = "x" ]
+then
+    ZOO_LOG4J_PROP="INFO,ROLLINGFILE"
+fi
+```
+> `ZOO_LOG_DIR="${ZOOKEEPER_HOME}/logs"`，日志会输出都 `/Users/xxx/opt/zookeeper/bin/~/opt/zookeeper/logs` 目录下。需要设置为 `../logs` 目录，才会正确输出到 `/Users/xxx/opt/zookeeper/logs` 目录下。
+
+#### 3.2 修改log4j.properties
+
+修改 `$ZOOKEEPER_HOME/conf/log4j.properties` 文件 `zookeeper.root.logger` 的值与前一个文件的 `ZOO_LOG4J_PROP` 保持一致，在这日志配置是以日志大小进行滚动:
+```xml
+# 以下是原配置
+zookeeper.root.logger=INFO, CONSOLE
+log4j.appender.ROLLINGFILE=org.apache.log4j.RollingFileAppender
+
+# 以下是修改后配置
+zookeeper.root.logger=INFO, ROLLINGFILE
+log4j.appender.ROLLINGFILE=org.apache.log4j.RollingFileAppender
+```
+
+上述两个文件修改后，重新启动服务，`ZooKeeper` 会将日志文件保存到 `${ZOOKEEPER_HOME}/logs` 目录下，文件名为 `log4j.properties` 文件中配置的 `zookeeper.log`。
 
 欢迎关注我的公众号和博客：
 
