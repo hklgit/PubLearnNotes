@@ -334,7 +334,9 @@ public class ZKGetData {
 
 `ZooKeeper` 类提供了 `setData` 方法来修改指定 `Znode`中的数据。`setData` 方法如下所示:
 ```java
+// 同步方法
 Stat setData(String path, byte[] data, int version) throws KeeperException, InterruptedException
+// 异步方法
 void setData(String path, byte[] data, int version, StatCallback cb, Object ctx)
 ```
 同步 `setData` 方法有三个参数:
@@ -535,5 +537,7 @@ public class ZKDelete {
 ![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Other/smartsi.jpg?raw=true)
 
 参考：
+
 [zookeeper java api介绍](https://segmentfault.com/a/1190000012262940)
+
 [Zookeeper - API](http://www.tutorialspoint.com/zookeeper/zookeeper_api.htm)

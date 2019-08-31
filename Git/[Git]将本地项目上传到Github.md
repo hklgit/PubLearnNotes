@@ -36,7 +36,7 @@ git remote rm origin
 
 推送到远程仓库
 ```
-xiaosi@yoona:~/code/PubLearnNotes$ git push origin master
+xiaosi@yoona:~/code/PubLearnNotes$ git push -u origin master
 ```
 
 git remote add origin git@github.com:sjf0115/HexoBlog.git
