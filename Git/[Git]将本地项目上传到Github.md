@@ -38,5 +38,3 @@ git remote rm origin
 ```
 xiaosi@yoona:~/code/PubLearnNotes$ git push -u origin master
 ```
-
-git remote add origin git@github.com:sjf0115/HexoBlog.git
