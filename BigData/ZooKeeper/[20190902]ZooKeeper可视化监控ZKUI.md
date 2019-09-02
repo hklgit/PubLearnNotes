@@ -80,7 +80,9 @@ userSet = {"users": [{ "username":"admin" , "password":"admin","role": "ADMIN" }
 nohup java -jar zkui-2.0-SNAPSHOT-jar-with-dependencies.jar ＆
 ```
 现在我们可以通过Web界面(http://localhost:9090)访问 ZKUI:
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ZooKeeper/zkui-zookeeper-ui-dashboard-1.jpg?raw=true)
+
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ZooKeeper/zkui-zookeeper-ui-dashboard-2.jpg?raw=true)
 
 欢迎关注我的公众号和博客：
 
