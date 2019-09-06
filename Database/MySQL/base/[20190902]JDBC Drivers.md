@@ -14,7 +14,7 @@ permalink: how-to-understand-jdbc-drivers
 
 Java Database Connectivity（JDBC）是Java语言的应用程序编程接口（API），它定义了客户端如何访问任何类型的表格数据，尤其是关系数据库。它充当了 Java 应用程序和数据库之间的中间层接口。
 
-JDBC 类包含在 Java `java.sql` 和 `javax.sql` 包中。JDBC 帮助你编写管理下面三种编程场景的Java应用程序：
+JDBC 类包含在 Java `java.sql` 和 `javax.sql` 包中。JDBC 帮助你编写管理下面三种编程场景的Java应用程序:
 - 连接到数据源，如数据库。
 - 将查询和更新语句发送到数据库。
 - 检索并处理从数据库接收的结果以回答你的查询。
