@@ -1,3 +1,15 @@
+---
+layout: post
+author: sjf0115
+title: Flink Kafka Connector
+date: 2019-09-10 12:14:17
+tags:
+  - Flink
+  - Flink Stream
+
+categories: Flink
+permalink: flink-kafka-connector
+---
 
 ## 1. 简介
 
@@ -93,15 +105,84 @@ Flink Kafka 消费者需要知道如何将 Kafka 中的二进制数据转换为 
 
 从 `AbstractDeserializationSchema` 开始通常很有帮助，它负责将生成的 Java/Scala 类型描述为 Flink 的类型系统。实现 `vanilla DeserializationSchema` 的用户需要自己实现 `getProducedType(...)` 方法。
 
-为了访问 Kafka 消息的键，值和元数据，`KafkaDeserializationSchema` 具有以下反序列化方法 `T deserialize(ConsumerRecord<byte[], byte[]> record)`。为方便起见，Flink 提供以下模式:
-- TypeInformationSerializationSchema（和TypeInformationKeyValueSerializationSchema）创建基于Flink的模式TypeInformation。如果Flink编写和读取数据，这将非常有用。此模式是其他通用序列化方法的高性能Flink替代方案。
-- JsonDeserializationSchema（和JSONKeyValueDeserializationSchema）将序列化的JSON转换为ObjectNode对象，可以使用objectNode.get（“field”）作为（Int / String / ...）（）从中访问字段。KeyValue objectNode包含一个“key”和“value”字段，其中包含所有字段，以及一个可选的“元数据”字段，用于公开此消息的偏移量/分区/主题。
-- AvroDeserializationSchema它使用静态提供的模式读取使用Avro格式序列化的数据。它可以从Avro生成的类（AvroDeserializationSchema.forSpecific(...)）中推断出模式，也可以GenericRecords 使用手动提供的模式（with AvroDeserializationSchema.forGeneric(...)）。此反序列化架构要求序列化记录不包含嵌入式架构。
+为了访问 Kafka 消息的键，值和元数据，`KafkaDeserializationSchema` 具有 `T deserialize(ConsumerRecord<byte[], byte[]> record)` 反序列化方法。为方便起见，Flink 提供以下 schema:
+- `TypeInformationSerializationSchema`(以及 `TypeInformationKeyValueSerializationSchema`) 会基于 Flink 的 TypeInformation 创建 schema。对 Flink 读写数据会非常有用。此 schema 是其他通用序列化方法的高性能替代方案。
+- `JsonDeserializationSchema`(以及 `JSONKeyValueDeserializationSchema`)将序列化的 JSON 转换为 ObjectNode 对象，可以使用 `objectNode.get("field").as(Int/String/...)()` 来访问某个字段。KeyValue objectNode 包含一个"key"和"value"字段，这包含了所有字段，以及一个可选的"元数据"字段，可以用来查询此消息的偏移量/分区/主题。
+- `AvroDeserializationSchema` 可以使用静态模式读取 Avro 格式序列化的数据。可以从 Avro 生成的类( `AvroDeserializationSchema.forSpecific(...)`) 中推断出 schema，也可以GenericRecords 使用手动提供的模式（with AvroDeserializationSchema.forGeneric(...)）。此反序列化架构要求序列化记录不包含嵌入式架构。
 
+### 4.2 Kafka消费者起始位置配置
 
-### 4.2 Kafka Consumers Start Position Configuration
+Flink Kafka Consumer 允许配置如何确定 Kafka 分区的起始位置。
 
-### 4.3 Kafka Consumers and Fault Tolerance
+Java版本:
+```java
+final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+
+FlinkKafkaConsumer08<String> myConsumer = new FlinkKafkaConsumer08<>(...);
+// 从最早的记录开始消费
+myConsumer.setStartFromEarliest();
+// 从最近的记录开始消费
+myConsumer.setStartFromLatest();
+// 从指定时间戳(毫秒)开始消费
+myConsumer.setStartFromTimestamp(...);
+// 默认行为 从指定消费组偏移量开始消费
+myConsumer.setStartFromGroupOffsets();
+DataStream<String> stream = env.addSource(myConsumer);
+...
+```
+Scala版本:
+```scala
+val env = StreamExecutionEnvironment.getExecutionEnvironment()
+
+val myConsumer = new FlinkKafkaConsumer08[String](...)
+myConsumer.setStartFromEarliest()      // start from the earliest record possible
+myConsumer.setStartFromLatest()        // start from the latest record
+myConsumer.setStartFromTimestamp(...)  // start from specified epoch timestamp (milliseconds)
+myConsumer.setStartFromGroupOffsets()  // the default behaviour
+
+val stream = env.addSource(myConsumer)
+...
+```
+Flink 所有版本的 Kafka Consumer 都具有上述配置起始位置的方法。
+- `setStartFromGroupOffsets`（默认行为）：从消费者组(在消费者属性中 `group.id` 配置)提交到 Kafka Broker(Kafka 0.8版本提交到 ZooKeeper)的偏移量开始读取分区。如果找不到分区的偏移量，将使用 `auto.offset.reset` 属性中的设置。
+- `setStartFromEarliest()/ setStartFromLatest()`：从最早/最新记录开始读取。在这个模式下，Kafka 提交的偏移量不用起任何作用，可以忽略。
+- `setStartFromTimestamp(long)`：从指定的时间戳开始。对于每个分区，时间戳大于或等于指定时间戳的记录会被用作起始位置。如果分区的最新记录早于时间戳，则只会从分区中读取最新记录。在这个模式下，Kafka 提交的偏移量不用起任何作用，可以忽略。
+
+你还可以为每个分区指定消费者应该开始的确切偏移量。
+
+Java版本:
+```java
+Map<KafkaTopicPartition, Long> specificStartOffsets = new HashMap<>();
+specificStartOffsets.put(new KafkaTopicPartition("myTopic", 0), 23L);
+specificStartOffsets.put(new KafkaTopicPartition("myTopic", 1), 31L);
+specificStartOffsets.put(new KafkaTopicPartition("myTopic", 2), 43L);
+
+myConsumer.setStartFromSpecificOffsets(specificStartOffsets);
+```
+Scala版本:
+```scala
+val specificStartOffsets = new java.util.HashMap[KafkaTopicPartition, java.lang.Long]()
+specificStartOffsets.put(new KafkaTopicPartition("myTopic", 0), 23L)
+specificStartOffsets.put(new KafkaTopicPartition("myTopic", 1), 31L)
+specificStartOffsets.put(new KafkaTopicPartition("myTopic", 2), 43L)
+
+myConsumer.setStartFromSpecificOffsets(specificStartOffsets)
+```
+上面的示例配置消费者从主题 myTopic 的0,1和2分区指定偏移量开始消费。偏移量应该是消费者从每个分区读取的下一条记录。请注意，如果消费者需要读取的分区在提供的偏移量 Map 中没有指定的偏移量，那么自动转换为默认的消费组偏移量(例如，`setStartFromGroupOffsets()`)。
+
+请注意，当作业从故障中自动恢复或使用保存点手动恢复时，这些起始位置配置方法不会影响起始位置。在恢复时，每个 Kafka 分区的起始位置由存储在保存点或检查点中的偏移量确定。
+
+### 4.3 Kafka消费者与容错
+
+启用 Flink 的检查点后，Flink Kafka 消费者会从 Topic 中消费记录，并以一致的方式定期检查(checkpoint)其所有 Kafka 偏移量以及其他算子的状态。如果作业失败，Flink 会将流式程序恢复到最新检查点的状态，并从存储在检查点中的偏移量重新开始消费来自 Kafka 的记录。
+
+因此，检查点间隔定义了程序在发生故障时最多可以回退多少。要使用容错的 Kafka 消费者，需要在运行环境中启用拓扑的检查点。
+
+region i { Java版本
+  final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+  env.enableCheckpointing(5000); // checkpoint every 5000 msecs
+} region
+
 
 ### 4.4 Kafka Consumers Partition Discovery
 
