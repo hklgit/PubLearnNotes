@@ -14,7 +14,7 @@ permalink: how-to-use-watcher-in-zookeeper
 
 ZooKeeper 允许客户端向服务端注册一个 Watcher 监听，当服务端的一些指定事件触发了这个 Watcher，那么就向指定客户端（注册了对应 Watcher 监听的客户端）发送一个事件通知来实现分布式的通知功能。整个 Watcher 注册与通知过程如下图所示:
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ZooKeeper/how-to-use-watcher-in-zookeeper-1.jpg?raw=true)
 
 从上图可以看出 ZooKeeper 的 Watcher 机制主要由客户端线程、客户端 WatchManager 以及 ZooKeeper 服务器三部分组成。在具体流程上，客户端在向 ZooKeeper 服务器注册 Watcher 的同时(步骤一)，会将 Watcher 对象存储在客户端的 WatchManager 上(步骤二)。当 ZooKeeper 服务器触发了 Watcher 事件后，会向客户端发送通知(步骤三)。客户端线程从 WatchManager 取出对应的 Watcher 对象来执行回调逻辑(步骤四)。
 
