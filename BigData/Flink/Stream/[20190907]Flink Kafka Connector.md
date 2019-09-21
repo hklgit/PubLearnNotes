@@ -178,13 +178,36 @@ myConsumer.setStartFromSpecificOffsets(specificStartOffsets)
 
 因此，检查点间隔定义了程序在发生故障时最多可以回退多少。要使用容错的 Kafka 消费者，需要在运行环境中启用拓扑的检查点。
 
-region i { Java版本
-  final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-  env.enableCheckpointing(5000); // checkpoint every 5000 msecs
-} region
+Java版本:
+```java
+final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+// 每5s进行一次checkpoint
+env.enableCheckpointing(5000);
+```
+Scala版本:
+```scala
+val env = StreamExecutionEnvironment.getExecutionEnvironment()
+// 每5s进行一次checkpoint
+env.enableCheckpointing(5000)
+```
+请另外注意，如果有足够的 slot 可用于重新启动拓扑，那么 Flink 才能重新启动拓扑。因此，如果拓扑由于与 TaskManager 断开而失败，那么仍必须有足够的可用 slot。如果未启用检查点，Kafka 消费者可以定期向 Zookeeper 提交偏移量。
 
+### 4.4 Kafka 消费者分区发现
 
-### 4.4 Kafka Consumers Partition Discovery
+#### 4.4.1 分区发现
+
+Flink Kafka 消费者支持动态发现创建的 Kafka 分区，并使用 Exactly-Once 处理语义来消费。在初始检索分区元数据（即，当作业开始运行时）发现的所有分区会从最早的偏移量开始消费。
+
+默认情况下，分区发现是禁用的。如果要启用它，需要设置 `flink.partition-discovery.interval-millis` 非负值，表示以毫秒为单位的发现间隔。
+
+> 当使用 Flink 1.3.x 之前的版本，消费者从保存点恢复时，无法在恢复的运行启用分区发现。如果要启用，恢复将失败并抛出异常。在这种情况下，为了使用分区发现，需要在 Flink 1.3.x 版本中生成保存点，然后再从中恢复。
+
+#### 4.4.2 Topic发现
+
+Flink Kafka 消费者还能够使用正则表达式基于 Topic 名称的模式匹配来发现Topic。请参阅以下示例：
+```
+
+```
 
 ### 4.5 Kafka Consumers Offset Committing Behaviour Configuration
 
