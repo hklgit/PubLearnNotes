@@ -161,7 +161,7 @@ strContain(List("a", "b", "c"), "b"); // true
 strContain(List("a", "b", "c"), "d"); // false
 ```
 #### 2.3 代码
-```
+```java
 package com.sjf.open.hive.udf;
 import org.apache.hadoop.hive.ql.exec.Description;
 import org.apache.hadoop.hive.ql.exec.UDFArgumentException;
