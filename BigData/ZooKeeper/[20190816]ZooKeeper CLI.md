@@ -74,11 +74,11 @@ create -e /path /data
 ```
 示例：
 ```
-create /second_znode "my zookeeper tmp znode"
+create -e /second_znode "my zookeeper tmp znode"
 ```
 输出：
 ```
-[zk: 192.34.15.82:2181(CONNECTED) 3] create /second_znode "my zookeeper tmp znode"
+[zk: 192.34.15.82:2181(CONNECTED) 3] create -e /second_znode "my zookeeper tmp znode"
 Created /second_znode
 ```
 
