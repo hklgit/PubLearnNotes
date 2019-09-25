@@ -74,6 +74,7 @@ sys.cpu.user+1541946115+host+iteblog+cpu+0
 \x00\x00\x01+1541946115+\x00\x00\x01+\x00\x00\x01+\x00\x00\x02+\x00\x00\x02
 ```
 所以上表的数据就变成下面的了：
+
 ![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/OpenTSDB/how-hbase-rowkey-is-designed-of-opentsdb-2.png?raw=true)
 
 这样我们可以节省一些存储空间（不要看这张表好像比上面的表要长了，这里其实是用十六进制表示的，每个\x00占用一个字节，整个指标名称默认只占用三个字节，如果用字符串表示是不止三个字节的）。
@@ -92,6 +93,7 @@ sys.cpu.user+1541946115+host+iteblog+cpu+0
 - 第三张表中的列名称在实际存储中除了包含相对于 Rowkey 的秒数或者毫秒数，其实还包含了当前列值的数据类型，数据长度等标识。
 
 如果说用一张图表示上面的过程，可以如下所示:
+
 ![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/OpenTSDB/how-hbase-rowkey-is-designed-of-opentsdb-4.png?raw=true)
 
 如果想通过例子进一步了解 Rowkey 到底是如何组织以及列名称是如何组成的，可以进一步阅读[通过例子剖析 OpenTSDB 的 Rowkey 及列名设计](https://www.iteblog.com/archives/2452.html)。
