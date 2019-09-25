@@ -1,7 +1,7 @@
 ---
 layout: post
 author:  过往记忆大数据
-title: OpenTSDB底层HBase的Rowkey是如何设计的
+title: OpenTSDB 底层 HBase 的 Rowkey 是如何设计的
 date: 2019-08-16 13:21:45
 tags:
   - OpenTSDB
@@ -52,7 +52,7 @@ sys.cpu.user+1541946115+host+iteblog+cpu+0
 ```
 那如果这个指标有很多监控数据，其存储在 HBase 的 key-value 如下：
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/OpenTSDB/how-hbase-rowkey-is-designed-of-opentsdb-1.png?raw=true)
 
 ### 2.2 Rowkey 设计版本二
 
@@ -74,7 +74,7 @@ sys.cpu.user+1541946115+host+iteblog+cpu+0
 \x00\x00\x01+1541946115+\x00\x00\x01+\x00\x00\x01+\x00\x00\x02+\x00\x00\x02
 ```
 所以上表的数据就变成下面的了：
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/OpenTSDB/how-hbase-rowkey-is-designed-of-opentsdb-2.png?raw=true)
 
 这样我们可以节省一些存储空间（不要看这张表好像比上面的表要长了，这里其实是用十六进制表示的，每个\x00占用一个字节，整个指标名称默认只占用三个字节，如果用字符串表示是不止三个字节的）。
 
@@ -84,7 +84,7 @@ sys.cpu.user+1541946115+host+iteblog+cpu+0
 
 1541946115 时间戳转换成时间为 2018-11-11 22:21:55，其对应的整点小时为 2018-11-11 22:00:00，这个转换成时间戳是 1541944800。1541946115 相对于 1541944800 多余出来的秒数为 1315，在 HBase 里面，1315 就作为当前指标对应值的列名。经过这样的优化之后，同一小时的监控数据都放在一行的不同列里面，所以上面的表格就变成下面的了：
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/OpenTSDB/how-hbase-rowkey-is-designed-of-opentsdb-3.png?raw=true)
 
 注意：
 - 第三张表中为了展示方便，我将 000001+1541944800+000001+000001+000002+000003 简写为 001+1541944800+001+001+002+003；
@@ -92,7 +92,7 @@ sys.cpu.user+1541946115+host+iteblog+cpu+0
 - 第三张表中的列名称在实际存储中除了包含相对于 Rowkey 的秒数或者毫秒数，其实还包含了当前列值的数据类型，数据长度等标识。
 
 如果说用一张图表示上面的过程，可以如下所示:
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/OpenTSDB/how-hbase-rowkey-is-designed-of-opentsdb-4.png?raw=true)
 
 如果想通过例子进一步了解 Rowkey 到底是如何组织以及列名称是如何组成的，可以进一步阅读[通过例子剖析 OpenTSDB 的 Rowkey 及列名设计](https://www.iteblog.com/archives/2452.html)。
 
