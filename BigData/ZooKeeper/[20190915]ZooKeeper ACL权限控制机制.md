@@ -108,6 +108,17 @@ public class DigestAuthenticationProviderUsage {
 }
 ```
 
+和Auth模式相比，有两点不同：
+- 第一不需要预先添加认证用户(但是在zkCli访问的时候，肯定还是要添加认证用户的)。
+- 第二密码是经过sha1及base64处理的密文。
+- 授权是针对单个特定用户。
+- setAcl使用的密码不是明文，是sha1摘要值，无法反推出用户密码内容。
+
+密码可以通过如下shell的方式生成：
+```
+echo -n <user>:<password> | openssl dgst -binary -sha1 | openssl base64
+```
+
 ### 3.3 World模式
 
 World 是一种最开放的权限控制模式，从其名字中也可以看出，事实上这种权限控制方式几乎没有任何作用，数据节点的访问权限对所有用户开放，即所有用户都可以在不进行任何权限校验的情况下操作 ZooKeeper 上的数据。另外，World 模式也可以看作是一种特殊的 Digest 模式，它只有一个权限标识，即 `world:anyone`。World 模式只有一个授权对象(`anyone`)，表示世界上任意用户。
