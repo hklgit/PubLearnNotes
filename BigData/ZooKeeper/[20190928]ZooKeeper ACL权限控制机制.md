@@ -1,5 +1,14 @@
+---
+layout: post
+author: sjf0115
+title: ZooKeeper ACL权限控制机制
+date: 2019-09-28 19:12:45
+tags:
+  - ZooKeeper
 
-zookeeper-acl-access-permission-control-mechanism
+categories: ZooKeeper
+permalink: zookeeper-acl-access-permission-control-mechanism
+---
 
 ZooKeeper 的 ACL 权限控制和 Unix/Linux 操作系统的ACL有一些区别，我们可以从三个方面来理解 ACL 机制，分别是：权限模式(Scheme)、授权对象(ID)和权限(Permission)，通常使用 `scheme:id:perm` 来标识一个有效的ACL信息。
 
@@ -181,13 +190,11 @@ addauth digest <username>:<password>
 
 Super模式，顾名思义就是超级用户的意思，为管理员所使用，这也是一种特殊的 Digest 模式。在 Super 模式下，超级用户可以对任意 ZooKeeper 上的数据节点进行任何操作，不会被任何节点的 ACL 所限制。
 
-### 3.2 Super模式的用法
-
 根据ACL权限控制的原理，一旦对一个数据节点设置了 ACL 权限控制，那么其他没有被授权的 ZooKeeper 客户端将无法访问该数据节点，这的确很好的保证了 ZooKeeper 的数据安全。但同时，ACL 权限控制也给 ZooKeeper 的运维人员带来了一个困扰：如果一个持久数据节点包含了 ACL 权限控制，而其创建者客户端已经退出或已不再使用，那么这些数据节点该如何清理呢？这个时候，就需要在 ACL 的 Super 模式下，使用超级管理员权限来进行处理了。要使用超级管理员权限，首先需要在 ZooKeeper 服务器上开启 Super 模式，方法是在 ZooKeeper 服务器启动的时候，添加如下系统属性：
 ```
--Dzookeeper.DigestAuthenticationProvider.superDigest=admin:0sxEug2Dpm/NpzMPieOlFREd9Ao=
+-Dzookeeper.DigestAuthenticationProvider.superDigest=super:zUZ0bpqYS7FucDXsnUgxOWTto1s=
 ```
-其中，admin 代表了一个超级管理员的用户名；`0sxEug2Dpm/NpzMPieOlFREd9Ao=` 是由 ZooKeeper 的系统管理员自主配置密码的两次编码处理后的密文，此例中使用的是 `admin:root` 的编码。
+其中，super 代表了一个超级管理员的用户名；`zUZ0bpqYS7FucDXsnUgxOWTto1s=` 是由 ZooKeeper 的系统管理员自主配置密码的两次编码处理后的密文，此例中使用的是 `super:root` 的编码。
 
 打开 ZooKeeper 目录下的 `/bin/zkServer.sh` 服务器脚本，找到如下一行：
 ```
@@ -200,8 +207,7 @@ nohup "$JAVA" "-Dzookeeper.log.dir=${ZOO_LOG_DIR}" "-Dzookeeper.DigestAuthentica
 ```
 
 完成对 ZooKeeper 服务器的 Super 模式的开启后，重新启动服务器后就可以在应用程序中使用了，下面是一个使用超级管理员权限操作 ZooKeeper 数据节点的示例程序：
+![]()
 
-
-
-...
-https://ihong5.wordpress.com/2014/07/24/apache-zookeeper-setting-acl-in-zookeeper-client/
+参考:
+- [Apache ZooKeeper – Setting ACL in ZooKeeper Client](https://ihong5.wordpress.com/2014/07/24/apache-zookeeper-setting-acl-in-zookeeper-client/)
