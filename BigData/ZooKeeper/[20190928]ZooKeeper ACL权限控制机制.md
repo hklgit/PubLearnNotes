@@ -42,6 +42,7 @@ ZooKeeper 的 ACL 权限控制和 Unix/Linux 操作系统的ACL有一些区别�
 ## 3. ACL管理
 
 权限相关命令:
+
 | 命令 | 使用方式 | 描述 |
 | --- | --- | --- |
 | getAcl | getAcl <path> | 读取 ACL 权限 |
@@ -104,7 +105,7 @@ World 是一种最开放的权限控制模式，从其名字中也可以看出�
 setAcl /<node-name> world:anyone:crdwa
 ```
 通过正确执行上述操作，我们可以得到如下所示输出：
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ZooKeeper/zookeeper-acl-access-permission-control-mechanism-1.jpg?raw=true)
 
 > world模式创建节点的默认模式。
 
@@ -119,7 +120,7 @@ setAcl /<node-name> ip:<IPv4-address>:<permission-set>
 setAcl /test/ip-node ip:127.0.0.1:crdwa
 ```
 通过正确执行上述操作，我们可以得到如下所示输出：
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ZooKeeper/zookeeper-acl-access-permission-control-mechanism-2.jpg?raw=true)
 
 ### 4.3 Digest模式
 
@@ -146,10 +147,10 @@ setAcl /test/digest-node-1 digest:user-1:1g4T1B5w+se9ntA6Ckp90uPaJ30=:crdwa
 > `1g4T1B5w+se9ntA6Ckp90uPaJ30=` 为 `password-1` 对应的密文。
 
 通过正确执行上述操作，我们可以得到如下所示输出：
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ZooKeeper/zookeeper-acl-access-permission-control-mechanism-4.jpg?raw=true)
 
 注意的是虽然可以使用明文密码 `user-1:password-1` 设置 ACL(实际上 ZooKeeper 认为 `password-1` 是两次编码处理的密文)，但是获取内容时会没有权限：
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ZooKeeper/zookeeper-acl-access-permission-control-mechanism-3.jpg?raw=true)
 
 ### 4.4 Auth模式
 
@@ -181,10 +182,10 @@ Acl is not valid : /test/auth-node
 addauth digest <username>:<password>
 ```
 通过添加认证用户并相应地设置ACL，可以确保正确设置ACL：
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ZooKeeper/zookeeper-acl-access-permission-control-mechanism-5.jpg?raw=true)
 
 在其他窗口使用对其用户名和密码组合重复上述步骤如下所示：
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ZooKeeper/zookeeper-acl-access-permission-control-mechanism-6.jpg?raw=true)
 
 ### 5. Super模式
 
@@ -207,7 +208,9 @@ nohup "$JAVA" "-Dzookeeper.log.dir=${ZOO_LOG_DIR}" "-Dzookeeper.DigestAuthentica
 ```
 
 完成对 ZooKeeper 服务器的 Super 模式的开启后，重新启动服务器后就可以在应用程序中使用了，下面是一个使用超级管理员权限操作 ZooKeeper 数据节点的示例程序：
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ZooKeeper/zookeeper-acl-access-permission-control-mechanism-7.jpg?raw=true)
+
+从上面输出结果中，我们可以看出，由于 `super:root` 是一个超级管理员，因此能够对一个受权限控制的数据节点 `/test/auth-node` 随意进行操作。但是 `user-3:password-3` 这个普通用户，就无法通过权限验证了。
 
 参考:
 - [Apache ZooKeeper – Setting ACL in ZooKeeper Client](https://ihong5.wordpress.com/2014/07/24/apache-zookeeper-setting-acl-in-zookeeper-client/)
