@@ -1,5 +1,5 @@
 ### 1. 列转行
- 
+
 #### 1.1 需求
 
 date|	platform|	click_type|	click|	click_uv|
@@ -42,7 +42,7 @@ date|platform|detail_click|detail_click_uv|more_click|more_click_uv|all_click|al
 第二步：
 
 要实现三行转为一行，只需获取每一列的最大值作为当前值（对date，platform分组）
-```
+```sql
 select date, platform,
   Max(case click_type when 'detail' then click else 0 end) as detail_click,
   Max(case click_type when 'detail' then click_uv else 0 end) as detail_click_uv,
@@ -59,7 +59,7 @@ date|platform|detail_click|detail_click_uv|more_click|more_click_uv|all_click|al
 ---|---|---|---|--|---|---|---
 20170101|ios|13996|10224|1830|1604|15826|11343
 
-### 2. 行转列
+### 2. 列转行
 
 #### 1.1 需求
 

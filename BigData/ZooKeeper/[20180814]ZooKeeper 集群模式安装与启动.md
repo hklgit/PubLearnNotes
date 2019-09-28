@@ -1,7 +1,7 @@
 ---
 layout: post
 author: sjf0115
-title: ZooKeeper 安装与启动
+title: ZooKeeper 集群模式安装与启动
 date: 2018-08-14 12:30:01
 tags:
   - ZooKeeper
@@ -12,12 +12,12 @@ permalink: zookeeper-setup-and-run
 
 ### 1. 安装
 
-要在你的计算机上安装ZooKeeper框架，请访问该[链接](http://zookeeper.apache.org/releases.html)并下载最新版本的ZooKeeper。
-到目前为止，最新稳定版本的ZooKeeper是3.4.12(ZooKeeper-3.4.12.tar.gz)。
+要在你的计算机上安装 ZooKeeper 框架，请访问该[链接](http://zookeeper.apache.org/releases.html)并下载最新版本的ZooKeeper。
+到目前为止，最新稳定版本的 ZooKeeper是3.4.12(ZooKeeper-3.4.12.tar.gz)。
 
 使用以下命令提取tar文件：
 ```
-cd /home/q/opt/
+cd ~/opt/
 $ tar -zxf zookeeper-3.4.12.tar.gz
 ```
 创建软连接，便于升级：
@@ -35,7 +35,7 @@ $ mkdir data
 修改 `conf/zoo.cfg` 配置文件：
 ```
 tickTime = 2000
-dataDir = /home/q/opt/zookeeper/data
+dataDir = /Users/smartsi/opt/zookeeper/data
 clientPort = 2181
 initLimit = 10
 syncLimit = 5
@@ -63,14 +63,14 @@ clientPort | 2181 |表示客户端所连接的服务器所监听的端口号，�
 - 在 101.34.82.16 机器上输入2
 - 在 101.34.82.17 机器上输入3
 
-> 这里的1,2,3是与server1,2,3相对应。
+> 需要确保每台服务器的 myid 文件中数字不同，并且和自己所在机器的 zoo.cfg 中 server.id=host:port:port 的id值一样。另外，id的范围是1～255。
 
 ### 4. 配置环境变量
 
 分别在三台机器的上修改 `/etc/profile` 配置环境变量：
 ```
 # ZOOKEEPER
-export ZOOKEEPER_HOME=/home/q/opt/zookeeper
+export ZOOKEEPER_HOME=/Users/smartsi/opt/zookeeper
 export PATH=${ZOOKEEPER_HOME}/bin:$PATH
 ```
 运行命令 `source /etc/profile` 使环境变量生效。
@@ -79,26 +79,26 @@ export PATH=${ZOOKEEPER_HOME}/bin:$PATH
 
 分别在三台机器的上启动ZooKeeper，进入bin目录下执行：
 ```
-[sjf0115@ying /home/q/opt/zookeeper/bin]$ sudo zkServer.sh start
+[sjf0115@ying /Users/smartsi/opt/zookeeper/bin]$ sudo zkServer.sh start
 ZooKeeper JMX enabled by default
-Using config: /home/q/opt/zookeeper/bin/../conf/zoo.cfg
+Using config: /Users/smartsi/opt/zookeeper/bin/../conf/zoo.cfg
 Starting zookeeper ... STARTED
 ```
 当对三台机器启动后，我们用 `zkServer.sh status` 命令来查看启动状态：
 ```
 # 101.34.82.16
 ZooKeeper JMX enabled by default
-Using config: /home/q/opt/zookeeper/bin/../conf/zoo.cfg
+Using config: /Users/smartsi/opt/zookeeper/bin/../conf/zoo.cfg
 Mode: leader
 
 # 101.34.82.15
 ZooKeeper JMX enabled by default
-Using config: /home/q/opt/zookeeper/bin/../conf/zoo.cfg
+Using config: /Users/smartsi/opt/zookeeper/bin/../conf/zoo.cfg
 Mode: follower
 
 # 101.34.82.17
 ZooKeeper JMX enabled by default
-Using config: /home/q/opt/zookeeper/bin/../conf/zoo.cfg
+Using config: /Users/smartsi/opt/zookeeper/bin/../conf/zoo.cfg
 Mode: follower
 ```
 
