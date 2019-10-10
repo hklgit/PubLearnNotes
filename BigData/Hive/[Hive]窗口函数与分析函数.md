@@ -75,3 +75,36 @@ SELECT rank() OVER (ORDER BY sum(b))
 FROM T
 GROUP BY a;
 ```
+
+
+
+
+
+```sql
+INSERT INTO tmp_over_test_1d VALUES
+    ('1001985', '铁流', 1570412317329),
+    ('1001985', '铁流', 1570412317330),
+    ('1001985', '红军不怕远征难-铁流', 1570412317331),
+    ('1001985', '红军不怕远征难-铁流', 1570412317332),
+    ('1001986', '', 1570412317330),
+    ('1001986', '好梦已花开', 1570412317331),
+    ('1001986', '', 1570412317332)
+;
+
+SELECT
+    item_id,
+    FIRST_VALUE(IF(item_name = '', NULL, item_name), TRUE) OVER(PARTITION BY item_id ORDER BY event_ts DESC ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS item_name,
+    event_ts
+FROM tmp_over_test_1d;
+
+item_id	item_name	event_ts
+1001985	红军不怕远征难-铁流	1570412317332
+1001985	红军不怕远征难-铁流	1570412317331
+1001985	红军不怕远征难-铁流	1570412317330
+1001985	红军不怕远征难-铁流	1570412317329
+1001986	好梦已花开	1570412317332
+1001986	好梦已花开	1570412317331
+1001986	好梦已花开	1570412317330
+```
+
+All you need to do is to slide over a window between preceedings and current row and find most recent not null value. LAST_VALUE windowable function has an argument to ignore null values as boolean. LAST_VALUE(<field>,<ignore_nulls> as boolean);
