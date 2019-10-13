@@ -7,26 +7,26 @@ tags:
   - HBase
 
 categories: HBase
-permalink: understanding-hbase-and-bigtable
+permalink: understanding-HBase-and-bigtable
 ---
 
-在学习HBase（Google BigTable 的开源实现）的时候，我们面临的最为困难的地方就是你需要重构你的思路来理解BigTable的概念。
+在学习HBase（Google BigTable 的开源实现）的时候，我们面临的最为困难的地方就是需要你重构你的思路来理解 BigTable 的概念。
 
-非常不幸的是，在 BigTable 和 HBase 中都出现了 `table` 和 `base` 这两个名称，很容易让我们与RDBMS（关系型数据库管理系统）相混淆。
+非常不幸的是，在 BigTable 和 HBase 中都出现了 `table` 和 `base` 这两个概念，这很容易让我们与RDBMS（关系型数据库管理系统）产生联想。
 
-本文旨在从概念的角度描述这些分布式数据存储系统。阅读后，我们应该能够更好地做出明智的决定，即何时使用 Hbase 以及何时使用'传统'数据库更好。
+本文旨在从概念的角度描述这些分布式数据存储系统。阅读完这篇文章后，我们应该能够更明智的做出决定，即何时使用 HBase 以及何时使用'传统'数据库。
 
 ### 1. 术语
 
 幸运的是，Google 的 BigTable Paper 清楚地说明了 BigTable 的真正含义。这是'数据模型'部分的第一句话：
 ```
-Bigtable 是一个稀疏，分布式，持久化的多维排序 Map。
+Bigtable 是一个稀疏的，分布式的，持久化的多维有序 Map。
 ```
 > A Bigtable is a sparse, distributed, persistent multidimensional sorted map.
 
 论文继续解释到：
 ```
-Map 由行键、列以及时间戳索引，在 Map 中的每个值都是无解释的字节数组。
+Map 由行键、列以及时间戳进行索引，在 Map 中的每个值都是无解释的字节数组。
 ```
 > The map is indexed by a row key, column key, and a timestamp; each value in the map is an uninterpreted array of bytes.
 
@@ -43,7 +43,7 @@ HBase 使用的数据模型与 Bigtable 非常相似。用户在标记表中存�
 
 ### 2. Map
 
-Hbase/BigTable 的核心是 Map。根据我们不同编程语言背景，我们可能更熟悉编程语言关联的术语：数组（PHP），字典（Python），哈希（Ruby）或对象（JavaScript）。从维基百科文章来看，Map 是'由一组键和一组值组成的抽象数据类型，其中每个键都与一个值相关联'。
+HBase/BigTable 的核心是 Map。根据我们不同编程语言背景，我们可能更熟悉编程语言关联的术语：数组（PHP），字典（Python），哈希（Ruby）或对象（JavaScript）。从维基百科文章来看，Map 是'由一组键和一组值组成的抽象数据类型，其中每个键都与一个值相关联'。
 
 使用 JavaScript 对象表示，这是一个简单的 Map 示例，其中所有值都只是字符串：
 ```json
@@ -61,13 +61,13 @@ Hbase/BigTable 的核心是 Map。根据我们不同编程语言背景，我们�
 
 ### 4. 分布式
 
-Hbase 和 BigTable 建立在分布式文件系统上，因此底层文件存储分布在不同的计算机上。Hbase 使用的是 Hadoop 的分布式文件系统（HDFS）或 Amazon 的简单存储服务（S3），而 BigTable 使用的是 Google 文件系统（GFS）。
+HBase 和 BigTable 建立在分布式文件系统上，因此底层文件存储分布在不同的计算机上。HBase 使用的是 Hadoop 的分布式文件系统（HDFS）或 Amazon 的简单存储服务（S3），而 BigTable 使用的是 Google 文件系统（GFS）。
 
 数据以一种类似于 RAID 系统的方式在多个参与节点中进行复制。在这里，我们并不在乎使用哪种分布式文件系统来实现。重要的是我们需要知道它是分布式的，它提供了一层保护，以防止集群中的某个节点发生故障。
 
 ### 5. 有序
 
-与大多数 Map 实现不同，在 Hbase/BigTable 中，键/值对严格按照字母顺序排序。也就是说，键 `aaaaa` 的行应紧邻键 `aaaab` 的行，并距离键 `zzzzz` 的行非常远。排序后的版本如下所示：
+与大多数 Map 实现不同，在 HBase/BigTable 中，键/值对严格按照字母顺序排序。也就是说，键 `aaaaa` 的行应紧邻键 `aaaab` 的行，并距离键 `zzzzz` 的行非常远。排序后的版本如下所示：
 ```json
 {
   "1" : "x",
@@ -77,17 +77,15 @@ Hbase 和 BigTable 建立在分布式文件系统上，因此底层文件存储�
   "zzzzz" : "woot"
 }
 ```
-​由于这些系统常常非常巨大而且是分布式的，有序功能实际上是非常重要的。相似的行（例如键）紧密相邻，当你必须对表进行扫描时，你最感兴趣的条目之间彼此相邻。
+​由于这些系统常常非常巨大而且是分布式的，有序功能是非常重要的。相似的行（例如键）紧密相邻，这样当你必须对表进行扫描时，你最感兴趣的条目之间彼此相邻。
 
-行键的设计非常重要。例如，我们有一个表，行键为域名。我们最好以域名的倒序形式作为行键（使用 `com.jimbojw.www` 而不是 `www.jimbojw.com`），这样相关子域名的行就会位于父域名行的附近。域名 `mail.jimbojw.com` 的行会紧邻 `www.jimbojw.com` 的行，而不会是 `mail.xyz.com`。
+行键的设计非常重要。例如，我们有一个表，行键为域名。我们最好以域名的倒序形式作为行键（使用 `com.jimbojw.www` 而不是 `www.jimbojw.com`），这样相关子域名的行就会位于父域名行的附近。这样域名 `mail.jimbojw.com` 的行会紧邻 `www.jimbojw.com` 的行，而不会是 `mail.xyz.com`。
 
-需要注意的是，术语'sorted'在 Hbase/BigTable 中并不意味着值是有序的。除了行键之外，没有其他任何自动索引。
+需要注意的是，术语'sorted'在 HBase/BigTable 中并不意味着值是有序的。除了行键之外，没有其他任何自动索引。
 
 ### 6. 多维
 
-到现在为止，我们还没有提到 `column` 的任何概念，而是将 `table` 视为概念上的常规 Hash/Map。`column` 这个词也像是 `table` 和`base` 的概念一样，承载了太多的RDBMS的情感在内。
-
-取而代之的是，我们可以把它理解为一个多维Map——即 Map 中嵌套 Map。在JSON示例中增加一维：
+到现在为止，我们还没有提到 `column` 的任何概念，而是将 `table` 视为概念上的常规 Hash/Map。`column` 这个词也跟 `table` 和`base` 的概念一样，承载了太多的 RDBMS 的情感在内。我们可以把它理解为一个多维 Map，即 Map 中嵌套 Map。在 JSON 示例中增加一维：
 ```json
 {
   "1" : {
@@ -112,9 +110,9 @@ Hbase 和 BigTable 建立在分布式文件系统上，因此底层文件存储�
   }
 }
 ```
-在上面的示例中，我们会注意到，每个键都指向具有两个键的 Map：`A`和 `B`。从这里开始，我们将顶级键/Map对称为行(`Row`)。同样，在 BigTable/Hbase 命名中，`A`和 `B` 映射称为列族。表的列族是在创建表时指定的，以后很难或无法修改。添加新的列族代价可能也很昂贵，因此最好预先指定所有需要的列族。
+在上面的示例中，我们会注意到，每个键都指向具有两个键的 Map：`A`和 `B`。从这里开始，我们将顶级键/Map对称为行(`Row`)。同样，在 BigTable/HBase 命名中，`A`和 `B` 映射称为列族。表的列族是在创建表时指定的，以后很难或无法修改。添加新的列族代价可能也很昂贵，因此最好预先指定所有需要的列族。
 
-幸运的是，列族可以具有任意数量的列，用限定符(`Qualifier`)或标签(`Label`)列表示。下面是我们的JSON示例的子集，这次是添加列限定符维度：
+幸运的是，列族可以具有任意数量的列，用限定符(`Qualifier`)或标签(`Label`)列表示。下面是我们的 JSON 示例的子集，这次是添加列限定符维度：
 ```json
 {
   // ...
@@ -141,9 +139,9 @@ Hbase 和 BigTable 建立在分布式文件系统上，因此底层文件存储�
 ```
 > 在上面两行中，`A` 列族有两列：`foo` 和 `bar`，而 `B` 列族只有一列，其限定符为空字符串。
 
-向 Hbase/BigTable 查询数据时，我们必须以 `<family>:<qualifier>` 的形式提供完整的列名。因此，例如，上例中的三列为：`A:foo`，`A:bar` 和`B:`。
+向 HBase/BigTable 查询数据时，我们必须以 `<family>:<qualifier>` 的形式提供完整的列名。因此，上例中的三列为：`A:foo`，`A:bar` 和`B:`。
 
-尽管列族是静态的，但列本身不是。考虑以下扩展行：
+尽管列族是静态的，但列不是。考虑以下扩展行：
 ```json
 {
   // ...
@@ -156,7 +154,7 @@ Hbase 和 BigTable 建立在分布式文件系统上，因此底层文件存储�
 ```
 在这个示例下，`zzzzz` 行只有一列 `A:catch_phrase`。由于每一行都可以有任意数量的不同列，因此没有内置的方法来查询所有行中所有列。要获取该信息，我们必须进行全表扫描。但是，我们可以查询所有列族，因为它们是不变的。
 
-Hbase/BigTable 中最后一个维度是时间。我们可以使用整数时间戳（自纪元以来的秒数）或我们选择自定义整数来对数据进行版本控制。客户端可以在插入数据时指定时间戳。
+HBase/BigTable 中最后一个维度是时间。我们可以使用整数时间戳（自纪元以来的秒数）或我们选择自定义整数来对数据进行版本控制。客户端可以在插入数据时指定时间戳。
 
 使用任意整数时间戳示例：
 ```json
@@ -183,7 +181,7 @@ Hbase/BigTable 中最后一个维度是时间。我们可以使用整数时间�
   // ...
 }
 ```
-每个列族在保留给定单元格的版本数量方面都有其自己的规则（一个单元格通过其行键/列对来标识）。在大多数情况下，应用程序只是简单地查询给定单元格的数据，无需指定时间戳。在这种常见情况下，Hbase/BigTable 将返回最新版本（时间戳最高的版本）的数据。如果应用程序查询给定时间戳版本的数据，Hbase 将返回时间戳小于或等于我们提供的时间戳的单元格数据。
+每个列族在保存给定单元格的版本数量方面都有其自己的规则（一个单元格通过其行键/列对来标识）。在大多数情况下，应用程序只是简单地查询给定单元格的数据，无需指定时间戳。在这种常见情况下，HBase/BigTable 将返回最新版本（时间戳最高的版本）的数据。如果应用程序查询给定时间戳版本的数据，HBase 将返回时间戳小于或等于我们提供的时间戳的单元格数据。
 
 例如，查询 `aaaaa/A:foo` (行/列)单元格数据将返回 `y`，而查询 `aaaaa/A:foo/10` (行/列/时间戳)单元格数据将返回 `m`。查询 `aaaaa/A:foo/2` (行/列/时间戳)单元格数据将返回空。
 
@@ -195,4 +193,4 @@ Hbase/BigTable 中最后一个维度是时间。我们可以使用整数时间�
 
 ![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Other/smartsi.jpg?raw=true)
 
-原文：[Understanding HBase and BigTable](https://dzone.com/articles/understanding-hbase-and-bigtab)
+原文：[Understanding HBase and BigTable](https://dzone.com/articles/understanding-HBase-and-bigtab)
