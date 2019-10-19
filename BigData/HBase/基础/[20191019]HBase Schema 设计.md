@@ -23,19 +23,19 @@ HBase 的数据模型与我们在关系数据库中使用或了解的数据模�
 - 时间戳：单元格中的值会进行版本化控制。版本由版本号进行标识，默认情况下，版本号是写入单元格的时间戳。如果在写入时未指定时间戳，则使用当前时间戳。如果读取时未指定时间戳，则返回最新时间戳的单元格值。每个列族都可以配置自己的单元格值版本数。单元格版本的默认三个。
 
 HBase 中的表如下图所示:
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/HBase/introduction-to-hbase-schema-design-1.jpg?raw=true)
 
 上表由两个列族（`Personal` 和 `Office`）组成。每个列族都有两列，`Personal` 列族的两列为 `Name`、`ResidencePhone`，`Office` 列族的两列为 `Phone`、`Address`。包含数据的实体称为单元。行根据行键进行排序。
 
 HBase 用于数据处理的API包含三种主要方法：Get，Put和Scan。Get 和 Put 方法针对特定行，并且需要提供行键。Scan 方法作用在一定范围的行上。该范围可以由开始行键和终止行键定义，如果没有指定开始行键和终止行键，则遍历整个表。
 
 我们将数据模型理解为多维 Map 可能有助于我们理解。上表第一行表示为多维 Map 如下所示:
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/HBase/introduction-to-hbase-schema-design-2.jpg?raw=true)
 
 一个行键映射一个列族数组，列族数组中的每个列族又映射一个列限定符数组，列限定符数组中的每一个列限定符又映射到一个时间戳数组，每个时间戳映射到不同版本的值，即单元格本身。如果我们要查询行键映射的条目，则可以从所有列中获取数据。如果我们要查询指定列族映射的条目，则可以获取该列族下所有列中获取数据。如果我们要查询指定列限定符映射的条目，则可以获取所有时间戳以及相关的值。HBase 会对经典模式进行优化，默认情况下仅返回最新版本的数据。我们可以在查询中请求多个版本的数据。行键可以理解为等价于关系数据库表中的主键。在表创建后，我们不能更改其他列将作为行键。换句话说，在将数据放入表之后，我们不能选择 `Personal` 列族中的 `Name` 列作为行键。
 
 我们也可以将 HBase 视为键值存储（如下图所示），可以理解行键，列族，列限定符，时间戳的组合作为键，存储在单元格中的实际数据为值。稍后，当我们深入了解底层存储的细节时，我们会发现，如果要从给定的行中读取特定单元格数据时，HBase 会去读取一个数据块，里面除了有要查询的单元格数据，可能同时也会获取到其它单元格数据：
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/HBase/introduction-to-hbase-schema-design-3.jpg?raw=true)
 
 如果 HBase 表作为键值存储来看，主键可以只是行键，或者是行键，列族，列限定符，时间戳的组合，具体取决于我们要寻址的单元格。如果我们对一行中的所有单元格都感兴趣，则主键是行键。如果我们只关注指定单元格，则需要将对应的列族和列限定符作为主键的一部分。
 
@@ -72,16 +72,16 @@ HBase 表设计的最重要的是定义行键结构。定义行键结构，重�
 - 用户取消关注了某个人。
 
 让我们考虑一些表设计事项，并探讨其优缺点。从下图所示的表设计开始。该表每一行代表着某个用户和他所关注的其它用户，行键是关注者的用户ID，每列为关注的用户ID：
-![](4)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/HBase/introduction-to-hbase-schema-design-4.jpg?raw=true)
 
 带有数据的设计表如下图所示：
-![](5)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/HBase/introduction-to-hbase-schema-design-5.jpg?raw=true)
 
 在这种表结构的设计下，第一个问题'用户关注了谁'很好解决，但对于第二个问题'用户A是否关注了用户B'这个问题在列很多(关注的用户很多)的时候，需要遍历所有列去找到用户B，这样的代价会比较大。并且当添加新的关注用户时，因为不知道给这个新用户分配什么样的列序号，需要遍历整个列族中的所有列找出最后一个列，并将最后一列的序号+1给新的被关注用户作为列序号，这样的代价很大。一种可能的解决方案是保留一个计数器，记录当前列序号，如下图所示：
-![](6)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/HBase/introduction-to-hbase-schema-design-6.jpg?raw=true)
 
 表中的数据跟之前一样，只是添加了一个计数器，用于记录用户所关注的用户数量。根据上图表的设计，将新被关注用户添加到关注用户列表中所需的步骤如下：
-![](7)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/HBase/introduction-to-hbase-schema-design-7.jpg?raw=true)
 
 - 第一步获取当前计数器表示的列序号(`count:4`)。
 - 第二步更新列序号值，加1(`count:5`)。
@@ -91,7 +91,7 @@ HBase 表设计的最重要的是定义行键结构。定义行键结构，重�
 上图的设计比以前的设计有所改进，但还是不能解决所有问题。取消关注用户仍然很棘手，因为我们必须遍历整行以找出我们需要删除的列。最大的问题是，要添加关注用户，我们必须在客户端代码中实现某种事务逻辑，因为 HBase 不会对跨行或跨RPC调用进行事务保证。
 
 我之前提到的一个属性是列限定符是动态的，并且像单元格一样存储为字节数组。这样一来，我们便可以将任意数据放入列限定符中，这对我们的设计很有帮助。如下图所示，在这种设计中，不再需要计数器，因此添加关注用户变得不那么复杂(直接添加，不需要计数器获取列序号)。取消关注也得到了简化(直接找到对应列，不需要遍历)。在这种情况下，单元格仅包含了一些小的值，没有任何影响：
-![](8)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/HBase/introduction-to-hbase-schema-design-8.jpg?raw=true)
 
 > 现在，表中使用用户名作为列限定符，任意字符串作为单元格值。
 
@@ -100,15 +100,13 @@ HBase 表设计的最重要的是定义行键结构。定义行键结构，重�
 > 这两种方法的区别是使用同一张表存储用户以及所有关注他的用户还是新创建一张表。这两种方法的缺点就是需要维护反序关系，例如添加A->B(用户A关注用户B)，同时维护B->A(用户B被用户A关注)。
 
 当前表结构还可以进一步的优化。如下图所示的表：
-![](9)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/HBase/introduction-to-hbase-schema-design-9.jpg?raw=true)
 
 在此设计中，有两点需要注意：行键现在包含关注用户和被关注用户，同时列族的名字被设计成只有一个字母f。列族名称这样的设计可以通过减少从 HBase 读取/写入的数据来减少I/O负载（磁盘和网络），因为列族名称也是返回给客户端的 KeyValue 对象的一部分。现在，获取关注的所有用户从 Get 操作变成简短的 Scan。取消关注变为简单的删除操作，'用户A是否关注用户B？'变为 Get 操作，并且我们不用再像早期表设计中那样遍历该行的所有列。这是解决该问题的最简单方法，尤其是在关注的用户列表很大的情况下。此设计的表如下图所示：
-![](10)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/HBase/introduction-to-hbase-schema-design-10.jpg?raw=true)
 
 注意，在表中不同的行键可能其长度也不一样。由于每次对表的调用要传输的数据都是不一样的，因此这对性能也会由影响。解决此问题的方法是行键使用哈希值。为了在表中由相同长度的行键，我们可以对不同用户ID进行哈希并将其拼接在一起。如下图所示我们使用 MD5 对用户Id以及其所关注的用户Id进行加密并拼接 `md5(follower)md5(followed)`。这样我们就有固定长度的行键，每个用户ID为16个字节。如果我们要要查询某个用户，我们可以计算对应的哈希值来查询表。
-![](11)
-
-这种表设计可以有效地回答我们前面概述的所有访问模式。
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/HBase/introduction-to-hbase-schema-design-11.jpg?raw=true)
 
 ### 3. 总结
 
