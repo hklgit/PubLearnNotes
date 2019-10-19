@@ -10,7 +10,7 @@ categories: HBase
 permalink: start-of-a-new-era-apache-hBase-1.0
 ---
 
-> 在学习 HBase API 时了解到 1.0 版本是一个里程碑式的版本，在此我们回顾一下这个重要的版本的发布。
+> 在学习 HBase API 时了解到 1.0 版本是一个里程碑式的版本， API 也发生了很多变化。在此我们回顾一下这个重要的版本的发布。
 
 Apache HBase 社区在2015年2月份发布了 Apache HBase 1.0.0 版本。Apache HBase 在花费了将近七年的时间后取得了里程碑式的发展，这次发布提供了一些令人兴奋的特性以及并未牺牲稳定性的新API。
 
@@ -20,7 +20,7 @@ Apache HBase 社区在2015年2月份发布了 Apache HBase 1.0.0 版本。Apache
 
 在列举这个版本的详细特性之前，我们先回顾一下历史版本以及版本号演变。HBase 2007 年始于 Apache Hadoop 的一个子项目，并随同 Hadoop 一起发布。三年后，HBase 成为了一个独立的顶级 Apache 项目。由于 HBase 依赖于 HDFS，所以社区让 HBase 与 Hadoop 的主版本号保持一致。例如，HBase 0.19.x 版本与 Hadoop 0.19.x 版本一起使用，等等。
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/HBase/start-of-a-new-era-apache-hBase-1.0.jpeg?raw=true)
 
 但是，HBase 社区希望一个 HBase 版本可以与多个 Hadoop 版本一起使用，不仅仅能与其所匹配的主版本号一起使用。因此，一个新的命名方案就诞生了，新版本将从接近 1.0 版本的 0.90 主版本开始，就像上面时间线中展示的一样。我们也运用了一种'偶数-奇数'版本的约定，即奇数版本是开发者预览版本，偶数版本是可以在生产环境中使用的稳定版本。稳定版本系列包括0.90、0.92、0.94、0.96和0.98（详见[HBase版本](https://hbase.apache.org/book.html#hbase.versioning)）。
 
@@ -39,7 +39,7 @@ Apache HBase 社区在2015年2月份发布了 Apache HBase 1.0.0 版本。Apache
 
 HBase 的客户端 API 已经发展多年了。为了简化语义、支持并提供可扩展性以及在将来更容易使用，我们重构了 1.0 版本之前的API。为此，1.0.0 版本引进了新的 API，并且废弃了一些常用的客户端 API（`HTableInterface`, `HTable` 以及 `HBaseAdmin`）。
 
-建议更新我们的应用程序使用新风格的 API，因为在以后的 2.x 发行版本中会被删除这些废弃 API。更多资料，可以访问这个链接：http://www.slideshare.net/xefyr/apache-hbase-10-release和 http://s.apache.org/hbase-1.0-api。
+建议更新我们的应用程序使用新风格的 API，因为在以后的 2.x 发行版本中会被删除这些废弃 API。更多资料，可以访问这个链接：http://www.slideshare.net/xefyr/apache-hbase-10-release 和 http://s.apache.org/hbase-1.0-api。
 
 所有的客户端 API 都标识有 `InterfaceAudience.Public` 类注解，表明是 HBase 官方的客户端 API。接下来，对于以注解声明为客户端公开的类，所有的 1.x 版本将会对其 API 兼容。
 
