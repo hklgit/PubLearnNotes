@@ -1,0 +1,153 @@
+
+
+### 1.  热点
+HBase 中的行是以 Rowkey 的字典序排序的，这种设计优化了 Scan 操作，可以将相关的行以及会被一起读取的行存储在临近位置。 但是，糟糕的 Rowkey 设计是引起热点的常见原因。热点发生在大量的客户端流量直接访问集群的一个或极少数节点。客户端流量可以是读，写，或者其他操作。大量流量会使负责该 Region 的单台机器不堪重负，引起性能下降甚至是 Region 不可用。这也会对同一个 RegionServer 的其他 Region 产生不利影响，因为主机无法满足请求的负载。设计良好的数据访问模式可以充分，均衡的利用集群。
+
+为了避免写入时出现热点，设计 Rowkey 时尽量避免不同行在同一个 Region，但从更大的角度看，数据应该被写入集群中的多个 Region，而不是一次写入一个 Region。下面介绍一些避免热点的常用技术，以及它们的一些优点和缺点。
+
+#### 1.1 加盐
+
+这里的加盐不是密码学中的加盐，而是指给 Rowkey 添加随机前缀，以使得它和之前排序不同。分配的前缀个数应该和你想使数据分散到的 Region 个数一致。如果你有一些热点 Rowkey 反复出现在其他分布均匀的 Rowkey 中，加盐是很有用的。
+但其弊端也显而易见，会增加读取的成本。现在读操作需要把扫描命令分散到所有 Region 上来查找相应的行，因为它们不再存储在一起。如果需要使用 GET 请求再次获取行数据，我们需要知道添加的随机前缀是什么，所以需要我们在插入时保存原始 Rowkey 与随机前缀的映射关系。
+
+下面的例子表明加盐可以将写入负载分散到多个 RegionServer 上，同时也表明了对读取的负面影响。假设我们有如下 Rowkey，表中的每一个 Region 对应字母表中的一个字母。前缀 `a` 的 Rowkey 对应一个 Region，前缀 `b` 的 Rowkey 对应另一个 Region。在表中，所有以 `f` 开头的 Rowkey 都在同一个 Region，如下所示：
+```
+foo0001
+foo0002
+foo0003
+foo0004
+```
+现在，假设我们想将上面这些 Rowkey 分配到 4 个不同的 Region。我们可以用 4 种不同的盐：`a`、`b`、`c`、`d`。在这个情况下，每一个字母前缀都对应不同的 Region。加盐之后，Rowkey 变成如下所示：
+```
+a-foo0003
+b-foo0001
+c-foo0004
+d-foo0002
+```
+由于我们现在可以写入四个不同的 Region，因此理论上我们现在的写入吞吐量是之前写入相同 Region 时的四倍。现在，我们再增加一行，会随机分配 `a`、`b`、`c`、`d` 中的一个作为前缀，并以一个现有行作为尾部结束：
+```
+a-foo0003
+b-foo0001
+c-foo0003
+c-foo0004
+d-foo0002
+```
+由于分配是随机的，因此如果我们想要以字典序取回数据，我们需要做更多的工作。加盐增加了写入吞吐量，但会增加读取的成本。
+
+#### 1.2 哈希
+
+除了加盐，你也可以使用哈希。哈希会使同一行始终有相同的前缀加盐，使用确定性哈希可以使客户端重新构造完整的 Rowkey，并使用 Get 操作正常检索该行。哈希的原理是计算 Rowkey 的哈希值，然后取哈希值的部分字符串和原来的 Rowkey 进行拼接或者完全替代。这里说的哈希包含 MD5、sha1、sha256或sha512等算法。
+
+对于上面的例子，我们可以使用哈希来代替加盐，这样会使得 Rowkey 始终有可预测前缀(对于每一个 Rowkey 都有确定性的前缀)。通过哈希我们可以知道前缀进而检索该行数据。我们还可以做一些优化，例如使某些键始终位于同一 Region。比如我们有如下的 Rowkey：
+```
+foo0001
+foo0002
+foo0003
+foo0004
+```
+我们使用 md5 算法计算这些 Rowkey 的哈希值，然后取前 6 位和原来的 Rowkey 拼接得到新的 Rowkey：
+```
+95f18c-foo0001
+6ccc20-foo0002
+b61d00-foo0003
+1a7475-foo0004
+```
+
+#### 1.3 翻转Key
+
+如果经初步设计出的 RowKey 在数据分布上不均匀，但 RowKey 尾部的数据却呈现出了良好的随机性，此时，可以考虑将 RowKey 翻转，或者直接将尾部部分放到 RowKey 的前面，这样就可以把最频繁发生变化的部分放在前面。翻转可以有效的使 RowKey 随机分布，但是牺牲了 RowKey 的有序性特性。
+
+翻转是避免热点问题的常用的方法，用户Id一般是关系型数据库的自增主键，通常会将用户Id翻转后在末尾加0补齐。类似的，如果我们使用时间戳作为 Rowkey 的一部分，可以使用 `Long.MAX_VALUE - 时间戳` 进行替换。
+
+### 2. 单调递增
+
+在汤姆·怀特（Tom White）的《 Hadoop：权威指南》的 HBase 一章中，有一个优化注意事项：所有客户端一段时间内一致写入某一个 Region，然后再接着一起写入下一个 Region，依此类推。使用单调增加的 RowKey（例如，使用时间戳），就会发生这种情况。可以参阅 IKai Lan 的漫画 [monotonically increasing values are bad](http://ikaisays.com/2011/01/25/app-engine-datastore-tip-monotonically-increasing-values-are-bad/)，该漫画解释了为什么在像 BigTable 这样的数据存储区中单调递增的 RowKey 会出现问题。可以通过将输入记录随机化来缓解单调递增键在单个 Region 上堆积所带来的压力，最好避免使用时间戳或序列（例如1、2、3）作为 RowKey。
+
+如果确实需要将时间序列数据上传到 HBase，可以学习 [OpenTSDB](http://smartsi.club/how-hbase-rowkey-is-designed-of-opentsdb.html) 是怎么做的。专门有一页讲述在HBase中使用的 [scheme](http://opentsdb.net/docs/build/html/user_guide/backends/hbase.html)。OpenTSDB 中的 RowKey 格式为 `[metric_type] [event_timestamp]`，乍一看这似乎违反了不使用时间戳作为 RowKey 的原则。但是，不同之处在于时间戳不在 RowKey 的关键位置，而这个设计假设存在数十个或数百个（或更多）不同的度量标准类型。
+
+### 3. 尽量减小行和列的大小
+
+在 HBase 中，Rowkey、列名、时间戳总是跟值一起发送。如果 RowKey 和列名比较大，尤其是与单元格值大小相比差异不大时，可能会遇到一些有趣的情况。Marc Limotte 在 [HBASE-3551](https://issues.apache.org/jira/browse/HBASE-3551?page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel&focusedCommentId=13005272#comment-13005272) 描述了这种情况（推荐看一下！）。其中，由于单元值坐标很大，保存在 HBase 存储文件（StoreFile（HFile））上以方便随机访问的索引可能最终会占用HBase分配的RAM的大块。上面引用的注释中的Mark表示建议增大块大小，以便存储文件索引中的条目以较大的间隔发生或修改表模式，从而使行和列名更小。压缩还将使索引更大。请在用户邮件列表中查看有关问题storefileIndexSize的线程。
+
+在大多数情况下，低效率并不重要。不幸的是，这是他们这样做的情况。无论为ColumnFamilies，属性和行键选择了哪种模式，它们都可以在数据中重复数十亿次。
+
+#### 3.1 列族
+
+尽量使列族名称尽可能的短，最好是一个字符（例如，`d` 表示数据/默认值）。
+
+#### 3.2 属性
+
+虽然详细的属性名称（例如，`myVeryImportantAttribute`）更易于阅读，但最好将较短的属性名称（例如 `via`）存储在 HBase 中。
+
+#### 3.3 RowKey长度
+
+请将它们尽可能短地保留，以使它们仍可用于必需的数据访问（例如，获取与扫描）。对于数据访问无用的短键并不比具有更好的获取/扫描属性的长键更好。 设计行键时需要权衡取舍。
+
+让 Rowkey 越短越好是合理的，这对必需的数据访问（get,scan）是有益的。但是当短 key 对数据访问是无用时它不及长 key 拥有更好的get/scan属性。当设计 rowkey 时，我们需要权衡。
+
+#### 3.4 字节模式
+
+Long 为8个字节，我们可以使用这八个字节存储最大为18,446,744,073,709,551,615的无符号整数。如果将此数字存储为字符串（假定每个字符一个字节），则需要将近3倍的字节：
+```java
+// long
+//
+long l = 1234567890L;
+byte[] lb = Bytes.toBytes(l);
+System.out.println("long bytes length: " + lb.length);   // returns 8
+
+String s = String.valueOf(l);
+byte[] sb = Bytes.toBytes(s);
+System.out.println("long as string length: " + sb.length);    // returns 10
+
+// hash
+//
+MessageDigest md = MessageDigest.getInstance("MD5");
+byte[] digest = md.digest(Bytes.toBytes(s));
+System.out.println("md5 digest bytes length: " + digest.length);    // returns 16
+
+String sDigest = new String(digest);
+byte[] sbDigest = Bytes.toBytes(sDigest);
+System.out.println("md5 digest as string length: " + sbDigest.length);    // returns 26
+```
+不幸的是，用二进制类型会使你的数据在代码之外难以阅读。例如，当我们增加一个值后下面是我们在shell 中看到的：
+```shell
+hbase(main):001:0> incr 't', 'r', 'f:q', 1
+COUNTER VALUE = 1
+
+hbase(main):002:0> get 't', 'r'
+COLUMN                                        CELL
+ f:q                                          timestamp=1369163040570, value=\x00\x00\x00\x00\x00\x00\x00\x01
+1 row(s) in 0.0310 seconds
+```
+Shell 会尽力打印字符串，但是这种情况下，它只能打印 16进制。 这也会在你的 rowkey 中发生。如果你知道存的是什么那当然没什么，但是如果任意数据存放在具体的值中，那将难以阅读。这也需要权衡。
+
+#### 3.5 翻转时间戳
+
+数据库处理中的一个常见问题是快速找到最新版本的值。使用翻转的时间戳作为 RowKey 的一部分可以很好的帮助我们解决这个问题。例如我们可以将 `Long.MAX_VALUE - timestamp` 添加到 RowKey 的末尾，例如 `[key][reverse_timestamp]`。
+
+#### 3.6 RowKey与列族
+
+RowKey 的作用域为列族，因此，相同的 RowKey 可以存在于表中的每个列族中而不会发生冲突。
+
+#### 3.7 RowKey的不变性
+
+RowKey 不能发生改变。在表中进行改变的唯一方法是删除后重新插入。这是一个常见的问题，因此一次设计好 RowKey 是非常值得的。
+
+#### 3.8 RowKey与Region分割的关系
+
+如果我们预先分割了表格，那么了解行键如何在区域边界上分布至关重要。 作为说明为什么如此重要的示例，请考虑使用可显示的十六进制字符作为键的开头位置的示例（例如，“ 0000000000000000”到“ ffffffffffffffff”）。 通过Bytes.split（这是在Admin.createTable（byte [] startKey，byte [] endKey，numRegions）中创建区域时使用的拆分策略）来运行10个区域的键范围将生成以下拆分...
+
+如果你要预分你的表，理解你的 rowkey 如何以 region 的边界分布是十分重要的，考虑这个例子，使用可显示的16进制字符作为 key 的关键位置。（例如"0000000000000000" to "ffffffffffffffff"） 对10个region 运行这些key 序列通过 Bytes.split(这是一种分裂策略当创建region 通过 Admin.createTable(byte[] startKey, byte[] endKey, numRegions 方式时)将会产生下面的结果：
+
+
+### 4. Example
+
+
+
+
+
+
+
+
+
+...
