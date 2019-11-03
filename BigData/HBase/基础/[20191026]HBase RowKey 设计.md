@@ -7,7 +7,7 @@ tags:
   - HBase
 
 categories: HBase
-permalink: introduction-to-hbase-RowKey-design
+permalink: introduction-to-hbase-rowkey-design
 ---
 
 ### 1. RowKey作用
