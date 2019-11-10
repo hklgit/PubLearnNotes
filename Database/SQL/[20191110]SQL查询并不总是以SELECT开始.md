@@ -18,7 +18,7 @@ permalink: sql-queries-dont-start-with-select
 
 我研究了一下，执行顺序如下所示。SELECT 并不是第一个执行的，而是第五个。
 
-![](1)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/SQL/sql-queries-dont-start-with-select-1.jpeg?raw=true)
 
 执行顺序如下：
 - FROM/JOIN 以及所有 ON 表达式
