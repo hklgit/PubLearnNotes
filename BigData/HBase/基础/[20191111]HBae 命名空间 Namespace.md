@@ -19,7 +19,7 @@ permalink: hbase-namespace-commands-examples
 
 ### 2. 命名空间管理
 
-可以创建，删除或更改命名空间。命名空间成员是在表创建期间通过指定完全限定表名来确定：
+可以创建，删除或修改命名空间。命名空间成员是在表创建期间通过指定完全限定表名来确定：
 ```
 <table namespace>:<table qualifier>
 ```
