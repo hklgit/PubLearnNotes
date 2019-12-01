@@ -116,3 +116,7 @@ OK
 127.0.0.1:6379> PFCOUNT hll3
 (integer) 6
 ```
+
+欢迎关注我的公众号和博客：
+
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Other/smartsi.jpg?raw=true)
