@@ -1,3 +1,15 @@
+---
+layout: post
+author: sjf0115
+title: Redis 如何使用HyperLogLog
+date: 2019-12-01 14:59:06
+tags:
+  - Redis
+
+categories: Redis
+permalink: how-to-use-hyperloglog-in-redis
+---
+
 ### 1. 概述
 
 Redis 在 2.8.9 版本添加了 HyperLogLog 数据结构。HyperLogLog 是用来做基数统计的算法，其优点是在输入元素的数量或者体积非常非常大时，计算基数所需的空间总是固定的、并且是很小。
@@ -104,11 +116,3 @@ OK
 127.0.0.1:6379> PFCOUNT hll3
 (integer) 6
 ```
-
-```
-
-redis-cli -h localhost -p 6379 keys "*"
-```
-
-
-...
