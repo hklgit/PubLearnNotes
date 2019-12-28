@@ -41,18 +41,23 @@ COMMAND GROUPS:
 hbase(main):002:0> exit
 ```
 
-### 2. 一般命令
-![](1)
+### 2. 常规命令
+
+在 Hbase 中，有如下常规命令：
+- status
+- version
+- whoami
 
 #### 2.1 status
 
-可以使用 `status` 命令展示 HBase 集群的状态，例如服务器数量：
+可以使用 `status` 命令展示 HBase 集群的系统状态的详细，例如服务器数量：
 ```
 hbase(main):001:0> status
 1 active master, 0 backup masters, 1 servers, 0 dead, 3.0000 average load
 Took 0.3686 seconds
 ```
-后面可以添加 `summary`，`simple`，`detailed` 或 `replication` 参数。默认不填为`summary`：
+
+我们还可以传递特定参数，具体取决于我们想了解系统的哪些详细状态。参数可以为 `summary`，`simple`，`detailed` 或 `replication`。默认不填为 `summary`。下面我们展示了如何将不同的参数传递给 `status` 命令：
 ```
 hbase> status
 hbase> status 'simple'
@@ -65,7 +70,7 @@ hbase> status 'replication', 'sink'
 
 #### 2.2 version
 
-使用 `version` 命令展示 HBase 版本：
+可以使用 `version` 命令展示当前使用的 HBase 版本：
 ```
 hbase(main):005:0> version
 2.1.6, rba26a3e1fd5bda8a84f99111d9471f62bb29ed1d, Mon Aug 26 20:40:38 CST 2019
@@ -73,7 +78,7 @@ hbase(main):005:0> version
 
 #### 2.3 whoami
 
-使用 `whoami` 命令展示当前 HBase 用户：
+可以使用 `whoami` 命令展示当前 HBase 用户：
 ```
 hbase(main):010:0> whoami
 smartsi (auth:SIMPLE)
@@ -84,7 +89,19 @@ smartsi (auth:SIMPLE)
 
 数据定义语言(Data Definition Language, DDL)，包括数据库表的创建、修改、删除等语句。
 
-![](2)
+在 Hbase 中，有如下数据定义命令：
+- Create
+- Exists
+- Describe
+- List
+- Disable
+- Disable_all
+- Is_disabled
+- Enable
+- Enable_all
+- Is_enabled
+- Alter
+- Drop
 
 #### 3.1 Create
 
@@ -278,9 +295,19 @@ hbase(main):053:0> drop 'ns1:t1'
 Took 0.2357 seconds
 ```
 
-### 4. 数据操纵语言DML
+### 4. DML命令
 
 数据操纵语言(Data Manipulation Language, DML)，包括数据的修改、查询、删除等语句。
+
+在 Hbase 中，有如下数据操纵命令：
+- Put
+- Get
+- Scan
+- Count
+- Append
+- Delete
+- Deleteall
+- Truncate
 
 #### 4.1 Put
 
