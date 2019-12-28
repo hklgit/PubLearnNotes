@@ -41,10 +41,10 @@ COMMAND GROUPS:
 hbase(main):002:0> exit
 ```
 
-#### 2. 一般命令
+### 2. 一般命令
 ![](1)
 
-##### 2.1 status
+#### 2.1 status
 
 可以使用 `status` 命令展示 HBase 集群的状态，例如服务器数量：
 ```
@@ -63,7 +63,7 @@ hbase> status 'replication', 'source'
 hbase> status 'replication', 'sink'
 ```
 
-##### 2.2 version
+#### 2.2 version
 
 使用 `version` 命令展示 HBase 版本：
 ```
@@ -71,7 +71,7 @@ hbase(main):005:0> version
 2.1.6, rba26a3e1fd5bda8a84f99111d9471f62bb29ed1d, Mon Aug 26 20:40:38 CST 2019
 ```
 
-##### 2.3 whoami
+#### 2.3 whoami
 
 使用 `whoami` 命令展示当前 HBase 用户：
 ```
@@ -80,14 +80,13 @@ smartsi (auth:SIMPLE)
     groups: staff, everyone, localaccounts, _appserverusr, admin, _appserveradm, _lpadmin, com.apple.sharepoint.group.1, _appstore, _lpoperator, _developer, _analyticsusers, com.apple.access_ftp, com.apple.access_screensharing, com.apple.access_ssh
 ```
 
-#### 3. DDL命令
+### 3. DDL命令
 
 数据定义语言(Data Definition Language, DDL)，包括数据库表的创建、修改、删除等语句。
 
-
 ![](2)
 
-##### 3.1 Create
+#### 3.1 Create
 
 可以使用 `create` 命令创建表，必须指定表名和列族名，以及可选的命名空间参数。列族名可以是一个简单的字符串，也可以是包含 `NAME` 属性的字典：
 ```
@@ -110,7 +109,7 @@ Took 2.4030 seconds
 
 > 命名空间是表的逻辑分组，类似于关系数据库系统中的数据库。这种抽象为多租户相关功能奠定了基础。具体使用可以查阅[HBase 命名空间 Namespace](http://smartsi.club/hbase-namespace-commands-examples)
 
-##### 3.2 Exists
+#### 3.2 Exists
 
 可以使用 `exists` 命令判断表是否存在：
 ```
@@ -129,7 +128,7 @@ Took 0.1863 seconds
 => true
 ```
 
-##### 3.3 Describe
+#### 3.3 Describe
 
 可以使用 `describe` 命令查看表信息：
 ```
@@ -163,7 +162,7 @@ Took 0.0319 seconds
 - `COMPRESSION`：压缩方式。HBase 提供了多种压缩方式来在数据存储到磁盘之前压缩以减少存储空间。
 - `BLOCKSIZE`：HBase 读取数据的最小单元。设置过大会导致读取很多不需要的数据，过小则会产生过多的索引文件，默认为 64 KB。
 
-##### 3.4 List
+#### 3.4 List
 
 可以使用 `list` 命令查看 HBase 中用户自定义的表，也可以使用正则表达式查询：
 ```
@@ -184,7 +183,7 @@ test
 Took 0.0075 seconds
 => ["ns1:t1", "ns1:test", "t1", "test"]
 ```
-##### 3.5 Disable
+#### 3.5 Disable
 
 可以使用 `disable` 命令禁用表：
 ```
@@ -194,7 +193,7 @@ hbase(main):051:0> disable 'ns1:test'
 Took 0.4331 seconds
 ```
 
-##### 3.6 Disable_all
+#### 3.6 Disable_all
 
 可以使用 `disable_all` 命令禁用满足正则表达式条件的表：
 ```
@@ -203,7 +202,7 @@ hbase> disable_all 'ns:t.*'
 hbase> disable_all 'ns:.*'
 ```
 
-##### 3.7 Is_disabled
+#### 3.7 Is_disabled
 
 可以使用 `is_disabled` 命令查看表是否被禁用：
 ```
@@ -217,7 +216,7 @@ true
 Took 0.0269 seconds
 => 1
 ```
-##### 3.8 Enable
+#### 3.8 Enable
 
 可以使用 `enable` 命令启用表：
 ```
@@ -225,7 +224,7 @@ hbase> enable 't1'
 hbase> enable 'ns1:t1'
 ```
 
-##### 3.9 Enable_all
+#### 3.9 Enable_all
 
 可以使用 `enable_all` 命令启用满足正则表达式条件的表：
 ```
@@ -234,7 +233,7 @@ hbase> enable_all 'ns:t.*'
 hbase> enable_all 'ns:.*'
 ```
 
-##### 3.10 Is_enabled
+#### 3.10 Is_enabled
 
 可以使用 `is_enabled` 命令查看表是否启用：
 ```
@@ -249,7 +248,7 @@ Took 0.0242 seconds
 => false
 ```
 
-##### 3.11 Alter
+#### 3.11 Alter
 
 可以使用 `alter` 命令对 Hbase 的表以及列族进行修改，如新增一个列族、修改表属性，增加协处理器等等。修改表的模式之前需要先将表下线（禁用），然后执行修改命令，再上线（启用）。例如，使用如下命令修改表列族 `f1` 可以最多保留5个版本的数据：
 ```
@@ -269,7 +268,7 @@ hbase> alter 'ns1:t1', NAME => 'f3', METHOD => 'delete'
 hbase> alter 'ns1:t1', 'delete' => 'f3'
 ```
 
-##### 3.12 drop
+#### 3.12 drop
 
 可以使用 `drop` 命令删除表，但是表必须首先要禁用表：
 ```
@@ -279,11 +278,11 @@ hbase(main):053:0> drop 'ns1:t1'
 Took 0.2357 seconds
 ```
 
-#### 4. 数据操纵语言DML
+### 4. 数据操纵语言DML
 
 数据操纵语言(Data Manipulation Language, DML)，包括数据的修改、查询、删除等语句。
 
-##### 4.1 Put
+#### 4.1 Put
 
 可以使用 `put` 命令将一行数据插入到 HBase 表中：
 ```
@@ -295,7 +294,7 @@ put 't1', 'r1', 'f1:c1', 'this is first value'
 put 'ns1:t1', 'r1', 'f1:c1', 'this is first value of ns1'
 ```
 
-##### 4.2 Get
+#### 4.2 Get
 
 可以使用 `get` 命令获取 HBase 表的一行或者一个单元的内容：
 ```
@@ -341,7 +340,7 @@ COLUMN                                              CELL
 Took 0.0070 seconds
 ```
 
-##### 4.3 Scan
+#### 4.3 Scan
 
 可以使用 `scan` 命令来扫描表的数据。该命令是 HBase 数据查询命令中最复杂的命令，需要特别注意查询的数据量，以免由于扫描数据过大导致 HBase 集群出现响应延迟：
 ```
@@ -379,7 +378,7 @@ ROW                                                 COLUMN+CELL
 Took 0.4751 seconds
 ```
 
-##### 4.4 Count
+#### 4.4 Count
 
 可以使用 `count` 命令统计表的行数：
 ```
@@ -402,7 +401,7 @@ Took 0.0200 seconds
 => 8
 ```
 
-##### 4.5 Append
+#### 4.5 Append
 
 可以使用 `append` 命令向指定的单元上在原先值上追加新值：
 ```
@@ -425,7 +424,7 @@ COLUMN                                              CELL
 Took 0.0171 seconds
 ```
 
-##### 4.6 Delete
+#### 4.6 Delete
 
 可以使用 `delete` 命令删除某列数据。如果我们指定了时间戳，那么我们只会删除对应版本的单元数据：
 ```
@@ -448,7 +447,7 @@ ROW                                         COLUMN+CELL
 Took 0.0035 seconds
 ```
 
-##### 4.7 Deleteall
+#### 4.7 Deleteall
 
 可以使用 `deleteall` 命令删除整行数据：
 ```
@@ -464,7 +463,7 @@ ROW                                         COLUMN+CELL
 Took 0.0036 seconds
 ```
 
-##### 4.8 Truncate
+#### 4.8 Truncate
 
 可以使用 `truncate` 命令清空整个表的数据：
 ```
