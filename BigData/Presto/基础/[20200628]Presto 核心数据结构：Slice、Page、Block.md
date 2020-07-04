@@ -17,7 +17,7 @@ permalink: presto-core-data-structures-slice-block-and-page
 
 从用户的角度来看，Slice 是一个对开发人员更友好的虚拟内存，它定义了一组 getter 和 setter 方法，因此我们可以像使用结构化数据一样使用内存：
 
-![](presto-core-data-structures-slice-block-and-page-1.png)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Presto/presto-core-data-structures-slice-block-and-page-1.png?raw=true)
 
 Slice 常用来表示一个字符串：
 ```java
@@ -40,7 +40,7 @@ block.getSlice().getBytes()
 
 由于 Page 由 Block 组成，因此我们首先介绍 Block。Block 可以认为是同一类数据（int，long，Slice等）的数组。每个数据项都有一个 `position`，总位置个数代表 Block 中数据的总行数（Block 仅保存这些行中的一列）。
 
-![](presto-core-data-structures-slice-block-and-page-2.png)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Presto/presto-core-data-structures-slice-block-and-page-2.png?raw=true)
 
 Block 定义了好几套 API，其中一个是 getXXX 方法，让我们以 getInt 为例：
 ```java
@@ -124,7 +124,7 @@ Page getOutput();
 void addInput(Page page);
 ```
 
-![](presto-core-data-structures-slice-block-and-page-3.png)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Presto/presto-core-data-structures-slice-block-and-page-3.png?raw=true)
 
 就像 Block 一样，Page 也需要序列化和反序列化，序列化发生在工作进程之间传输数据时。Page 进行序列化时，首先使用相应的 BlockEncoding 对 Block 进行编码。如果有压缩器，将尝试对编码的块数据进行压缩，如果压缩效果良好（编码率低于0.8），将使用压缩数据，否则使用未压缩的数据。编码后的块数据将与一些统计信息(压缩前后页面的字节大小)一起放入名为 SerializedPage 的类中。
 
