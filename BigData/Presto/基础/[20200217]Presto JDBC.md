@@ -44,3 +44,11 @@ String url = "jdbc:presto://localhost:8001/hive/default?user=root";
 Connection connection = DriverManager.getConnection(url);
 ```
 各参数说明如下：
+
+
+
+
+
+
+
+...
