@@ -50,7 +50,7 @@ Presto Web UI 页面底部展现了最近运行的查询，如下图所示：
 下面三个值 smartsi，presto-cli 以及 global 分别表示运行查询的用户，查询来源以及运行查询的资源组。在此示例中，用户默认为 smartsi，我们通过 presto-cli 来提交查询。如果在运行 Presto CLI 时指定 --user 标志，那么显示的用户将更改为我们指定的值。提交查询来源也可以不是 presto-cli，例如，当应用程序使用 JDBC 驱动程序连接到 Presto 时，提交查询来源会显示为 presto-jdbc。客户端还可以使用 Presto CLI 的 --source 标志以及 JDBC 连接字符串属性将其设置为任何所需的值。
 
 下面我将介绍最后几行标示的具体含义，它们包含了查询的一些重要信息：
-- Completed Splits：每个查询已完成的 Split 数。该示例显示已完成 50 个 Split。在运行查询之前，该值为0。在查询执行期间，每完成一个 Split 时，该值都会增加。
+- Completed Splits：每个查询已完成的 Split 数。该示例显示已完成 18 个 Split。在运行查询之前，该值为0。在查询执行期间，每完成一个 Split 时，该值都会增加。
 - Running Splits：每个查询正在运行的 Split 数。查询完成后，该值变为0。但是，在执行过程中，这个数字会随着 Split 的执行以及完成而改变。
 - Queued Splits：每个查询排队等待的 Split 数。查询完成后，该值变为0。但是，在执行期间，这个数字会随着 Split 在排队状态和运行状态之间切换而改变。
 - Wall Time：执行查询所花费的总时间，不包含排队等待的时间。即使正在分页展示结果，该值仍会继续增长。
