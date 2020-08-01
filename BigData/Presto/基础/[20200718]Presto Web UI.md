@@ -16,7 +16,7 @@ permalink: presto-web-ui
 
 当你第一次使用 Presto Web UI 时，你会看到如下图所示的页面。顶部展示了 Presto 的集群信息，底部展示了查询列表。这些信息对于操作 Presto 以及管理正在运行的查询都具有巨大的价值：
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Presto/presto-web-ui-1.jpg?raw=true)
 
 ### 2. 集群信息
 
@@ -35,7 +35,7 @@ permalink: presto-web-ui
 
 Presto Web UI 面板底部展现了最近运行的查询，如下图所示。历史记录列表中展示的查询个数取决于 Presto 集群配置：
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Presto/presto-web-ui-2.jpg?raw=true)
 
 如上图所示我们可以点击控件选择我们需要展示的查询。毕竟在集群非常繁忙时，数十或数百个查询会同时运行。可以在输入框键入用于搜索特定查询的条件，可以是查询启动器的用户名，查询源，查询ID，资源组，甚至查询的 SQL 文本以及查询状态。
 
@@ -45,7 +45,7 @@ Presto Web UI 面板底部展现了最近运行的查询，如下图所示。历
 
 查询框下方的每一行代表一个查询。每行的左列展示有关查询的信息。右列展示查询 SQL 文本以及查询状态。如下图所示提供了查询摘要的示例：
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Presto/presto-web-ui-3.jpg?raw=true)
 
 让我们仔细看看查询的详细信息。左上方的内容是查询ID。在此的示例中，查询ID为 20190803_224130_00010_iukvw。仔细看，我们可能会注意到日期和时间（UTC）构成了查询ID的开头，并使用 YYYYMMDD_HHMMSS 的时间格式。后半部分是查询的增量计数器。计数器值 00010 仅表示这是自 Coordinator 启动以来运行的第十个查询。最后部分 iukvw 是 Coordinator 的随机标识符。如果重新启动 Coordinator，随机标识符和计数器值也会重置。右上角的时间是运行查询的本地时间。
 
@@ -76,7 +76,7 @@ Presto Web UI 面板底部展现了最近运行的查询，如下图所示。历
 
 Query Details 视图有几个 Tab 可以供我们查看有关 Presto 查询的更多详细信息，如下图所示。除了 Tab 之外，我们还可以一直看到查询的查询ID以及状态：
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Presto/presto-web-ui-4.jpg?raw=true)
 
 #### 4.1 概述
 
@@ -91,7 +91,8 @@ Query Details 视图有几个 Tab 可以供我们查看有关 Presto 查询的�
 - Tasks
 
 如下图所示 Stages 部分展示查询 Stages 的信息：
-![]()
+
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Presto/presto-web-ui-5.jpg?raw=true)
 
 这个特定的查询是 `SELECT count(*) FROM lineitem` 查询语句。因为它是一个比较简单的查询，所以只有两个 Stage。Stage 0 是运行在 Coordinator 上的单任务 Stage，负责合并 Stage 1 中任务的结果并执行最终聚合。Stage 1 是一个运行在不同 Works 上的分布式 Stage。该 Stage 负责读取数据并计算部分聚合。
 
@@ -110,7 +111,8 @@ Query Details 视图有几个 Tab 可以供我们查看有关 Presto 查询的�
 - SCHEDULED TIME SKEW、CPU TIME SKEW、TASK SCHEDULED TIME、TASK CPU TIME：这些直方图展示了不同 Works 上多个任务的计划时间，CPU时间，任务计划时间以及任务CPU时间的分布与变化。这样，我们就可以在运行时间比较长的分布式查询期间诊断 Worker 的利用率。
 
 如下图所示展示了 Task 更多详细信息：
-![]()
+
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Presto/presto-web-ui-6.jpg?raw=true)
 
 让我们下面看看 Task 列表中：
 
@@ -134,27 +136,31 @@ Query Details 视图有几个 Tab 可以供我们查看有关 Presto 查询的�
 #### 4.2 Live Plan
 
 Live Plan 页面中我们可以实时查看查询执行处理过程，如下图所示：
-![]()
+
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Presto/presto-web-ui-7.jpg?raw=true)
 
 查询执行过程中，Plan 中的计数器会随着查询执行的进度而更新。Plan 中的值与概述（Overview）页面中描述的值相同，唯一不同的是在查询执行计划上实时展现。查看此视图有助于可视化查询卡在哪里或在哪里花费大量时间，以便诊断或改善性能问题。
 
 #### 4.3 Stage Performance
 
-Stage 性能页面在查询处理结束之后会提供 Stage 性能的详细可视化视图，如下图所示。该视图可以认为是 Live Plan 视图的向下钻取，我们可以在其中看到 Stage 中 Task 的算子流水线。Plan 中的值与概述（Overview）页面中描述的值相同。查看此视图有助于查看查询卡在哪里或在哪里花费大量时间，以便诊断或解决性能问题。我们可以单击每个单独的算子来查看详细信息。
+Stage 性能页面在查询处理结束之后会提供 Stage 性能的详细可视化视图，如下图所示。该视图可以认为是 Live Plan 视图的向下钻取，我们可以在其中看到 Stage 中 Task 的算子流水线。Plan 中的值与概述（Overview）页面中描述的值相同。查看此视图有助于查看查询卡在哪里或在哪里花费大量时间，以便诊断或解决性能问题。我们可以单击每个单独的算子来查看详细信息：
+
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Presto/presto-web-ui-8.jpg?raw=true)
 
 #### 4.4 Split
 
-Split 页面展示了在查询执行期间创建和处理 Split 的时间线。
+Split 页面展示了在查询执行期间创建和处理 Split 的时间线：
+
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Presto/presto-web-ui-9.jpg?raw=true)
 
 #### 4.5 JSON
 
-JSON 页面以 JSON 格式提供所有查询的详细信息。这些信息会根据其检索的快照进行更新。
+JSON 页面以 JSON 格式提供所有查询的详细信息。这些信息会根据其检索的快照进行更新：
 
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Presto/presto-web-ui-10.jpg?raw=true)
 
+欢迎关注我的公众号和博客：
 
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Other/%E5%85%AC%E4%BC%97%E5%8F%B7.jpg?raw=true)
 
-
-
-
-
-...
+> 翻译来自《Presto权威指南》
