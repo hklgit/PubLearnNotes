@@ -43,7 +43,7 @@ Presto Web UI 页面底部展现了最近运行的查询，如下图所示：
 
 查询控件下面每一行都代表一个查询。每行的最左列展示查询有关信息。最右列展示查询 SQL 文本以及查询状态，如下图所示查询摘要示例：
 
-![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Presto/presto-web-ui-3.jpg?raw=true)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Presto/presto-web-ui-12.jpg?raw=true)
 
 我们仔细看看每个查询的详细信息。最上面一行左侧内容是查询ID。在这个示例中，查询ID为 20200730_014855_00003_tccrc。我们可能会注意到查询ID的开头由日期和时间（UTC）组成，并使用 YYYYMMDD_HHMMSS 的时间格式。后半部分是查询的增量计数器，计数器 00003 表示这是自 Coordinator 启动以来运行的第4个查询。最后一部分 tccrc 是 Coordinator 的随机标识符。如果重新启动 Coordinator，随机标识符和计数器也都会重置。右上角的时间是运行查询的本地时间。
 
