@@ -45,7 +45,7 @@ Presto Web UI 页面底部展现了最近运行的查询，如下图所示：
 
 ![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Presto/presto-web-ui-3.jpg?raw=true)
 
-我们仔细看看每个查询的详细信息。最上面一行左侧内容是查询ID。在这个示例中，查询ID为 20200730_015347_00004_tccrc。我们可能会注意到查询ID的开头由日期和时间（UTC）组成，并使用 YYYYMMDD_HHMMSS 的时间格式。后半部分是查询的增量计数器，计数器 00004 表示这是自 Coordinator 启动以来运行的第4个查询。最后一部分 tccrc 是 Coordinator 的随机标识符。如果重新启动 Coordinator，随机标识符和计数器也都会重置。右上角的时间是运行查询的本地时间。
+我们仔细看看每个查询的详细信息。最上面一行左侧内容是查询ID。在这个示例中，查询ID为 20200730_014855_00003_tccrc。我们可能会注意到查询ID的开头由日期和时间（UTC）组成，并使用 YYYYMMDD_HHMMSS 的时间格式。后半部分是查询的增量计数器，计数器 00003 表示这是自 Coordinator 启动以来运行的第4个查询。最后一部分 tccrc 是 Coordinator 的随机标识符。如果重新启动 Coordinator，随机标识符和计数器也都会重置。右上角的时间是运行查询的本地时间。
 
 下面三个值 smartsi，presto-cli 以及 global 分别表示运行查询的用户，查询来源以及运行查询的资源组。在此示例中，用户默认为 smartsi，我们通过 presto-cli 来提交查询。如果在运行 Presto CLI 时指定 --user 标志，那么显示的用户将更改为我们指定的值。提交查询来源也可以不是 presto-cli，例如，当应用程序使用 JDBC 驱动程序连接到 Presto 时，提交查询来源会显示为 presto-jdbc。客户端还可以使用 Presto CLI 的 --source 标志以及 JDBC 连接字符串属性将其设置为任何所需的值。
 
