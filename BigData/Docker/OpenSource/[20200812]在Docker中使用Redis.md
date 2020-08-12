@@ -77,6 +77,7 @@ docker exec -it docker-redis /bin/bash
 root@517350f4f2bb:/data# redis-cli
 ```
 现在我们可以运行一些基本的 Redis 命令：
+
 ![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/docker/docker-open-source-redis-8.jpg?raw=true)
 
 ### 7. 清理容器
