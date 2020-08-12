@@ -20,7 +20,7 @@ permalink: docker-open-source-redis
 
 可以在镜像仓库中查看 [Redis](https://hub.docker.com/_/redis?tab=tags) 镜像：
 
-![](2)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/docker/docker-open-source-redis-2.jpg?raw=true)
 
 ### 3. 获取镜像
 
@@ -29,7 +29,7 @@ permalink: docker-open-source-redis
 docker pull redis:latest
 ```
 
-![](3)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/docker/docker-open-source-redis-3.jpg?raw=true)
 
 ### 4. 查看本地镜像
 
@@ -37,7 +37,7 @@ docker pull redis:latest
 ```
 docker images
 ```
-![](4)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/docker/docker-open-source-redis-4.jpg?raw=true)
 
 在图中我们可以看到我们已经安装了最新版本（latest）的 Redis 镜像。
 
@@ -47,7 +47,7 @@ docker images
 ```
 docker run -d -p 6379:6379 --name docker-redis redis
 ```
-![](1)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/docker/docker-open-source-redis-1.jpg?raw=true)
 
 > -p 6379:6379：映射容器服务的 6379 端口到宿主机的 6379 端口。外部可以直接通过宿主机ip:6379 访问到 Redis 的服务。
 
@@ -55,13 +55,13 @@ docker run -d -p 6379:6379 --name docker-redis redis
 ```
 docker ps
 ```
-![](5)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/docker/docker-open-source-redis-5.jpg?raw=true)
 
 还可以通过如下命令查看日志输出：
 ```
 docker logs docker-redis
 ```
-![](6)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/docker/docker-open-source-redis-6.jpg?raw=true)
 
 ### 6. 在容器中运行Redis CLI
 
@@ -70,14 +70,14 @@ docker logs docker-redis
 docker exec -it docker-redis /bin/bash
 ```
 
-![](7)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/docker/docker-open-source-redis-7.jpg?raw=true)
 
 我们已经连接到容器，现在让我们运行 `redis-cli`：
 ```
 root@517350f4f2bb:/data# redis-cli
 ```
 现在我们可以运行一些基本的 Redis 命令：
-![](8)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/docker/docker-open-source-redis-8.jpg?raw=true)
 
 ### 7. 清理容器
 
