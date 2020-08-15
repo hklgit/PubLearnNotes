@@ -34,8 +34,7 @@ docker.io/library/zookeeper:3.5.8
 ```
 docker images
 ```
-![](1)
-
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ZooKeeper/zookeeper-setup-and-run-with-docker-1.png?raw=true)
 
 ### 2. Standalone模式
 
@@ -49,7 +48,7 @@ docker run -p 8080:8080 --name zookeeper-standalone --restart always -d zookeepe
 ```
 docker ps
 ```
-![](2)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ZooKeeper/zookeeper-setup-and-run-with-docker-2.png?raw=true)
 
 通过上图我们可以看到容器对外暴露了4个端口：2181 2888 3888 8080（分别是 Zookeeper 客户端端口，主从节点交互信息的端口，选举端口以及 AdminServer 端口）。暴露端口主要是镜像包括 `EXPOSE 2181 2888 3888 8080` 命令，具体可以参阅[镜像Dockerfile](https://github.com/31z4/zookeeper-docker/blob/95e63be6a0767ed462db2e5aa779047672cc3b35/3.5.8/Dockerfile)。
 
@@ -140,7 +139,7 @@ root@d3a8ecd271fc:/apache-zookeeper-3.5.8-bin#
 zkCli.sh -server 127.0.0.1:2181
 ```
 如果看到如下信息，表示我们连接成功：
-![](3)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ZooKeeper/zookeeper-setup-and-run-with-docker-3.png?raw=true)
 
 我们可以不用先进入容器再连接Zookeeper服务，使用如下命令一步到位：
 ```
@@ -212,7 +211,7 @@ Creating zookeeper_cluster_zoo2_1 ... done
 ```
 docker ps
 ```
-![](4)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ZooKeeper/zookeeper-setup-and-run-with-docker-4.png?raw=true)
 
 #### 3.2 进入容器
 
@@ -274,14 +273,14 @@ server.3=zoo3:2888:3888;2181
 zkCli.sh -server localhost:2181
 ```
 如果看到如下信息，表示我们连接成功：
-![](5)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ZooKeeper/zookeeper-setup-and-run-with-docker-5.png?raw=true)
 
 我们也可以通过本地主机连接 Zookeeper 集群，因为我们将 zoo1, zoo2, zoo3 的 2181 端口分别映射到了本地主机的 2181, 2182, 2183 端口上, 因此我们使用如下命令连接 Zookeeper 集群：
 ```
 zkCli.sh -server localhost:2181,localhost:2182,localhost:2183
 ```
 如果看到如下信息，表示我们通过本地宿主机连接集群成功：
-![](6)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ZooKeeper/zookeeper-setup-and-run-with-docker-6.png?raw=true)
 
 欢迎关注我的公众号和博客：
 
