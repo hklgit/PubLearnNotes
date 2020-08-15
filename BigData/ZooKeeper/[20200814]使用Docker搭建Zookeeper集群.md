@@ -50,9 +50,9 @@ docker ps
 ```
 ![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ZooKeeper/zookeeper-setup-and-run-with-docker-2.png?raw=true)
 
-通过上图我们可以看到容器对外暴露了4个端口：2181 2888 3888 8080（分别是 Zookeeper 客户端端口，主从节点交互信息的端口，选举端口以及 AdminServer 端口）。暴露端口主要是镜像包括 `EXPOSE 2181 2888 3888 8080` 命令，具体可以参阅[镜像Dockerfile](https://github.com/31z4/zookeeper-docker/blob/95e63be6a0767ed462db2e5aa779047672cc3b35/3.5.8/Dockerfile)。
+通过上图我们可以看到容器对外暴露了4个端口：2181 2888 3888 8080（分别是 Zookeeper 客户端端口，主从节点交互信息的端口，选举端口以及 AdminServer 端口）。暴露端口主要是镜像包含了 `EXPOSE 2181 2888 3888 8080` 命令，具体可以参阅[镜像Dockerfile](https://github.com/31z4/zookeeper-docker/blob/95e63be6a0767ed462db2e5aa779047672cc3b35/3.5.8/Dockerfile)。
 
-3.5 版本开始提供 AdminServer 功能。AdminServer 是嵌入式 Jetty 服务器，为四字母命令提供 HTTP 接口。默认端口是8080。由于在启动容器时做了端口映射，我们可以直接通过 `http://localhost:8080/commands/stats` 进行访问：
+Zookeeper 3.5 版本开始提供 AdminServer 功能。AdminServer 是嵌入式 Jetty 服务器，为四字母命令提供 HTTP 接口。默认端口是8080。由于在启动容器时做了端口映射，我们可以直接通过 `http://localhost:8080/commands/stats` 进行访问：
 ```json
 {
   "version" : "3.5.8-f439ca583e70862c3068a1f2a7d4d068eec33315, built on 05/04/2020 15:07 GMT",
@@ -130,7 +130,7 @@ Client port found: 2181. Client address: localhost.
 Mode: standalone
 root@d3a8ecd271fc:/apache-zookeeper-3.5.8-bin#
 ```
-从上面可以看到我们确实是 standalone 模式。
+从上面可以看到确实是 standalone 模式。
 
 #### 2.3 连接Zookeeper服务
 
@@ -187,15 +187,16 @@ services:
       ZOO_MY_ID: 3
       ZOO_SERVERS: server.1=zoo1:2888:3888;2181 server.2=zoo2:2888:3888;2181 server.3=0.0.0.0:2888:3888;2181
 ```
-上述配置将以副本模式启动 Zookeeper 3.5.8，会告诉 Docker 运行三个 Zookeeper 容器：zoo1、zoo2、zoo3, 并分别将本地的 2181, 2182, 2183 端口绑定到对应的容器的 2181 端口上。
+上述配置将以副本模式启动 Zookeeper 3.5.8，同时会告诉 Docker 运行三个 Zookeeper 容器：zoo1、zoo2、zoo3，并分别将本地的 2181, 2182, 2183 端口绑定到对应的容器的 2181 端口上。
 
 ZOO_MY_ID 和 ZOO_SERVERS 是搭建 Zookeeper 集群需要设置的两个环境变量, 其中 ZOO_MY_ID 表示 Zookeeper 服务的 id, 它是1-255 之间的整数, 必须在集群中唯一。ZOO_SERVERS 是Zookeeper 集群的主机列表。
 
-接着我们在 docker-compose.yml 当前目录下运行：
+接着我们在 docker-compose.yml 当前目录下运行如下命令：
 ```
 COMPOSE_PROJECT_NAME=zookeeper_cluster docker-compose up -d
 ```
-> 或者指定配置文件名称 COMPOSE_PROJECT_NAME=zookeeper_cluster docker-compose -f docker-compose.yml up -d
+> 或者指定配置文件名称 COMPOSE_PROJECT_NAME=zookeeper_cluster docker-compose -f docker-compose.yml up -d。
+
 > 我们在 docker-compose up 前添加 COMPOSE_PROJECT_NAME=zookeeper_cluster 环境变量是为我们的 compose 工程起一个名字。
 
 看到如下信息表示容器启动成功：
@@ -247,7 +248,9 @@ Using config: /conf/zoo.cfg
 Client port found: 2181. Client address: localhost.
 Mode: leader
 ```
-经过以上的查看，我们可以看到一个主节点Leader，2个是从节点Follower。从配置文件中可以看到该 Zookeeper 节点的配置信息位于 `/conf/zoo.cfg` 文件中：
+从上面可以看到我们创建了一个主节点Leader，2个从节点Follower。
+
+从配置文件中可以看到该 Zookeeper 节点的配置信息位于 `/conf/zoo.cfg` 文件中：
 ```
 root@zoo1:/apache-zookeeper-3.5.8-bin# cat /conf/zoo.cfg
 dataDir=/data
@@ -268,7 +271,7 @@ server.3=zoo3:2888:3888;2181
 
 #### 3.3 连接Zookeeper服务
 
-使用如下命令即可连接到该节点的 ZooKeeper 服务：
+使用如下命令在容器内连接该节点的 ZooKeeper 服务：
 ```
 zkCli.sh -server localhost:2181
 ```
