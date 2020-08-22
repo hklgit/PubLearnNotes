@@ -37,7 +37,7 @@ DMP数据管理平台是实现用户精细化运营和和全生命周期运营�
 
 基于bitmap的用户分群方案完整流程如下图所示：
 
-![](1)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/UserProfile/practice-of-user-grouping-on-bitmap-in-beike-dmp-1.jpeg?raw=true)
 
 整个方案主要包含以下几个技术问题：
 - 如何针对亿级用户构建全局连续唯一数字ID标识join_id？
@@ -53,7 +53,7 @@ DMP系统中，用户都是使用STRING类型的cust_join_key（不同数据表�
 
 如何为DMP平台上用STRING类型的cust_join_key标识的亿级用户生成全局唯一的数字ID呢？hive提供了基础的row_number() over()函数，但是在操作亿级别行的数据时，会造成数据倾斜，受限于Hadoop集群单机节点的内存限制，无法成功运行。为此我们创新性的提出了一种针对亿级行大数据量的全局唯一连续数字ID生成方法。其核心思想如下：
 
-![](2)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/UserProfile/practice-of-user-grouping-on-bitmap-in-beike-dmp-2.jpg?raw=true)
 
 具体解释为：
 - 将全部亿级数据按照一定的规则分成多个子数据集（假设共有M个子数据集，每个子数据集各有Ni行数据，M >= 1，Ni >= 1，1<= i <= M），确保每个子数据集的数据可以在Hadoop集群的单个节点上使用行号生成函数ROW_NUMBER() OVER (PARTITION BY col_1 ORDER BY col_2 ASC/DESC)生成行号。每个子数据集中的行号都是从1开始，最大的行号为Ni。
@@ -81,7 +81,7 @@ action表中，4个字段组合成一个标签，行为字段为主要标签，�
 
 两种不同的分类方式下，标签是可以任意组合的，其组合情况如下：
 
-![](3)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/UserProfile/practice-of-user-grouping-on-bitmap-in-beike-dmp-3.jpg?raw=true)
 
 #### 3.2.2 bitmap的构建和运算转换
 
@@ -99,7 +99,7 @@ Bitmap构建和运算转换的理论情况如下。
 
 单个标签取值到bitmap运算的转换关系为：
 
-![](4)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/UserProfile/practice-of-user-grouping-on-bitmap-in-beike-dmp-4.jpg?raw=true)
 
 ##### 3.2.2.2 连续值类型标签
 
@@ -113,7 +113,7 @@ Bitmap构建和运算转换的理论情况如下。
 
 单个标签取值到bitmap运算的转换关系为：
 
-![](5)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/UserProfile/practice-of-user-grouping-on-bitmap-in-beike-dmp-5.jpg?raw=true)
 
 > 对于某个连续值标签，将取值>=8的人群存储在一个bitmap结构b1中，将取值>=9的人群存储在一个bitmap结构b2中，为圈出某个连续值标签取值=8的用户群体，使用b1和b2做异或运算即可。
 
@@ -127,7 +127,7 @@ Bitmap构建和运算转换的理论情况如下。
 
 单个标签取值到bitmap运算的转换关系为：
 
-![](6)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/UserProfile/practice-of-user-grouping-on-bitmap-in-beike-dmp-6.jpg?raw=true)
 
 > 对于某个日期类型标签，将取值<=20200304的人群存储在一个bitmap结构b1中，将取值<=20200305的人群存储在一个bitmap结构b2中，为圈出某个连续值标签取值=2020-03-05的用户群体，使用b1和b2做异或运算即可。
 
@@ -137,7 +137,7 @@ Bitmap构建和运算转换的理论情况如下。
 
 以近7日活跃天数这个连续值类型标签为例，在底层hive数据中，该标签字段的取值时[0, 7]。假设该标签为单一标签，针对该标签会生成>=0, >=1, >=2, >=3, >=4, >=5, >=6, >=7共8个bitmap。对于取边界值等于7的情况，根据上述规则，会使用到>=8的bitmap，然而并不存在这个>=8的bitmap，造成结果为空。所以需要针对这种边界值进行转换处理。具体的针对边界值的处理方案如下：
 
-![](7)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/UserProfile/practice-of-user-grouping-on-bitmap-in-beike-dmp-7.jpg?raw=true)
 
 3.2.2节提到，针对连续值类型和日期类型的标签，结合实际标签使用情况和数据库存储空间的限制，我们分别选择了[0,100]和[0,180]的区间构建bitmap。对于当边界值取到100或-180d的时候，也会出现因为不存在相关的bitmap而造成结果不准确的现象，此处可结合实际情况限制用户对标签的的最大取值为区间最大值减1或扩大区间范围以减少边界值的影响。
 
@@ -149,7 +149,7 @@ bitmap数据是通过Spark任务以序列化的方式写入到CH中的，为此�
 
 Spark任务中，先通过spark SQL将所需hive数据读取，保存在DataSet<Row>中。根据不同的标签类型按照3.2.2中设计的规则使用spark聚合算子进行运算。处理逻辑如下：
 
-![](8)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/UserProfile/practice-of-user-grouping-on-bitmap-in-beike-dmp-8.jpg?raw=true)
 
 在这个过程中，我们还使用了bitmap的循环构建、spark任务调优、异常重试机制、bitmap构建后的数据验证等方法来提高任务的运行速度和稳定性。
 
@@ -159,7 +159,7 @@ Spark任务中，先通过spark SQL将所需hive数据读取，保存在DataSet<
 
 通过处理人群包的标签组合，确定所需要的bitmap以及这些bitmap之间的逻辑关系（下图红线标识），最终生成的bitmap SQL 示例如下图所示。同时通过使用GLOBAL IN代替比较耗时的GLOBAL ANY INNER JOIN，CH SQL运行效率也有了大幅度的提升。
 
-![](9)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/UserProfile/practice-of-user-grouping-on-bitmap-in-beike-dmp-2.jpeg?raw=true)
 
 ## 4. 总结和展望
 
