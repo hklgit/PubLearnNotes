@@ -171,7 +171,7 @@ docker build -t smartsi/docker-zookeeper:3.5.8 .
 ```
 > 使用默认Dockerfile文件
 
-![](1)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/docker/build-zookeeper-image-with-docker-1.jpg?raw=true)
 
 
 ### 9. 运行
@@ -180,11 +180,11 @@ docker build -t smartsi/docker-zookeeper:3.5.8 .
 ```
 docker run -p 2181:2818 -p 2888:2888 -p 3888:3888 --name standalone-zookeeper  smartsi/docker-zookeeper:3.5.8
 ```
-![](2)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/docker/build-zookeeper-image-with-docker-2.jpg?raw=true)
 
 上述命令启动一个名为 `standalone-zookeeper` 的容器。通过 `docker ps` 命令查看运行中的 Zookeeper 容器：
 
-![](3)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/docker/build-zookeeper-image-with-docker-3.jpg?raw=true)
 
 通过如下命令进入容器：
 ```shell
@@ -203,12 +203,12 @@ Mode: standalone
 ./bin/zkCli.sh -server localhost:2181
 ```
 
-![](4)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/docker/build-zookeeper-image-with-docker-4.jpg?raw=true)
 
 
 给大家推荐一个ZooKeeper课程：
 
-![]()
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/zookeeper/zookeeper-study.jpg?raw=true)
 
 欢迎关注我的公众号和博客：
 
