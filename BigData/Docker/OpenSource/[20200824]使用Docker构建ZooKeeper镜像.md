@@ -208,7 +208,7 @@ Mode: standalone
 
 给大家推荐一个ZooKeeper课程：
 
-![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Zookeeper/zookeeper-study.jpg?raw=true)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/ZooKeeper/zookeeper-study.jpg?raw=true)
 
 欢迎关注我的公众号和博客：
 
