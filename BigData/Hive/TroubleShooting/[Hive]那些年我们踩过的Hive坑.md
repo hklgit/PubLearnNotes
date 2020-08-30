@@ -1,7 +1,7 @@
 ### 1. 缺少MySQL驱动包
 
 #### 1.1 问题描述
-```
+```java
 Caused by: org.datanucleus.store.rdbms.connectionpool.DatastoreDriverNotFoundException: The specified datastore driver ("com.mysql.jdbc.Driver") was not found in the CLASSPATH. Please check your CLASSPATH specification, and the name of the driver.
 	at org.datanucleus.store.rdbms.connectionpool.AbstractConnectionPoolFactory.loadDriver(AbstractConnectionPoolFactory.java:58)
 	at org.datanucleus.store.rdbms.connectionpool.BoneCPConnectionPoolFactory.createConnectionPool(BoneCPConnectionPoolFactory.java:54)
@@ -19,8 +19,8 @@ xiaosi@yoona:~$ cp mysql-connector-java-5.1.34-bin.jar opt/hive-2.1.0/lib/
 #### 2.1 问题描述
 
 运行./hive脚本时，无法进入，报错：
-```
-Exception in thread "main" java.lang.RuntimeException: Hive metastore database is not initialized. Please use schematool (e.g. ./schematool -initSchema -dbType ...) to create the schema. If needed, don't forget to include the option to auto-create the underlying database in your JDBC connection string (e.g. ?createDatabaseIfNotExist=true for mysql)
+```java
+Exception in thread "main" java.lang.RuntimeException: Hive metastore database is not initialized. Please use schematool (e.g. ./schematool -initSchema -dbType ...) to create the schema. If needed, dont forget to include the option to auto-create the underlying database in your JDBC connection string (e.g. ?createDatabaseIfNotExist=true for mysql)
 ```
 #### 2.2 解决方案
 
@@ -56,23 +56,23 @@ Caused by: java.net.URISyntaxException: Relative path in absolute URI: ${system:
 
 #### 3.2 解决方案
 
- 产生上述问题的原因是使用了没有配置的变量，解决此问题只需在配置文件hive-site.xml中配置system:user.name和system:java.io.tmpdir两个变量，配置文件中就可以使用这两个变量：
-```
+产生上述问题的原因是使用了没有配置的变量，解决此问题只需在配置文件hive-site.xml中配置system:user.name和system:java.io.tmpdir两个变量，配置文件中就可以使用这两个变量：
+```xml
 <property>
     <name>system:user.name</name>
-    <value>xiaosi</value>
+    <value>wy</value>
 </property>
 <property>
     <name>system:java.io.tmpdir</name>
-    <value>/home/${system:user.name}/tmp/hive/</value>
+    <value>/tmp/hive/</value>
 </property>
 ```
 
 ### 4. 拒绝连接
 
 #### 4.1 问题描述
-```
-on exception: java.net.ConnectException: 拒绝连接; For more details see:  http://wiki.apache.org/hadoop/ConnectionRefused
+```java
+exception: java.net.ConnectException: 拒绝连接; For more details see:  http://wiki.apache.org/hadoop/ConnectionRefused
 ...
 Caused by: java.net.ConnectException: Call From Qunar/127.0.0.1 to localhost:9000 failed on connection exception: java.net.ConnectException: 拒绝连接; For more details see:  http://wiki.apache.org/hadoop/ConnectionRefused
 ...
@@ -113,13 +113,13 @@ xiaosi@yoona:~/opt/hadoop-2.7.3$ jps
 ### 5. 创建Hive表失败
 
 #### 5.1 问题描述
-```
-FAILED: Execution Error, return code 1 from org.apache.hadoop.hive.ql.exec.DDLTask. MetaException(message:For direct MetaStore DB connections, we don't support retries at the client level.)
+```java
+FAILED: Execution Error, return code 1 from org.apache.hadoop.hive.ql.exec.DDLTask. MetaException(message:For direct MetaStore DB connections, we dont support retries at the client level.)
 ```
 #### 5.2 解决方案
 
 查看Hive日志，看到这样的错误日志：
-```
+```java
 NestedThrowablesStackTrace:
 Could not create "increment"/"table" value-generation container `SEQUENCE_TABLE` since autoCreate flags do not allow it.
 org.datanucleus.exceptions.NucleusUserException: Could not create "increment"/"table" value-generation container `SEQUENCE_TABLE` since autoCreate flags do not allow it.
@@ -164,7 +164,7 @@ Time taken: 0.664 seconds
 ### 6. 加载数据失败
 
 #### 6.1 问题描述
-```
+```shell
 hive> load data local inpath '/home/xiaosi/hive/input/result.txt' overwrite into table recent_attention;
 Loading data to table test_db.recent_attention
 Failed with exception Unable to move source file:/home/xiaosi/hive/input/result.txt to destination hdfs://localhost:9000/user/hive/warehouse/test_db.db/recent_attention/result.txt
@@ -180,10 +180,10 @@ Caused by: org.apache.hadoop.ipc.RemoteException(java.io.IOException): File /hom
 
 这个问题是由于datanode没有启动导致的，至于datanode为什么没有启动起来，去看另一篇博文：那些年踩过的Hadoop坑（http://blog.csdn.net/sunnyyoona/article/details/51659080）
 
-
 ### 7. Java连接Hive 驱动失败
 
 #### 7.1 问题描述
+
 ```
 java.lang.ClassNotFoundException: org.apache.hadoop.hive.jdbc.HiveDriver
 	at java.net.URLClassLoader.findClass(URLClassLoader.java:381) ~[na:1.8.0_91]
@@ -202,7 +202,7 @@ java.lang.ClassNotFoundException: org.apache.hadoop.hive.jdbc.HiveDriver
 	at com.intellij.rt.execution.application.AppMain.main(AppMain.java:144) [idea_rt.jar:na]
 ```
 #### 7.2 解决方案
-```
+```java
 private static String driverName = "org.apache.hadoop.hive.jdbc.HiveDriver";
 ```
 取代
@@ -212,7 +212,8 @@ private static String driverName = "org.apache.hive.jdbc.HiveDriver"
 ### 8. create table问题
 
 #### 8.1 问题描述
-```
+
+```sql
 create table if not exists employee(
    name string comment 'employee name',
    salary float comment 'employee salary',
@@ -231,7 +232,7 @@ FAILED: ParseException line 10:0 missing EOF at 'location' near ')'
 #### 8.2 解决方案
 
 Location放在TBPROPERTIES之前：
-```
+```sql
 create table if not exists employee(
    name string comment 'employee name',
    salary float comment 'employee salary',
@@ -246,8 +247,8 @@ create table命令：https://cwiki.apache.org/confluence/display/Hive/LanguageMa
 ```
 ### 9. JDBC Hive 拒绝连接
 
-9.1 问题描述
-```
+#### 9.1 问题描述
+```java
 15:00:50.815 [main] INFO  org.apache.hive.jdbc.Utils - Supplied authorities: localhost:10000
 15:00:50.832 [main] INFO  org.apache.hive.jdbc.Utils - Resolved authority: localhost:10000
 15:00:51.010 [main] DEBUG o.a.thrift.transport.TSaslTransport - opening transport org.apache.thrift.transport.TSaslClientTransport@3ffc5af1
@@ -295,7 +296,7 @@ xiaosi@Qunar:/opt/apache-hive-2.0.0-bin/conf$ hive --service hiveserver2 >/dev/n
 [1] 11978
 ```
 (2) 检查配置：
-```
+```xml
 <property>
     <name>hive.server2.thrift.port</name>
     <value>10000</value>
@@ -306,13 +307,14 @@ xiaosi@Qunar:/opt/apache-hive-2.0.0-bin/conf$ hive --service hiveserver2 >/dev/n
 ### 10. User root is not allowed to impersonate anonymous
 
 #### 10.1 问题描述
-```
+
+```java
 Failed to open new session: java.lang.RuntimeException: org.apache.hadoop.ipc.RemoteException(org.apache.hadoop.security.authorize.AuthorizationException): User:xiaosiis not allowed to impersonate anonymous
 ```
 #### 10.2 解决方案
 
-修改hadoop 配置文件 etc/hadoop/core-site.xml,加入如下配置项
-```
+修改 Hadoop 配置文件 `etc/hadoop/core-site.xml` 加入如下配置项：
+```xml
 <property>
     <name>hadoop.proxyuser.root.hosts</name>
     <value>*</value>
@@ -322,10 +324,8 @@ Failed to open new session: java.lang.RuntimeException: org.apache.hadoop.ipc.Re
     <value>*</value>
 </property>
 ```
-==备注==
-
-hadoop.proxyuser.XXX.hosts  与 hadoop.proxyuser.XXX.groups 中XXX为异常信息中User:* 中的用户名部分
-```
+`hadoop.proxyuser.XXX.hosts` 与 `hadoop.proxyuser.XXX.groups` 中 XXX 为异常信息中 `User:*` 中的用户名部分，修改为自己的用户名称：
+```xml
 <property>
     <name>hadoop.proxyuser.xiaosi.hosts</name>
     <value>*</value>
@@ -341,7 +341,7 @@ hadoop.proxyuser.XXX.hosts  与 hadoop.proxyuser.XXX.groups 中XXX为异常信�
 ### 11. 安全模式
 
 #### 11.1 问题描述
-```
+```java
 Caused by: org.apache.hadoop.ipc.RemoteException(org.apache.hadoop.hdfs.server.namenode.SafeModeException): Cannot create directory /tmp/hive/xiaosi/c2f6130d-3207-4360-8734-dba0462bd76c. Name node is in safe mode.
 The reported blocks 22 has reached the threshold 0.9990 of total blocks 22. The number of live datanodes 1 has reached the minimum number 0. In safe mode extension. Safe mode will be turned off automatically in 5 seconds.
 	at org.apache.hadoop.hdfs.server.namenode.FSNamesystem.checkNameNodeSafeMode(FSNamesystem.java:1327)
@@ -397,13 +397,13 @@ Safe mode is OFF
 #### 12.1 问题描述
 
 在Hive1.2.2版本运行如下HQL时：
-```
+```sql
 select dt as date, comMap['searchType'] as search_type, comMap['clickType'] as click_type
 from search_click
 where dt = '20170614';
 ```
 会抛出如下异常：
-```
+```java
 Failed to recognize predicate 'date'. Failed rule: 'identifier' in column specification
 ```
 #### 12.2 问题分析
@@ -419,14 +419,14 @@ hive.support.sql11.reserved.keywords
 
 从上面可以知道是因为启用了对保留关键字的支持导致的，上面语句中`date`是保留关键字．所以解决方案如下：
 - 弃用保留关键字`date`
-```
+```sql
 select dt, comMap['searchType'] as search_type, comMap['clickType'] as click_type
 from search_click
 where dt = '20170614';
 ```
 - 弃用对保留关键字的支持
 
-```
+```shell
 sudo -uwirelessdev hive -e "
    set hive.support.sql11.reserved.keywords = false ;
    select dt, comMap['searchType'] as search_type, comMap['clickType'] as click_type
@@ -436,7 +436,7 @@ sudo -uwirelessdev hive -e "
 ```
 或者在`conf`下的`hive-site.xml`配置文件中修改配置选项：
 
-```
+```xml
 <property>
     <name>hive.support.sql11.reserved.keywords</name>
     <value>false</value>
@@ -447,7 +447,7 @@ sudo -uwirelessdev hive -e "
 #### 13.1 问题描述
 
 在Hive1.2.2版本运行HQL语句时，报如下异常：
-```
+```java
 Exception in thread "main" java.lang.UnsupportedClassVersionError: org/apache/hadoop/hive/cli/CliDriver : Unsupported major.minor version 51.0
         at java.lang.ClassLoader.defineClass1(Native Method)
         at java.lang.ClassLoader.defineClassCond(ClassLoader.java:632)
@@ -489,17 +489,9 @@ JDK 1.1 = 45 (0x2D hex)
 
 根据上面的分析把JDK版本提升到JDK 1.7即可．
 
-### 14. MetaException
+### 14. The MySQL server is running with the --read-only
 
-#### 14.1 问题描述
-```
-Caused by: MetaException(message:Hive Schema version 2.1.0 does not match metastore's schema version 1.2.0 Metastore is not upgraded or corrupt)
-...
-```
-
-### 15.
-
-```
+```java
 Caused by: java.sql.SQLException: The MySQL server is running with the --read-only option so it cannot execute this statement
         at com.mysql.jdbc.SQLError.createSQLException(SQLError.java:1074)
         at com.mysql.jdbc.MysqlIO.checkErrorPacket(MysqlIO.java:4074)
@@ -512,3 +504,22 @@ Caused by: java.sql.SQLException: The MySQL server is running with the --read-on
 ```
 https://blog.csdn.net/lwei_998/article/details/50445830
 https://www.cnblogs.com/gomysql/p/3671896.html
+
+
+### 15. Loading class com.mysql.jdbc.Driver
+
+创建表的时候出现如下警告：
+```java
+Loading class 'com.mysql.jdbc.Driver'. This is deprecated. The new driver class is `com.mysql.cj.jdbc.Driver'. The driver is automatically registered via the SPI and manual loading of the driver class is generally unnecessary.
+```
+修改 Hive 配置文件，将 `com.mysql.jdbc.Driver` 修改为 `com.mysql.cj.jdbc.Driver`：
+```xml
+<property>
+   <name>javax.jdo.option.ConnectionDriverName</name>
+   <value>com.mysql.cj.jdbc.Driver</value>
+</property>
+```
+
+欢迎关注我的公众号和博客：
+
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Other/smartsi.jpg?raw=true)
