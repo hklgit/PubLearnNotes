@@ -18,7 +18,15 @@ permalink: how-to-use-hive-in-zeppelin
 
 完成以上步骤我们才能进行下一步。
 
-### 2. 配置Hive解释器
+### 2. Hive 元数据服务
+
+Zeppelin 在访问 Hive 中的数据时需要得到 Hive 中的所有元数据信息，因此需要部署一个 HiveMetaStore 服务提供 Hive 的元数据信息。启动 HiveMetaStore 服务的命令如下：
+```
+nohup hive --service metastore -p 9083 > /opt/hive/logs/metastore.log 2>&1 &
+```
+上述表示在后台启动 Hive 的 MetaStore 服务，MetaStore 服务监听 9083 端口，并将错误和常规日志输出到日志文件 `/opt/hive/logs/metastore.log` 中。
+
+### 3. 配置Hive解释器
 
 解释器（Interpreter）是 Zeppelin 里最重要的概念，每一种解释器都对应一个引擎。需要注意的是Hive解释器被弃用并合并到 JDBC 解释器中。可以通过使用具有相同功能的 JDBC Interpreter 来使用 Hive Interpreter。Zeppelin 是通过 Hive 的 Jdbc 接口来运行 Hive SQL。
 
@@ -41,6 +49,21 @@ permalink: how-to-use-hive-in-zeppelin
 
 
 
+属性
+默认
+描述
+default.driver	org.apache.hive.jdbc.HiveDriver	JDBC驱动程序的类路径
+default.url	jdbc:hive2://localhost:10000	网址连接
+default.user	 	（可选）连接的用户名
+default.password	 	（可选）连接密码
+default.xxx	 	（可选）驱动程序使用的其他属性
+${prefix}.driver	 	驱动程序类路径 %hive(${prefix})
+${prefix}.url	 	的网址 %hive(${prefix})
+${prefix}.user	 	（可选）连接的用户名%hive(${prefix})
+${prefix}.password	 	（可选）连接密码%hive(${prefix})
+${prefix}.xxx	 	（可选）驱动程序使用的其他属性%hive(${prefix})
+
+
 
 
 
@@ -48,3 +71,4 @@ permalink: how-to-use-hive-in-zeppelin
 参考：
 - [Hive Interpreter for Apache Zeppelin](http://zeppelin.apache.org/docs/0.8.2/interpreter/hive.html)
 - [如何在Zeppelin里玩转Hive](https://mp.weixin.qq.com/s/TzTrgR-eJ45kppuCabSovA)
+- [Apache Zeppelin 中 Hive 解释器](https://cloud.tencent.com/developer/article/1014859)

@@ -1,3 +1,15 @@
+---
+layout: post
+author: sjf0115
+title: 如何配置HiveServer2
+date: 2020-09-05 15:15:01
+tags:
+  - Hive
+
+categories: Hive
+permalink: hive-base-how-to-use-bucket
+---
+
 HiveServer2(HS2)是一个服务器接口，能使远程客户端执行Hive查询，并且可以检索结果。HiveServer2是HiveServer1的改进版，HiveServer1已经被废弃。HiveServer2可以支持多客户端并发和身份认证。旨在为开放API客户端（如JDBC和ODBC）提供更好的支持。
 
 这篇文章将介绍如何配置服务器端。如何使用客户端与此服务器端交互将在下篇文章中介绍。
