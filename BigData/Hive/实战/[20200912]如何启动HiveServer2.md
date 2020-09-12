@@ -65,7 +65,7 @@ netstat -nl | grep 10000
 ```
 `beeline -u  <url> -n <username> -p <Password>`
 ```
-![](1)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hive/how-to-config-and-start-hiveserver2-1.jpg?raw=true)
 
 ### 4. Web UI
 
@@ -74,7 +74,6 @@ Hive 从 2.0.0 版本开始，为 HiveServer2 提供了一个简单的 WEB UI �
 如果要开启 Web UI 需要在 `hive-site.xml` 配置文件中修改配置：
 - hive.server2.webui.host
 - hive.server2.webui.port
-- hive.server2.webui.max.threads
 
 ```xml
 <property>
@@ -90,7 +89,7 @@ Hive 从 2.0.0 版本开始，为 HiveServer2 提供了一个简单的 WEB UI �
 
 配置完成之后启动 hiveserver2 通过 `http://localhost:10002/` 地址访问 Web UI：
 
-![](2)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hive/how-to-config-and-start-hiveserver2-2.jpg?raw=true)
 
 欢迎关注我的公众号和博客：
 
