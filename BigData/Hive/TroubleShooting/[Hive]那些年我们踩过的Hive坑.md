@@ -509,7 +509,7 @@ https://www.cnblogs.com/gomysql/p/3671896.html
 ### 15. Loading class com.mysql.jdbc.Driver
 
 创建表的时候出现如下警告：
-```java
+```
 Loading class 'com.mysql.jdbc.Driver'. This is deprecated. The new driver class is `com.mysql.cj.jdbc.Driver'. The driver is automatically registered via the SPI and manual loading of the driver class is generally unnecessary.
 ```
 修改 Hive 配置文件，将 `com.mysql.jdbc.Driver` 修改为 `com.mysql.cj.jdbc.Driver`：
@@ -519,6 +519,57 @@ Loading class 'com.mysql.jdbc.Driver'. This is deprecated. The new driver class 
    <value>com.mysql.cj.jdbc.Driver</value>
 </property>
 ```
+
+### 16. Invalid signature file digest for Manifest main attributes
+
+```
+Error: A JNI error has occurred, please check your installation and try again
+Exception in thread "main" java.lang.SecurityException: Invalid signature file digest for Manifest main attributes
+        at sun.security.util.SignatureFileVerifier.processImpl(SignatureFileVerifier.java:330)
+        at sun.security.util.SignatureFileVerifier.process(SignatureFileVerifier.java:263)
+        at java.util.jar.JarVerifier.processEntry(JarVerifier.java:318)
+        at java.util.jar.JarVerifier.update(JarVerifier.java:230)
+        at java.util.jar.JarFile.initializeVerifier(JarFile.java:383)
+        at java.util.jar.JarFile.getInputStream(JarFile.java:450)
+        at sun.misc.URLClassPath$JarLoader$2.getInputStream(URLClassPath.java:977)
+        at sun.misc.Resource.cachedInputStream(Resource.java:77)
+        at sun.misc.Resource.getByteBuffer(Resource.java:160)
+        at java.net.URLClassLoader.defineClass(URLClassLoader.java:454)
+        at java.net.URLClassLoader.access$100(URLClassLoader.java:73)
+        at java.net.URLClassLoader$1.run(URLClassLoader.java:368)
+        at java.net.URLClassLoader$1.run(URLClassLoader.java:362)
+        at java.security.AccessController.doPrivileged(Native Method)
+        at java.net.URLClassLoader.findClass(URLClassLoader.java:361)
+        at java.lang.ClassLoader.loadClass(ClassLoader.java:424)
+        at sun.misc.Launcher$AppClassLoader.loadClass(Launcher.java:338)
+        at java.lang.ClassLoader.loadClass(ClassLoader.java:357)
+        at sun.launcher.LauncherHelper.checkAndLoadMain(LauncherHelper.java:495)
+```
+这是因为在使用Maven打包的时候导致某些包的重复引用，以至于打包之后的META-INF的目录下多出了一些*.SF,*.DSA,*.RSA文件所致，我们可以在pom文件里面加入以下配置：
+```xml
+<build>
+  <plugins>
+  <plugin>
+    <groupId>org.apache.maven.plugins</groupId>
+    <artifactId>maven-shade-plugin</artifactId>
+    <version>2.2</version>
+    <configuration>
+      <filters>
+        <filter>
+          <artifact>*:*</artifact>
+          <excludes>
+            <exclude>META-INF/*.SF</exclude>
+            <exclude>META-INF/*.DSA</exclude>
+            <exclude>META-INF/*.RSA</exclude>
+          </excludes>
+        </filter>
+      </filters>
+    </configuration>
+  </plugin>
+  </plugins>
+</build>
+```
+
 
 欢迎关注我的公众号和博客：
 
