@@ -14,6 +14,10 @@ permalink: hiveserver2-client-jdbc
 
 ### 1. 配置
 
+如果想通过 JDBC 来访问 HiveServer2，需要开启 HiveServer2 服务，具体请参阅 [如何启动HiveServer2](http://smartsi.club/how-to-config-and-start-hiveserver2.html)。
+
+### 2. URL格式
+
 JDBC客户端允许使用 Java 代码连接到 HiveServer2。可以在远程，嵌入式或 HTTP 模式下建立 JDBC 连接。以下是不同模式的配置：
 - 远程模式下 Url 格式为 `jdbc:hive2://<host>:<port>/<database>`，默认情况下 HiveServer2 的端口为 10000。
 - 内嵌模式下 Url 格式为 `jdbc:hive2://`，不需要提供主机与端口号。
@@ -21,7 +25,7 @@ JDBC客户端允许使用 Java 代码连接到 HiveServer2。可以在远程，�
 hive.server2.transport.mode=http;hive.server2.thrift.http.path=
 <http_endpoint>`，<http_endpoint> 在 hive-site.xml 配置文件中进行配置，默认值为 cliservice。HTTP 传输模式的默认端口为 10001。
 
-### 2. Maven 依赖
+### 3. Maven 依赖
 
 如果你使用的是 Maven，需要在 pom.xml 中添加以下依赖项：
 ```xml
@@ -32,7 +36,7 @@ hive.server2.transport.mode=http;hive.server2.thrift.http.path=
 </dependency>
 ```
 
-### 3. 开发
+### 4. 开发
 
 第一步加载 JDBC 驱动类：
 ```java
@@ -61,7 +65,9 @@ while (resultSet.next()) {
     }
 }
 ```
-### 4. JDBC数据类型
+详细代码请参阅：[JdbcExample](https://github.com/sjf0115/data-example/blob/master/hive-example/src/main/java/com/hive/example/JdbcExample.java)
+
+### 5. JDBC数据类型
 
 下表为 HiveServer2 列出了 Hive数据类型与 Java 数据类型之间的映射关系：
 
