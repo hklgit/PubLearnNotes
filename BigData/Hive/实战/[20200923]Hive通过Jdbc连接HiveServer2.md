@@ -71,7 +71,7 @@ while (resultSet.next()) {
 
 下表为 HiveServer2 列出了 Hive数据类型与 Java 数据类型之间的映射关系：
 
-![](1)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Hive/hiveserver2-client-jdbc-1.jpg?raw=true)
 
 欢迎关注我的公众号和博客：
 
