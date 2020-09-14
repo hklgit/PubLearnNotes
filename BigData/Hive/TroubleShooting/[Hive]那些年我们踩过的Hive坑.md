@@ -569,6 +569,20 @@ Exception in thread "main" java.lang.SecurityException: Invalid signature file d
   </plugins>
 </build>
 ```
+### 17. /bin/java: No such file or directory
+
+在执行 Hive 报错，查看运行日志发现报如下错误：
+```
+/bin/bash: /bin/java: No such file or directory
+```
+根本问题是找不到 Java 路径，解决方案是修改 hadoop-env.sh 中 JAVA_HOME：
+```
+#export JAVA_HOME=${JAVA_HOME}
+export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_161.jdk/Contents/Home
+```
+
+
+
 
 
 欢迎关注我的公众号和博客：
