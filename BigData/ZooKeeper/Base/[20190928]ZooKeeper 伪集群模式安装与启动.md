@@ -115,9 +115,9 @@ export PATH=${ZOOKEEPER_HOME}/bin:$PATH
 
 分别启动三台 ZooKeeper 服务器，在根目录下执行如下命令：
 ```
-bin/zkServer.sh start conf/zoo1.cfg
-bin/zkServer.sh start conf/zoo2.cfg
-bin/zkServer.sh start conf/zoo3.cfg
+bin/zkServer.sh start /opt/zookeeper/conf/zoo1.cfg
+bin/zkServer.sh start /opt/zookeeper/conf/zoo2.cfg
+bin/zkServer.sh start /opt/zookeeper/conf/zoo3.cfg
 ```
 启动过程中会输出如下信息：
 ```
@@ -128,15 +128,15 @@ Starting zookeeper ... STARTED
 ```
 当对三台服务器启动后，我们用 `zkServer.sh status` 命令来查看启动状态：
 ```
-smartsi:zookeeper smartsi$ zkServer.sh status conf/zoo3.cfg
+smartsi:zookeeper smartsi$ zkServer.sh status /opt/zookeeper/conf/zoo3.cfg
 ZooKeeper JMX enabled by default
 Using config: conf/zoo3.cfg
 Mode: follower
-smartsi:zookeeper smartsi$ zkServer.sh status conf/zoo1.cfg
+smartsi:zookeeper smartsi$ zkServer.sh status /opt/zookeeper/conf/zoo1.cfg
 ZooKeeper JMX enabled by default
 Using config: conf/zoo1.cfg
 Mode: follower
-smartsi:zookeeper smartsi$ zkServer.sh status conf/zoo2.cfg
+smartsi:zookeeper smartsi$ zkServer.sh status /opt/zookeeper/conf/zoo2.cfg
 ZooKeeper JMX enabled by default
 Using config: conf/zoo2.cfg
 Mode: leader
