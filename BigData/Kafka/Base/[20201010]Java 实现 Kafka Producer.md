@@ -148,6 +148,8 @@ public class AsyncSendCallback implements Callback {
 
 > 注意：调用send方法之后（消息只是保存在缓冲池中），需要调用close方法（有一个单独的线程把、缓冲池中的消息发送的服务器）。
 
+具体代码可以参阅：[KafkaProducerExample](https://github.com/sjf0115/data-example/blob/master/kafka-example/src/main/java/com/kafka/example/KafkaProducerExample.java)
+
 欢迎关注我的公众号和博客：
 
 ![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Other/smartsi.jpg?raw=true)
