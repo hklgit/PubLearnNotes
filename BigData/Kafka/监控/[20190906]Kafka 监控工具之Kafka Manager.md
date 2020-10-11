@@ -1,7 +1,7 @@
 ---
 layout: post
 author: sjf0115
-title: 使用Kafka Manager管理Kafka集群
+title: Kafka 监控工具之Kafka Manager
 date: 2019-09-06 21:00:01
 tags:
   - Kafka
