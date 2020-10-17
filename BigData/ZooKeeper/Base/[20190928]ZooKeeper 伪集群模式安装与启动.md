@@ -37,7 +37,7 @@ $ mkdir data
 伪集群就是说集群所有的机器都在一台机器上，但是还是以集群的特性对外提供服务。这种模式和集群模式非常类似，只是把 zoo.cfg 做一些修改:
 ```
 tickTime = 2000
-dataDir = /Users/smartsi/opt/zookeeper/data
+dataDir = /opt/zookeeper/data
 clientPort = 2181
 initLimit = 10
 syncLimit = 5
@@ -61,33 +61,33 @@ clientPort | 2181 |表示客户端所连接的服务器监听的端口号，默�
 第一台机器的配置如下：
 ```
 tickTime = 2000
-dataDir = /Users/smartsi/opt/zookeeper/zk1/data
+dataDir = /opt/zookeeper/zk1/data
 clientPort = 2181
 initLimit = 10
 syncLimit = 5
-server.1=127.0.0.1:2888:3888  
+server.1=127.0.0.1:2888:3888
 server.2=127.0.0.1:2889:3889
 server.3=127.0.0.1:2890:3890
 ```
 第二台机器的配置如下：
 ```
 tickTime = 2000
-dataDir = /Users/smartsi/opt/zookeeper/zk2/data
+dataDir = /opt/zookeeper/zk2/data
 clientPort = 2182
 initLimit = 10
 syncLimit = 5
-server.1=127.0.0.1:2888:3888  
+server.1=127.0.0.1:2888:3888
 server.2=127.0.0.1:2889:3889
 server.3=127.0.0.1:2890:3890
 ```
 第三台机器的配置如下：
 ```
 tickTime = 2000
-dataDir = /Users/smartsi/opt/zookeeper/zk3/data
+dataDir = /opt/zookeeper/zk3/data
 clientPort = 2183
 initLimit = 10
 syncLimit = 5
-server.1=127.0.0.1:2888:3888  
+server.1=127.0.0.1:2888:3888
 server.2=127.0.0.1:2889:3889
 server.3=127.0.0.1:2890:3890
 ```
@@ -106,7 +106,7 @@ server.3=127.0.0.1:2890:3890
 修改 `/etc/profile` 配置环境变量：
 ```
 # ZOOKEEPER
-export ZOOKEEPER_HOME=/Users/smartsi/opt/zookeeper
+export ZOOKEEPER_HOME=/opt/zookeeper
 export PATH=${ZOOKEEPER_HOME}/bin:$PATH
 ```
 运行命令 `source /etc/profile` 使环境变量生效。
