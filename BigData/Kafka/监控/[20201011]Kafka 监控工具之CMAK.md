@@ -2,7 +2,7 @@
 layout: post
 author: smartsi
 title: Kafka 监控工具之CMAK
-date: 2020-10-10 18:16:01
+date: 2020-10-17 16:04:01
 tags:
   - Kafka
 
@@ -12,7 +12,7 @@ permalink: cmak-managing-apache-kafka-cluster
 
 ### 1. 概述
 
-CMAK(Cluster Manager for Apache Kafka) 是由 Yahoo 开源的 Kafka 集群管理平台。我们可能更多听到的是 kafka-manager，主要是因为[误用了 Apache 的商标](https://blog.wolfogre.com/redirect/v3/A7Ovh0QYxtuK0fIiLDSDltsSAwM8Cv46xcU7LxImWv3FUwS7BsX_BENNQUvFJQomNsX_AzcxMzESAwM8Cv46xcVaFgY7bkEGFtw7If3FPAZNCsX-awQs_msEzK0JBPkMzBgGQQkWBujF)，所以才从 kafka-manager 改名为 CMAK。
+CMAK(Cluster Manager for Apache Kafka) 是由 Yahoo 开源的 Kafka 集群管理平台。我们可能听到更多的是 kafka-manager。主要是因为[误用了 Apache 的商标](https://blog.wolfogre.com/redirect/v3/A7Ovh0QYxtuK0fIiLDSDltsSAwM8Cv46xcU7LxImWv3FUwS7BsX_BENNQUvFJQomNsX_AzcxMzESAwM8Cv46xcVaFgY7bkEGFtw7If3FPAZNCsX-awQs_msEzK0JBPkMzBgGQQkWBujF)，所以才从 kafka-manager 改名为 CMAK。
 
 在 3.0.0.2 版本之前，kafka-manager 是不提供现成的编译包的，需要我们自己编译打包，老版本的安装可以参阅博文 [Kafka 监控工具之Kafka Manager](http://smartsi.club/use-kafka-manager-to-manage-kafka.html)。在 3.0.0.2 版本之后我们可以直接下载编译后的 zip 包：
 ![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Kafka/cmak-managing-apache-kafka-cluster-5.jpg?raw=true)
