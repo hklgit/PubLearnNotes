@@ -15,7 +15,7 @@ permalink: cmak-managing-apache-kafka-cluster
 CMAK(Cluster Manager for Apache Kafka) 是由 Yahoo 开源的 Kafka 集群管理平台。我们可能更多听到的是 kafka-manager，主要是因为[误用了 Apache 的商标](https://blog.wolfogre.com/redirect/v3/A7Ovh0QYxtuK0fIiLDSDltsSAwM8Cv46xcU7LxImWv3FUwS7BsX_BENNQUvFJQomNsX_AzcxMzESAwM8Cv46xcVaFgY7bkEGFtw7If3FPAZNCsX-awQs_msEzK0JBPkMzBgGQQkWBujF)，所以才从 kafka-manager 改名为 CMAK。
 
 在 3.0.0.2 版本之前，kafka-manager 是不提供现成的编译包的，需要我们自己编译打包，老版本的安装可以参阅博文 [Kafka 监控工具之Kafka Manager](http://smartsi.club/use-kafka-manager-to-manage-kafka.html)。在 3.0.0.2 版本之后我们可以直接下载编译后的 zip 包：
-![](5)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Kafka/cmak-managing-apache-kafka-cluster-5.jpg?raw=true)
 
 ### 2. 下载
 
@@ -74,17 +74,17 @@ cmak -Dconfig.file=/opt/cmak/conf/application.conf -Dhttp.port=9000 -java-home /
 - -java-home：指定 JDK 路径，也可以不指定。这里由于需要用 JDK11，而我这台服务器上也安装了 JDK8，所以需要指定 JDK11 的路径。
 
 启动 CMAK 服务后，通过 `http://localhost:9000/` 地址进入 WEB UI 界面：
-![](4)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Kafka/cmak-managing-apache-kafka-cluster-4.jpg?raw=true)
 
 可以通过 `Add Cluster` 菜单创建我们的 Kafka 集群：
-![](1)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Kafka/cmak-managing-apache-kafka-cluster-1.jpg?raw=true)
 
 注意的的是 Cluster Zookeeper Hosts 要配置 Kafka 在 ZooKeeper 中的 NameSpace，在这我们是 `kafka`，具体取决于 Kafka 的配置：
 ```
 zookeeper.connect=localhost:2181/kafka
 ```
 看到如下页面表示我们已经创建好集群了：
-![](2)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Kafka/cmak-managing-apache-kafka-cluster-2.jpg?raw=true)
 
 如果你遇到报如下错误：
 ```
@@ -93,7 +93,7 @@ Yikes! KeeperErrorCode = Unimplemented for /kafka-manager/mutex Try again.
 那么你需要升级 Zookeeper 到 3.5+ 版本。
 
 创建成功后，你就可以看到你的 Kafka 信息：
-![](3)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Kafka/cmak-managing-apache-kafka-cluster-3.jpg?raw=true)
 
 参考：
 - [CMAK](https://github.com/yahoo/CMAK)
