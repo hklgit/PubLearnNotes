@@ -44,7 +44,7 @@ hive --service metastore -p 9083 &
 
 这里我建议选用第2种方法，针对每一种引擎，单独创建一个解释器。这里我会创建一个新的 Hive Interprete。在解释器页面点击创建按钮，创建一个名为 hive 的解释器，解释器组选择为 jdbc：
 
-![](1)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Zeppelin/how-to-use-hive-in-zeppelin-1.jpg?raw=true)
 
 具体配置如下所示：
 
@@ -66,7 +66,7 @@ default.driver 配置为 org.apache.hive.jdbc.HiveDriver，因为 Zeppelin 没�
 
 如下图所示：
 
-![](4)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Zeppelin/how-to-use-hive-in-zeppelin-4.jpg?raw=true)
 
 > 依赖的版本具体取决于你的 Hive 和 Hadoop 安装版本。
 
@@ -107,9 +107,9 @@ Caused by: java.io.IOException: Server returned HTTP response code: 501 for URL:
 
 除了修改存储仓库的配置项，我们还需要创建一个可用的存储仓库来解析这些依赖。默认自动会创建两个（Central、local），下面我们创建使用 Maven 专用的非安全端点的仓库 Centrals，如下图所示：
 
-![](2)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Zeppelin/how-to-use-hive-in-zeppelin-2.jpg?raw=true)
 
-![](3)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Zeppelin/how-to-use-hive-in-zeppelin-3.jpg?raw=true)
 
 到此为止，我们就创建好了 Hive 解释器。下面我们具体看看如何在 Zeppelin 中使用 Hive。
 
@@ -117,11 +117,11 @@ Caused by: java.io.IOException: Server returned HTTP response code: 501 for URL:
 
 创建一个名为 hive 的 Note，记得勾选选用 Hive 解释器：
 
-![](5)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Zeppelin/how-to-use-hive-in-zeppelin-5.jpg?raw=true)
 
 输入查询语句，注意查询语句前需要有前缀 `%hive`：
 
-![](6)
+![](https://github.com/sjf0115/PubLearnNotes/blob/master/image/Zeppelin/how-to-use-hive-in-zeppelin-6.jpg?raw=true)
 
 > 语句末尾不能加分号，不然会有错误。
 
