@@ -15,7 +15,7 @@ permalink: flink-kafka-connector
 
 > Flink版本：1.11.2
 
-Apache Flink 内置了多个 Kafka Connector：通用、0.10、0.11等。这个通用的 Kafka Connector 会尝试追踪最新版本的 Kafka 客户端。不同 Flink 发行版之间其使用的客户端版本可能会发生改变。现在的 Kafka 客户端可以向后兼容 0.10.0 或更高版本的 Broker。对于大多数用户使用通用的 Kafka Connector 是最合适的。对于 0.11.x 和 0.10.x 版本的 Kafka 用户，我们建议分别使用专用的 0.11 和 0.10 Connector。有关 Kafka 兼容性的详细信息，请参阅 [Kafka官方文档](https://kafka.apache.org/protocol.html#protocol_compatibility)。
+Apache Flink 内置了多个 Kafka Connector：通用、0.10、0.11等。这个通用的 Kafka Connector 会尝试追踪最新版本的 Kafka 客户端。不同 Flink 发行版之间其使用的客户端版本可能会发生改变。现在的 Kafka 客户端可以向后兼容 0.10.0 或更高版本的 Broker。对于大多数用户使用通用的 Kafka Connector 就可以了。但对于 0.11.x 和 0.10.x 版本的 Kafka 用户，我们建议分别使用专用的 0.11 和 0.10 Connector。有关 Kafka 兼容性的详细信息，请参阅 [Kafka官方文档](https://kafka.apache.org/protocol.html#protocol_compatibility)。
 
 通用 Connector：
 ```xml
@@ -90,10 +90,10 @@ stream = env
 
 Flink Kafka 消费者需要知道如何将 Kafka 中的二进制数据转换为 Java/Scala 对象。DeserializationSchema 可以允许用户指定这样的一个 Schema。每个 Kafka 消息都会调用 `T deserialize(ConsumerRecord<byte[], byte[]> record)` 方法。
 
-为了使用方便，Flink 提供以下开箱即用的 Schema：
+为了使用方便，Flink 提供如下开箱即用的 Schema：
 - TypeInformationSerializationSchema(以及 TypeInformationKeyValueSerializationSchema) 会基于 Flink 的 TypeInformation 创建 Schema。对 Flink 读写数据会非常有用。这个 Schema 是其他通用序列化方法的高性能替代方案。
 - JsonDeserializationSchema(以及 JSONKeyValueDeserializationSchema)将序列化的 JSON 转换为 ObjectNode 对象，可以使用 `objectNode.get("field").as(Int/String/...)()` 方法访问某个字段。KeyValue objectNode 包含一个"key"和"value"字段，这包含了所有字段，以及一个可选的"metadata"字段，可以用来查询此消息的偏移量/分区/主题。
-- AvroDeserializationSchema 使用静态 Schema 读取 Avro 格式的序列化的数据。可以从 Avro 生成的类(`AvroDeserializationSchema.forSpecific(...)`) 中推断出 Schema，也可以使用 GenericRecords 手动提供的 Schema（`AvroDeserializationSchema.forGeneric(...)`）。这个反序列化 Schema 要求序列化记录不能包含嵌套 Schema。
+- AvroDeserializationSchema 使用静态 Schema 读取 Avro 格式的序列化的数据。可以从 Avro 生成的类(`AvroDeserializationSchema.forSpecific(...)`) 中推断出 Schema，也可以使用 GenericRecords 手动提供 Schema（`AvroDeserializationSchema.forGeneric(...)`）。这个反序列化 Schema 要求序列化记录不能包含嵌套 Schema。
 
 如果要使用 Avro 这种 Schema，必须添加如下依赖：
 ```xml
@@ -197,8 +197,6 @@ env.enableCheckpointing(5000)
 
 #### 2.4.1 分区发现
 
-默认情况下，分区发现是禁用的。 要启用它，请在提供的属性配置中为flink.partition-discovery.interval-millis设置一个非负值，表示发现间隔（以毫秒为单位）。
-
 Flink Kafka Consumer 支持发现动态创建的 Kafka 分区，并使用 Exactly-Once 语义来消费。当作业开始运行，首次检索分区元数据后发现的所有分区会从最早的偏移量开始消费。
 
 默认情况下，分区发现是禁用的。如果要启用它，需要设置 `flink.partition-discovery.interval-millis` 为一个非负值，表示发现间隔（以毫秒为单位的）。
@@ -247,7 +245,7 @@ val stream = env.addSource(myConsumer)
 
 Flink Kafka Consumer 可以配置如何将偏移量提交回 Kafka Broker。需要注意的是 Flink Kafka Consumer 不需要依赖提交的偏移量来提供容错保证。提交的偏移量仅是用来展示消费者的进度。
 
-有不同的方式配置偏移提交，具体取决于作业是否启用了检查点：
+有不同的方式配置偏移量提交，具体取决于作业是否启用了检查点：
 - 禁用检查点：如果禁用了检查点，那么 Flink Kafka Consumer 依赖于 Kafka 客户端的定期自动提交偏移量的功能。因此，要禁用或启用偏移量提交，只需在 Properties 配置中将 `enable.auto.commit` / `auto.commit.interval.ms` 设置为适当的值。
 - 启用检查点：如果启用检查点，那么 Flink Kafka Consumer 会在检查点完成时提交偏移量存储在检查点状态中。这样可以确保 Kafka Broker 中的已提交偏移量与检查点状态中的偏移量一致。用户可以通过调用 `setCommitOffsetsOnCheckpoints(boolean)` 方法来选择禁用或启用偏移提交（默认情况下为true）。请注意，在这种情况下，Properties 配置中的自动定期提交偏移设置将被忽略。
 
