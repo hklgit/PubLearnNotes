@@ -108,3 +108,48 @@ Caused by: java.lang.IllegalStateException: No buffer, but serializer has buffer
         at org.apache.flink.streaming.runtime.tasks.StreamTask.triggerCheckpoint(StreamTask.java:538)
         ... 7 more
 ```
+
+### 4. Could not start rest endpoint
+
+```java
+2020-10-31 23:07:13,961 ERROR org.apache.flink.runtime.entrypoint.ClusterEntrypoint        [] - Could not start cluster entrypoint StandaloneSessionClusterEntrypoint.
+org.apache.flink.runtime.entrypoint.ClusterEntrypointException: Failed to initialize the cluster entrypoint StandaloneSessionClusterEntrypoint.
+        at org.apache.flink.runtime.entrypoint.ClusterEntrypoint.startCluster(ClusterEntrypoint.java:190) ~[flink-dist_2.12-1.11.2.jar:1.11.2]
+        at org.apache.flink.runtime.entrypoint.ClusterEntrypoint.runClusterEntrypoint(ClusterEntrypoint.java:520) [flink-dist_2.12-1.11.2.jar:1.11.2]
+        at org.apache.flink.runtime.entrypoint.StandaloneSessionClusterEntrypoint.main(StandaloneSessionClusterEntrypoint.java:64) [flink-dist_2.12-1.11.2.jar:1.11.2]
+Caused by: org.apache.flink.util.FlinkException: Could not create the DispatcherResourceManagerComponent.
+        at org.apache.flink.runtime.entrypoint.component.DefaultDispatcherResourceManagerComponentFactory.create(DefaultDispatcherResourceManagerComponentFactory.java:255) ~[flink-dist_2.12-1.11.2.jar:1.11.2]
+        at org.apache.flink.runtime.entrypoint.ClusterEntrypoint.runCluster(ClusterEntrypoint.java:219) ~[flink-dist_2.12-1.11.2.jar:1.11.2]
+        at org.apache.flink.runtime.entrypoint.ClusterEntrypoint.lambda$startCluster$0(ClusterEntrypoint.java:172) ~[flink-dist_2.12-1.11.2.jar:1.11.2]
+        at org.apache.flink.runtime.security.contexts.NoOpSecurityContext.runSecured(NoOpSecurityContext.java:30) ~[flink-dist_2.12-1.11.2.jar:1.11.2]
+        at org.apache.flink.runtime.entrypoint.ClusterEntrypoint.startCluster(ClusterEntrypoint.java:171) ~[flink-dist_2.12-1.11.2.jar:1.11.2]
+        ... 2 more
+Caused by: java.net.BindException: Could not start rest endpoint on any port in port range 8081
+        at org.apache.flink.runtime.rest.RestServerEndpoint.start(RestServerEndpoint.java:222) ~[flink-dist_2.12-1.11.2.jar:1.11.2]
+        at org.apache.flink.runtime.entrypoint.component.DefaultDispatcherResourceManagerComponentFactory.create(DefaultDispatcherResourceManagerComponentFactory.java:163) ~[flink-dist_2.12-1.11.2.jar:1.11.2]
+        at org.apache.flink.runtime.entrypoint.ClusterEntrypoint.runCluster(ClusterEntrypoint.java:219) ~[flink-dist_2.12-1.11.2.jar:1.11.2]
+        at org.apache.flink.runtime.entrypoint.ClusterEntrypoint.lambda$startCluster$0(ClusterEntrypoint.java:172) ~[flink-dist_2.12-1.11.2.jar:1.11.2]
+        at org.apache.flink.runtime.security.contexts.NoOpSecurityContext.runSecured(NoOpSecurityContext.java:30) ~[flink-dist_2.12-1.11.2.jar:1.11.2]
+        at org.apache.flink.runtime.entrypoint.ClusterEntrypoint.startCluster(ClusterEntrypoint.java:171) ~[flink-dist_2.12-1.11.2.jar:1.11.2]
+        ... 2 more
+```
+看错误信息，发现是端口被占用问题，修改配置文件 flink-conf.yaml 中的默认端口：
+```
+#==============================================================================
+# Rest & web frontend
+#==============================================================================
+
+# The port to which the REST client connects to. If rest.bind-port has
+# not been specified, then the server will bind to this port as well.
+#
+#rest.port: 8081
+rest.port: 8090
+```
+
+
+
+
+
+
+
+...
